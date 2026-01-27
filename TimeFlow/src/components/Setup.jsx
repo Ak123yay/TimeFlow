@@ -16,7 +16,6 @@ function hhmmToMinutes(hhmm) {
   return h * 60 + m;
 }
 
-// Replace the current LeafIcon with this version
 function LeafIcon({ className = "", size = 18, fill = "#3B6E3B" }) {
   return (
     <svg
@@ -28,13 +27,24 @@ function LeafIcon({ className = "", size = 18, fill = "#3B6E3B" }) {
       aria-hidden
       xmlns="http://www.w3.org/2000/svg"
     >
-      {/* pair of simple leaf ellipses for a friendly, non-weird shape */}
-      <g transform="translate(0,0)" fill={fill} opacity="0.98">
-        <ellipse cx="7.2" cy="12" rx="6.0" ry="3.8" transform="rotate(-28 7.2 12)" />
-        <ellipse cx="16.8" cy="12" rx="6.0" ry="3.8" transform="rotate(28 16.8 12)" />
-        {/* subtle stem */}
-        <path d="M12 12 L12 18" stroke="#2E6B2E" strokeWidth="0.6" strokeLinecap="round" />
-      </g>
+      <ellipse
+        cx="12"
+        cy="12"
+        rx="8"
+        ry="4"
+        transform="rotate(-45 12 12)"
+        fill={fill}
+        opacity="0.9"
+      />
+      <line
+        x1="6"
+        y1="18"
+        x2="18"
+        y2="6"
+        stroke="#2E6B2E"
+        strokeWidth="1"
+        strokeLinecap="round"
+      />
     </svg>
   );
 }
