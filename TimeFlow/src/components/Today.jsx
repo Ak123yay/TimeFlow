@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { loadAvailability } from "../utils/storage";
 import "../App.css";
 
@@ -22,26 +22,79 @@ function minutesToHHMM(minutes) {
   return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
 }
 
+/* localStorage helpers */
+const tasksKeyForToday = () => `timeflow-tasks-${new Date().toISOString().slice(0, 10)}`;
+const loadTasks = () => {
+  try {
+    const raw = localStorage.getItem(tasksKeyForToday());
+    return raw ? JSON.parse(raw) : [];
+  } catch (e) {
+    console.error("loadTasks", e);
+    return [];
+  }
+};
+const saveTasks = (tasks) => {
+  try {
+    localStorage.setItem(tasksKeyForToday(), JSON.stringify(tasks));
+  } catch (e) {
+    console.error("saveTasks", e);
+  }
+};
+
 export default function Today() {
   const availability = loadAvailability();
-  const [tasks, setTasks] = useState([]);
+  // --- keep original UI state names ---
+  const [tasks, setTasks] = useState(() => loadTasks());
   const [taskName, setTaskName] = useState("");
   const [taskDuration, setTaskDuration] = useState("");
   const [taskStartTime, setTaskStartTime] = useState("");
 
+  // --- TIMER STATE (non-UI changes) ---
+  const [activeTaskId, setActiveTaskId] = useState(null);
+  const [secondsLeft, setSecondsLeft] = useState(0);
+  const timerRef = useRef(null);
+  // store the initial seconds at start to calculate remaining if user says "not finished"
+  const activeInitialSecRef = useRef(0);
+
+  // UI modal state
+  const [showFinishPrompt, setShowFinishPrompt] = useState(false);
+
+  // persist tasks to localStorage whenever they change
+  useEffect(() => {
+    saveTasks(tasks);
+  }, [tasks]);
+
   const addTask = (e) => {
-    e.preventDefault();
+    if (e && e.preventDefault) e.preventDefault();
     if (!taskName || !taskDuration) return;
     const startTime = taskStartTime || null;
-    setTasks([...tasks, { id: Date.now(), name: taskName, duration: parseInt(taskDuration), startTime }]);
+    const newTask = {
+      id: Date.now(),
+      name: taskName,
+      duration: parseInt(taskDuration, 10),
+      startTime,
+      remaining: parseInt(taskDuration, 10),
+      completed: false,
+    };
+    setTasks(prev => [...prev, newTask]);
     setTaskName("");
     setTaskDuration("");
     setTaskStartTime("");
   };
 
-  const deleteTask = (id) => setTasks(tasks.filter(t => t.id !== id));
+  const deleteTask = (id) => {
+    // if deleting active task, stop timer
+    if (activeTaskId === id) {
+      clearInterval(timerRef.current);
+      setActiveTaskId(null);
+      setSecondsLeft(0);
+      setShowFinishPrompt(false);
+    }
+    setTasks(prev => prev.filter(t => t.id !== id));
+  };
 
-  const totalMinutes = tasks.reduce((sum, t) => sum + t.duration, 0);
+  // compute simple sequential scheduling (unchanged UI behavior)
+  const totalMinutes = tasks.reduce((sum, t) => sum + (t.duration || 0), 0);
   const startM = hhmmToMinutes(availability?.start || "09:00");
   const endM = hhmmToMinutes(availability?.end || "17:00");
   const availableM = endM - startM;
@@ -56,6 +109,104 @@ export default function Today() {
 
   const overflowing = taskBlocks.some(t => t.end > endM);
   const freeTime = Math.max(0, availableM - totalMinutes);
+
+  // ---------- TIMER ENGINE ----------
+  // startTask: sets activeTaskId and secondsLeft (based on remaining or duration)
+  const startTask = (task) => {
+    if (!task) return;
+    // find the latest copy from tasks array (in case changed)
+    const t = tasks.find(x => x.id === task.id);
+    if (!t) return;
+    const seconds = (t.remaining ?? t.duration ?? 0) * 60;
+    activeInitialSecRef.current = seconds;
+    setActiveTaskId(t.id);
+    setSecondsLeft(seconds);
+    // ensure any previous interval is cleared — effect below will set a new one
+    clearInterval(timerRef.current);
+  };
+
+  // effect: ticking (creates interval when activeTaskId is set)
+  useEffect(() => {
+    clearInterval(timerRef.current);
+
+    if (!activeTaskId) {
+      return;
+    }
+    // if secondsLeft already <= 0, show prompt immediately
+    if (secondsLeft <= 0) {
+      setShowFinishPrompt(true);
+      return;
+    }
+
+    timerRef.current = setInterval(() => {
+      setSecondsLeft(s => s - 1);
+    }, 1000);
+
+    return () => clearInterval(timerRef.current);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeTaskId]);
+
+  // effect: watch secondsLeft and trigger completion when reaches 0
+  useEffect(() => {
+    if (!activeTaskId) return;
+    if (secondsLeft > 0) return;
+
+    // secondsLeft <= 0 -> show finish modal (do not auto-mark)
+    clearInterval(timerRef.current);
+    setShowFinishPrompt(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [secondsLeft, activeTaskId]);
+
+  // user selects "Yes, done" in modal
+  const finishTaskConfirmed = () => {
+    const id = activeTaskId;
+    setTasks(prev => prev.map(t => (t.id === id ? { ...t, completed: true, remaining: 0 } : t)));
+    setActiveTaskId(null);
+    setSecondsLeft(0);
+    setShowFinishPrompt(false);
+  };
+
+  // user selects "Not yet" in modal — give 1 minute and resume
+  const finishTaskContinue = () => {
+    // give 60s more and resume
+    const id = activeTaskId;
+    const give = 60;
+    setSecondsLeft(give);
+    setShowFinishPrompt(false);
+    // restart interval
+    clearInterval(timerRef.current);
+    timerRef.current = setInterval(() => {
+      setSecondsLeft(s => s - 1);
+    }, 1000);
+  };
+
+  // "Finish early" button behaviour: open modal (we pause timer)
+  const openFinishPrompt = () => {
+    clearInterval(timerRef.current);
+    setShowFinishPrompt(true);
+  };
+
+  // helper to render time text for a block (minimal UI change)
+  const renderBlockTimeText = (task) => {
+    if (activeTaskId === task.id) {
+      const mm = Math.floor(secondsLeft / 60);
+      const ss = secondsLeft % 60;
+      return `${String(mm).padStart(2,"0")}:${String(ss).padStart(2,"0")} left`;
+    }
+    if (task.completed) return "done";
+    return `${task.duration} min`;
+  };
+
+  // Start-first-button behavior (keeps UI same, just hooks functionality)
+  const startFirstTask = () => {
+    if (!tasks || tasks.length === 0) return;
+    const first = tasks[0];
+    startTask(first);
+  };
+
+  // compute activeTask object for UI
+  const activeTask = tasks.find(t => t.id === activeTaskId) ?? null;
+  const progressPct = activeTask ? Math.max(0, Math.min(100, (secondsLeft / ((activeInitialSecRef.current || 1))) * 100)) : 0;
 
   return (
     <div className="setup-fullscreen nat-bg">
@@ -152,6 +303,58 @@ export default function Today() {
           ))}
         </div>
 
+        {/* ----- Active Task Timer Panel (added, small UI block) ----- */}
+        {activeTask && (
+          <div style={{
+            marginTop: 12,
+            marginBottom: 18,
+            padding: "14px",
+            borderRadius: "14px",
+            background: "linear-gradient(90deg, rgba(167,211,167,0.14), rgba(111,175,111,0.10))",
+            border: "1px solid rgba(111,175,111,0.12)"
+          }}>
+            <div style={{ fontSize: "13px", fontWeight: 700, color: "#3B6E3B" }}>🌿 Current Task</div>
+            <div style={{ fontSize: "18px", fontWeight: 800, marginTop: 6 }}>{activeTask.name}</div>
+
+            <div style={{ display: "flex", alignItems: "center", gap: 12, marginTop: 8 }}>
+              <div style={{ fontSize: "28px", fontWeight: 900, letterSpacing: "1px" }}>
+                {String(Math.floor(secondsLeft / 60)).padStart(2, "0")}:
+                {String(secondsLeft % 60).padStart(2, "0")}
+              </div>
+
+              <div style={{ flex: 1 }}>
+                <div style={{ height: 8, background: "#eaf7ea", borderRadius: 9999, overflow: "hidden" }}>
+                  <div style={{
+                    height: "100%",
+                    width: `${progressPct}%`,
+                    background: "linear-gradient(90deg,#4F7A4F,#6FAF6F)",
+                    transition: "width 0.4s linear"
+                  }} />
+                </div>
+                <div style={{ fontSize: 12, color: "#4B6B4B", marginTop: 6 }}>
+                  {Math.max(0, Math.floor((activeInitialSecRef.current - secondsLeft) / 60))} / {Math.ceil((activeInitialSecRef.current || 1) / 60)} min
+                </div>
+              </div>
+
+              <div>
+                <button
+                  onClick={openFinishPrompt}
+                  style={{
+                    padding: "8px 12px",
+                    borderRadius: 9999,
+                    border: "1px solid rgba(59,110,59,0.14)",
+                    background: "#fff",
+                    fontWeight: 800,
+                    cursor: "pointer"
+                  }}
+                >
+                  Finish early
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Timeline */}
         <div className="timeline-wrap">
           <div className="timeline-scale">
@@ -180,7 +383,8 @@ export default function Today() {
                       alignItems: "center",
                       gap: "12px",
                       position: "relative",
-                      overflow: "hidden"
+                      overflow: "hidden",
+                      opacity: task.completed ? 0.6 : 1
                     }}
                   >
                     <div style={{
@@ -211,10 +415,10 @@ export default function Today() {
 
                     <div style={{ flex: 1 }}>
                       <div style={{ fontSize: "15px", fontWeight: "700", color: "#3B6E3B", marginBottom: "4px" }}>
-                        {task.name}
+                        {task.name}{task.completed ? " (done)" : ""}
                       </div>
                       <div style={{ fontSize: "12px", color: "#6B8E6B" }}>
-                        {minutesToHHMM(task.start)} — {minutesToHHMM(task.end)} • {task.duration} min
+                        {minutesToHHMM(task.start)} — {minutesToHHMM(task.end)} • {renderBlockTimeText(task)}
                       </div>
                     </div>
 
@@ -247,7 +451,90 @@ export default function Today() {
 
         {tasks.length > 0 && (
           <div className="actions-row">
-            <button className="btn primary">Start First Task →</button>
+            <button className="btn primary" onClick={startFirstTask}>
+              Start First Task →
+            </button>
+          </div>
+        )}
+
+        {/* ---------- Finish Modal (in-app) ---------- */}
+        {showFinishPrompt && (
+          <div style={{
+            position: "fixed",
+            inset: 0,
+            background: "rgba(0,0,0,0.32)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            zIndex: 9999
+          }}>
+            <div style={{
+              background: "#fff",
+              padding: 22,
+              borderRadius: 16,
+              width: "92%",
+              maxWidth: 420,
+              textAlign: "center",
+              boxShadow: "0 30px 80px rgba(0,0,0,0.25)"
+            }}>
+              <div style={{ fontSize: 20, fontWeight: 900, color: "#123a12" }}>Task finished?</div>
+              <p style={{ marginTop: 8, color: "#4B6B4B" }}>
+                Did you complete <strong>{activeTask?.name}</strong>?
+              </p>
+
+              <div style={{ display: "flex", gap: 12, marginTop: 14 }}>
+                <button
+                  onClick={() => {
+                    // Not yet: give a minute and resume
+                    finishTaskContinue();
+                  }}
+                  style={{
+                    flex: 1,
+                    padding: 12,
+                    borderRadius: 9999,
+                    border: "1px solid #ddd",
+                    background: "#fff",
+                    fontWeight: 800,
+                    cursor: "pointer"
+                  }}
+                >
+                  Not yet
+                </button>
+
+                <button
+                  onClick={() => {
+                    // Yes done
+                    finishTaskConfirmed();
+                  }}
+                  style={{
+                    flex: 1,
+                    padding: 12,
+                    borderRadius: 9999,
+                    border: "none",
+                    background: "linear-gradient(90deg,#4F7A4F,#6FAF6F)",
+                    color: "#fff",
+                    fontWeight: 900,
+                    cursor: "pointer"
+                  }}
+                >
+                  Yes, done
+                </button>
+              </div>
+
+              <button
+                onClick={() => {
+                  // close modal and resume with small extra time if user accidentally opened it
+                  setShowFinishPrompt(false);
+                  if (activeTaskId) {
+                    setSecondsLeft(prev => Math.max(1, prev));
+                    timerRef.current = setInterval(() => setSecondsLeft(s => s - 1), 1000);
+                  }
+                }}
+                style={{ marginTop: 12, background: "transparent", border: "none", color: "#666", cursor: "pointer" }}
+              >
+                Cancel
+              </button>
+            </div>
           </div>
         )}
       </div>
