@@ -1,5 +1,6 @@
 import { useEffect, useState, useRef } from "react";
-import { loadAvailability } from "../utils/storage";
+import { loadAvailability, getUnfinishedTasksFromPreviousDays, saveTasksForDate, loadTasksForDate } from "../utils/storage";
+import { rescheduleUnfinishedTasks } from "../utils/scheduler";
 import "../App.css";
 
 function LeafIcon({ className = "", size = 18, fill = "#3B6E3B" }) {
@@ -23,19 +24,20 @@ function minutesToHHMM(minutes) {
 }
 
 /* localStorage helpers */
-const tasksKeyForToday = () => `timeflow-tasks-${new Date().toISOString().slice(0, 10)}`;
+const getTodayString = () => new Date().toISOString().slice(0, 10);
+
 const loadTasks = () => {
   try {
-    const raw = localStorage.getItem(tasksKeyForToday());
-    return raw ? JSON.parse(raw) : [];
+    return loadTasksForDate(getTodayString());
   } catch (e) {
     console.error("loadTasks", e);
     return [];
   }
 };
+
 const saveTasks = (tasks) => {
   try {
-    localStorage.setItem(tasksKeyForToday(), JSON.stringify(tasks));
+    saveTasksForDate(getTodayString(), tasks);
   } catch (e) {
     console.error("saveTasks", e);
   }
@@ -48,6 +50,7 @@ export default function Today() {
   const [taskName, setTaskName] = useState("");
   const [taskDuration, setTaskDuration] = useState("");
   const [taskStartTime, setTaskStartTime] = useState("");
+  const [hasLoadedCarryOver, setHasLoadedCarryOver] = useState(false);
 
   // --- TIMER STATE (non-UI changes) ---
   const [activeTaskId, setActiveTaskId] = useState(null);
@@ -58,6 +61,21 @@ export default function Today() {
 
   // UI modal state
   const [showFinishPrompt, setShowFinishPrompt] = useState(false);
+
+  // Load unfinished tasks from previous days on mount
+  useEffect(() => {
+    if (hasLoadedCarryOver) return;
+    
+    const unfinishedTasks = getUnfinishedTasksFromPreviousDays();
+    if (unfinishedTasks.length > 0) {
+      const todayTasks = loadTasks();
+      const rescheduled = rescheduleUnfinishedTasks(unfinishedTasks, todayTasks, availability);
+      setTasks(rescheduled);
+      setHasLoadedCarryOver(true);
+    } else {
+      setHasLoadedCarryOver(true);
+    }
+  }, [availability, hasLoadedCarryOver]);
 
   // persist tasks to localStorage whenever they change
   useEffect(() => {
@@ -99,11 +117,16 @@ export default function Today() {
   const endM = hhmmToMinutes(availability?.end || "17:00");
   const availableM = endM - startM;
 
-  let currentTime = startM;
-  const taskBlocks = tasks.map(task => {
+  const taskBlocks = tasks.map((task, index) => {
+    let currentTime = startM;
+    // Calculate start time by summing all previous tasks
+    for (let i = 0; i < index; i++) {
+      if (!tasks[i].startTime) {
+        currentTime += tasks[i].duration;
+      }
+    }
     const start = task.startTime ? hhmmToMinutes(task.startTime) : currentTime;
     const end = start + task.duration;
-    if (!task.startTime) currentTime = end;
     return { ...task, start, end };
   });
 
@@ -154,13 +177,11 @@ export default function Today() {
     // secondsLeft <= 0 -> show finish modal (do not auto-mark)
     clearInterval(timerRef.current);
     setShowFinishPrompt(true);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [secondsLeft, activeTaskId]);
 
   // user selects "Yes, done" in modal
   const finishTaskConfirmed = () => {
-    const id = activeTaskId;
-    setTasks(prev => prev.map(t => (t.id === id ? { ...t, completed: true, remaining: 0 } : t)));
+    setTasks(prev => prev.map(t => (t.id === activeTaskId ? { ...t, completed: true, remaining: 0 } : t)));
     setActiveTaskId(null);
     setSecondsLeft(0);
     setShowFinishPrompt(false);
@@ -168,8 +189,13 @@ export default function Today() {
 
   // user selects "Not yet" in modal — give 1 minute and resume
   const finishTaskContinue = () => {
+    // Save the current remaining time to the task
+    const remainingMinutes = Math.ceil(secondsLeft / 60);
+    setTasks(prev => prev.map(t => 
+      t.id === activeTaskId ? { ...t, remaining: remainingMinutes } : t
+    ));
+    
     // give 60s more and resume
-    const id = activeTaskId;
     const give = 60;
     setSecondsLeft(give);
     setShowFinishPrompt(false);
@@ -416,6 +442,7 @@ export default function Today() {
                     <div style={{ flex: 1 }}>
                       <div style={{ fontSize: "15px", fontWeight: "700", color: "#3B6E3B", marginBottom: "4px" }}>
                         {task.name}{task.completed ? " (done)" : ""}
+                        {task.carriedOver && <span style={{ fontSize: "11px", marginLeft: "6px", padding: "2px 6px", background: "rgba(255,165,0,0.15)", color: "#d97706", borderRadius: "4px", fontWeight: "600" }}>from {task.originalDate}</span>}
                       </div>
                       <div style={{ fontSize: "12px", color: "#6B8E6B" }}>
                         {minutesToHHMM(task.start)} — {minutesToHHMM(task.end)} • {renderBlockTimeText(task)}
