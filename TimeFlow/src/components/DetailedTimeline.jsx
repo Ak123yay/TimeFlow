@@ -12,8 +12,6 @@ export default function DetailedTimeline() {
   const tasks = loadTasks();
 
   // Generate task blocks
-  const dayStart = 0;   // 0:00
-  const dayEnd = 24 * 60; // 24:00
   const hourHeight = 60; // pixels per hour
 
   const blocks = tasks.map(task => {
@@ -25,7 +23,7 @@ export default function DetailedTimeline() {
   });
 
   // generate hour labels
-  const hours = Array.from({length:24}, (_,i)=>i);
+  const hours = Array.from({length:24}, (_)=>_);
 
   return (
     <div className="detailed-timeline-wrap" style={{position:"relative", width:"100%", minHeight: `${24*hourHeight}px`, border:"1px solid #c5e1c5", borderRadius:"12px", overflowY:"auto"}}>
@@ -35,7 +33,7 @@ export default function DetailedTimeline() {
         </div>
       ))}
 
-      {blocks.map((task, i) => (
+      {blocks.map((task) => (
         <div key={task.id} style={{
           position:"absolute",
           top: `${task.top}px`,

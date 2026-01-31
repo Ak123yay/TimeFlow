@@ -1,5 +1,5 @@
 // src/components/Setup.jsx
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useLayoutEffect, useRef, useState } from "react";
 import { saveAvailability, loadAvailability } from "../utils/storage";
 import "../App.css";
 
@@ -69,8 +69,6 @@ export default function Setup({ onDone }) {
   const MIN_CONNECTOR_PX = 70;
   const H_PADDING = 12;
 
-  useEffect(() => setError(""), [start, end]);
-
   const startM = hhmmToMinutes(start);
   const endM = hhmmToMinutes(end);
   const durationM = Math.max(0, endM - startM);
@@ -124,6 +122,7 @@ export default function Setup({ onDone }) {
   function applyPreset(p) {
     setStart(p.start);
     setEnd(p.end);
+    setError("");
   }
 
   function validateAndSave() {

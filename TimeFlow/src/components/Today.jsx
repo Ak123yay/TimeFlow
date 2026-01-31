@@ -1,5 +1,6 @@
 import { useEffect, useState, useRef } from "react";
-import { loadAvailability } from "../utils/storage";
+import { loadAvailability, getUnfinishedTasksFromPreviousDays, saveTasksForDate, loadTasksForDate } from "../utils/storage";
+import { rescheduleUnfinishedTasks } from "../utils/scheduler";
 import "../App.css";
 
 function LeafIcon({ className = "", size = 18, fill = "#3B6E3B" }) {
@@ -23,19 +24,20 @@ function minutesToHHMM(minutes) {
 }
 
 /* localStorage helpers */
-const tasksKeyForToday = () => `timeflow-tasks-${new Date().toISOString().slice(0, 10)}`;
+const getTodayString = () => new Date().toISOString().slice(0, 10);
+
 const loadTasks = () => {
   try {
-    const raw = localStorage.getItem(tasksKeyForToday());
-    return raw ? JSON.parse(raw) : [];
+    return loadTasksForDate(getTodayString());
   } catch (e) {
     console.error("loadTasks", e);
     return [];
   }
 };
+
 const saveTasks = (tasks) => {
   try {
-    localStorage.setItem(tasksKeyForToday(), JSON.stringify(tasks));
+    saveTasksForDate(getTodayString(), tasks);
   } catch (e) {
     console.error("saveTasks", e);
   }
@@ -48,6 +50,7 @@ export default function Today() {
   const [taskName, setTaskName] = useState("");
   const [taskDuration, setTaskDuration] = useState("");
   const [taskStartTime, setTaskStartTime] = useState("");
+  const [hasLoadedCarryOver, setHasLoadedCarryOver] = useState(false);
 
   // --- TIMER STATE (non-UI changes) ---
   const [activeTaskId, setActiveTaskId] = useState(null);
@@ -58,6 +61,21 @@ export default function Today() {
 
   // UI modal state
   const [showFinishPrompt, setShowFinishPrompt] = useState(false);
+
+  // Load unfinished tasks from previous days on mount
+  useEffect(() => {
+    if (hasLoadedCarryOver) return;
+    
+    const unfinishedTasks = getUnfinishedTasksFromPreviousDays();
+    if (unfinishedTasks.length > 0) {
+      const todayTasks = loadTasks();
+      const rescheduled = rescheduleUnfinishedTasks(unfinishedTasks, todayTasks, availability);
+      setTasks(rescheduled);
+      setHasLoadedCarryOver(true);
+    } else {
+      setHasLoadedCarryOver(true);
+    }
+  }, [availability, hasLoadedCarryOver]);
 
   // persist tasks to localStorage whenever they change
   useEffect(() => {
@@ -99,11 +117,16 @@ export default function Today() {
   const endM = hhmmToMinutes(availability?.end || "17:00");
   const availableM = endM - startM;
 
-  let currentTime = startM;
-  const taskBlocks = tasks.map(task => {
+  const taskBlocks = tasks.map((task, index) => {
+    let currentTime = startM;
+    // Calculate start time by summing all previous tasks
+    for (let i = 0; i < index; i++) {
+      if (!tasks[i].startTime) {
+        currentTime += tasks[i].duration;
+      }
+    }
     const start = task.startTime ? hhmmToMinutes(task.startTime) : currentTime;
     const end = start + task.duration;
-    if (!task.startTime) currentTime = end;
     return { ...task, start, end };
   });
 
@@ -154,13 +177,11 @@ export default function Today() {
     // secondsLeft <= 0 -> show finish modal (do not auto-mark)
     clearInterval(timerRef.current);
     setShowFinishPrompt(true);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [secondsLeft, activeTaskId]);
 
   // user selects "Yes, done" in modal
   const finishTaskConfirmed = () => {
-    const id = activeTaskId;
-    setTasks(prev => prev.map(t => (t.id === id ? { ...t, completed: true, remaining: 0 } : t)));
+    setTasks(prev => prev.map(t => (t.id === activeTaskId ? { ...t, completed: true, remaining: 0 } : t)));
     setActiveTaskId(null);
     setSecondsLeft(0);
     setShowFinishPrompt(false);
@@ -168,8 +189,13 @@ export default function Today() {
 
   // user selects "Not yet" in modal — give 1 minute and resume
   const finishTaskContinue = () => {
+    // Save the current remaining time to the task
+    const remainingMinutes = Math.ceil(secondsLeft / 60);
+    setTasks(prev => prev.map(t => 
+      t.id === activeTaskId ? { ...t, remaining: remainingMinutes } : t
+    ));
+    
     // give 60s more and resume
-    const id = activeTaskId;
     const give = 60;
     setSecondsLeft(give);
     setShowFinishPrompt(false);
@@ -286,7 +312,19 @@ export default function Today() {
           </label>
         </div>
 
-        <button onClick={addTask} style={{ width: "100%", marginBottom: "18px", padding: "13px 18px", borderRadius: "9999px", fontWeight: "800", background: "linear-gradient(90deg, #4F7A4F, #6FAF6F)", color: "white", border: "none", boxShadow: "0 10px 24px rgba(59,110,59,0.14)", cursor: "pointer", letterSpacing: "0.3px" }}>+ Add Task</button>
+        <button 
+          onClick={addTask} 
+          className="btn primary"
+          style={{ 
+            width: "100%", 
+            marginBottom: "18px", 
+            fontSize: "15px",
+            position: "relative",
+            overflow: "hidden"
+          }}
+        >
+          + Add Task
+        </button>
 
         {/* Quick Add Presets */}
         <div className="presets horizontal-scroll" role="list">
@@ -308,30 +346,46 @@ export default function Today() {
           <div style={{
             marginTop: 12,
             marginBottom: 18,
-            padding: "14px",
-            borderRadius: "14px",
-            background: "linear-gradient(90deg, rgba(167,211,167,0.14), rgba(111,175,111,0.10))",
-            border: "1px solid rgba(111,175,111,0.12)"
+            padding: "18px",
+            borderRadius: "16px",
+            background: "linear-gradient(135deg, rgba(167,211,167,0.15), rgba(111,175,111,0.08))",
+            border: "2px solid rgba(111,175,111,0.2)",
+            boxShadow: "0 4px 16px rgba(59,110,59,0.08)",
+            animation: "fadeIn 0.3s ease-out"
           }}>
-            <div style={{ fontSize: "13px", fontWeight: 700, color: "#3B6E3B" }}>🌿 Current Task</div>
-            <div style={{ fontSize: "18px", fontWeight: 800, marginTop: 6 }}>{activeTask.name}</div>
+            <div style={{ fontSize: "12px", fontWeight: 700, color: "#3B6E3B", textTransform: "uppercase", letterSpacing: "0.5px" }}>🌿 Current Task</div>
+            <div style={{ fontSize: "20px", fontWeight: 900, marginTop: 8, color: "#123a12" }}>{activeTask.name}</div>
 
-            <div style={{ display: "flex", alignItems: "center", gap: 12, marginTop: 8 }}>
-              <div style={{ fontSize: "28px", fontWeight: 900, letterSpacing: "1px" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 16, marginTop: 14 }}>
+              <div style={{ 
+                fontSize: "32px", 
+                fontWeight: 900, 
+                letterSpacing: "1px",
+                fontVariantNumeric: "tabular-nums",
+                color: "#3B6E3B",
+                textShadow: "0 2px 4px rgba(59,110,59,0.1)"
+              }}>
                 {String(Math.floor(secondsLeft / 60)).padStart(2, "0")}:
                 {String(secondsLeft % 60).padStart(2, "0")}
               </div>
 
               <div style={{ flex: 1 }}>
-                <div style={{ height: 8, background: "#eaf7ea", borderRadius: 9999, overflow: "hidden" }}>
+                <div style={{ 
+                  height: 10, 
+                  background: "#eaf7ea", 
+                  borderRadius: 9999, 
+                  overflow: "hidden",
+                  boxShadow: "inset 0 2px 4px rgba(0,0,0,0.05)"
+                }}>
                   <div style={{
                     height: "100%",
                     width: `${progressPct}%`,
                     background: "linear-gradient(90deg,#4F7A4F,#6FAF6F)",
-                    transition: "width 0.4s linear"
+                    transition: "width 0.3s ease-out",
+                    boxShadow: "0 0 8px rgba(79,122,79,0.3)"
                   }} />
                 </div>
-                <div style={{ fontSize: 12, color: "#4B6B4B", marginTop: 6 }}>
+                <div style={{ fontSize: 13, color: "#4B6B4B", marginTop: 8, fontWeight: 600 }}>
                   {Math.max(0, Math.floor((activeInitialSecRef.current - secondsLeft) / 60))} / {Math.ceil((activeInitialSecRef.current || 1) / 60)} min
                 </div>
               </div>
@@ -339,13 +393,10 @@ export default function Today() {
               <div>
                 <button
                   onClick={openFinishPrompt}
+                  className="btn ghost"
                   style={{
-                    padding: "8px 12px",
-                    borderRadius: 9999,
-                    border: "1px solid rgba(59,110,59,0.14)",
-                    background: "#fff",
-                    fontWeight: 800,
-                    cursor: "pointer"
+                    fontSize: 13,
+                    padding: "10px 16px"
                   }}
                 >
                   Finish early
@@ -384,7 +435,18 @@ export default function Today() {
                       gap: "12px",
                       position: "relative",
                       overflow: "hidden",
-                      opacity: task.completed ? 0.6 : 1
+                      opacity: task.completed ? 0.6 : 1,
+                      transition: "all 0.3s ease",
+                      animation: "slideInFromLeft 0.4s ease-out",
+                      boxShadow: "0 2px 8px rgba(59,110,59,0.05)"
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.boxShadow = "0 4px 16px rgba(59,110,59,0.12)";
+                      e.currentTarget.style.transform = "translateX(4px)";
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.boxShadow = "0 2px 8px rgba(59,110,59,0.05)";
+                      e.currentTarget.style.transform = "translateX(0)";
                     }}
                   >
                     <div style={{
@@ -416,6 +478,7 @@ export default function Today() {
                     <div style={{ flex: 1 }}>
                       <div style={{ fontSize: "15px", fontWeight: "700", color: "#3B6E3B", marginBottom: "4px" }}>
                         {task.name}{task.completed ? " (done)" : ""}
+                        {task.carriedOver && <span style={{ fontSize: "11px", marginLeft: "6px", padding: "2px 6px", background: "rgba(255,165,0,0.15)", color: "#d97706", borderRadius: "4px", fontWeight: "600" }}>from {task.originalDate}</span>}
                       </div>
                       <div style={{ fontSize: "12px", color: "#6B8E6B" }}>
                         {minutesToHHMM(task.start)} — {minutesToHHMM(task.end)} • {renderBlockTimeText(task)}
@@ -438,6 +501,18 @@ export default function Today() {
                         justifyContent: "center",
                         transition: "all 0.2s",
                         flexShrink: 0
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.background = "#fee";
+                        e.currentTarget.style.color = "#c00";
+                        e.currentTarget.style.borderColor = "rgba(200,0,0,0.3)";
+                        e.currentTarget.style.transform = "scale(1.1)";
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.background = "#fff";
+                        e.currentTarget.style.color = "#999";
+                        e.currentTarget.style.borderColor = "rgba(111,175,111,0.2)";
+                        e.currentTarget.style.transform = "scale(1)";
                       }}
                     >
                       ×
@@ -462,40 +537,38 @@ export default function Today() {
           <div style={{
             position: "fixed",
             inset: 0,
-            background: "rgba(0,0,0,0.32)",
+            background: "rgba(0,0,0,0.4)",
+            backdropFilter: "blur(4px)",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            zIndex: 9999
+            zIndex: 9999,
+            animation: "fadeIn 0.2s ease-out"
           }}>
             <div style={{
               background: "#fff",
-              padding: 22,
-              borderRadius: 16,
+              padding: 28,
+              borderRadius: 20,
               width: "92%",
               maxWidth: 420,
               textAlign: "center",
-              boxShadow: "0 30px 80px rgba(0,0,0,0.25)"
+              boxShadow: "0 30px 80px rgba(0,0,0,0.25)",
+              animation: "scaleIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)"
             }}>
-              <div style={{ fontSize: 20, fontWeight: 900, color: "#123a12" }}>Task finished?</div>
-              <p style={{ marginTop: 8, color: "#4B6B4B" }}>
-                Did you complete <strong>{activeTask?.name}</strong>?
+              <div style={{ fontSize: 24, fontWeight: 900, color: "#123a12", marginBottom: 12 }}>Task finished?</div>
+              <p style={{ marginTop: 8, color: "#4B6B4B", fontSize: 15, lineHeight: 1.5 }}>
+                Did you complete <strong style={{ color: "#3B6E3B" }}>{activeTask?.name}</strong>?
               </p>
 
-              <div style={{ display: "flex", gap: 12, marginTop: 14 }}>
+              <div style={{ display: "flex", gap: 12, marginTop: 20 }}>
                 <button
                   onClick={() => {
                     // Not yet: give a minute and resume
                     finishTaskContinue();
                   }}
+                  className="btn ghost"
                   style={{
-                    flex: 1,
-                    padding: 12,
-                    borderRadius: 9999,
-                    border: "1px solid #ddd",
-                    background: "#fff",
-                    fontWeight: 800,
-                    cursor: "pointer"
+                    flex: 1
                   }}
                 >
                   Not yet
@@ -506,15 +579,9 @@ export default function Today() {
                     // Yes done
                     finishTaskConfirmed();
                   }}
+                  className="btn primary"
                   style={{
-                    flex: 1,
-                    padding: 12,
-                    borderRadius: 9999,
-                    border: "none",
-                    background: "linear-gradient(90deg,#4F7A4F,#6FAF6F)",
-                    color: "#fff",
-                    fontWeight: 900,
-                    cursor: "pointer"
+                    flex: 1
                   }}
                 >
                   Yes, done
@@ -530,7 +597,17 @@ export default function Today() {
                     timerRef.current = setInterval(() => setSecondsLeft(s => s - 1), 1000);
                   }
                 }}
-                style={{ marginTop: 12, background: "transparent", border: "none", color: "#666", cursor: "pointer" }}
+                style={{ 
+                  marginTop: 16, 
+                  background: "transparent", 
+                  border: "none", 
+                  color: "#666", 
+                  cursor: "pointer",
+                  fontSize: 14,
+                  transition: "color 0.2s"
+                }}
+                onMouseEnter={(e) => e.currentTarget.style.color = "#333"}
+                onMouseLeave={(e) => e.currentTarget.style.color = "#666"}
               >
                 Cancel
               </button>
