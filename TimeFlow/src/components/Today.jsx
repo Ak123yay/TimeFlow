@@ -116,7 +116,7 @@ export default function Today() {
   const startM = hhmmToMinutes(availability?.start || "09:00");
   const endM = hhmmToMinutes(availability?.end || "17:00");
   const availableM = endM - startM;
-
+//hi
   const taskBlocks = tasks.map((task, index) => {
     let currentTime = startM;
     // Calculate start time by summing all previous tasks
