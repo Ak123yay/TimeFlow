@@ -450,3 +450,134 @@ input:focus-visible {
 .horizontal-scroll::-webkit-scrollbar-thumb:hover {
   background: rgba(111,175,111,0.5);
 }
+
+/* ============================================================================
+   VISUAL WARNING STYLES
+   ============================================================================ */
+
+/* Conflict warning */
+.task-conflict {
+  border-left: 3px solid #f59e0b !important;
+  background: linear-gradient(90deg, rgba(245,158,11,0.08), rgba(245,158,11,0.04)) !important;
+}
+
+/* Overflow warning */
+.task-overflow {
+  background: rgba(255, 200, 200, 0.15);
+  border-color: rgba(255, 100, 100, 0.2);
+}
+
+/* Late indicator */
+.task-late {
+  border-color: #ea580c !important;
+  box-shadow: 0 0 0 2px rgba(234,88,12,0.1) !important;
+}
+
+/* Overflow badge in stats */
+.overflow-badge {
+  animation: pulseWarning 2s ease-in-out infinite;
+}
+
+@keyframes pulseWarning {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+/* Focus mode styles */
+.task-focused {
+  animation: focusPulse 2s ease-in-out infinite;
+}
+
+.task-dimmed {
+  opacity: 0.4;
+  transition: opacity 0.3s;
+}
+
+@keyframes focusPulse {
+  0%, 100% {
+    box-shadow: 0 0 0 3px rgba(111,175,111,0.3);
+  }
+  50% {
+    box-shadow: 0 0 0 6px rgba(111,175,111,0.15);
+  }
+}
+
+/* ==================== Time-of-Day Backgrounds ==================== */
+.app-dawn {
+  background: linear-gradient(135deg, #FFF5F5, #F0F8F2) !important;
+}
+
+.app-day {
+  /* Uses default --bg variable */
+}
+
+.app-dusk {
+  background: linear-gradient(135deg, #F5F0FF, #F0F8F2) !important;
+}
+
+.app-night {
+  background: linear-gradient(135deg, #E8F4F8, #E0F0E8) !important;
+}
+
+/* ==================== Floating Leaves ==================== */
+.floating-leaves {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  z-index: 0;
+  overflow: hidden;
+}
+
+.floating-leaf {
+  position: absolute;
+  top: -50px;
+  width: 24px;
+  height: 24px;
+  opacity: 0.08;
+  animation: floatingLeaf 20s linear infinite;
+  pointer-events: none;
+}
+
+@keyframes floatingLeaf {
+  0% {
+    transform: translate(0, -50px) rotate(0deg);
+    opacity: 0;
+  }
+  5% {
+    opacity: 0.08;
+  }
+  95% {
+    opacity: 0.04;
+  }
+  100% {
+    transform: translate(var(--drift), calc(100vh + 50px)) rotate(360deg);
+    opacity: 0;
+  }
+}
+
+/* Ensure content is above floating leaves */
+.App > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* ==================== Weekly Pool Task Cards ==================== */
+.pool-task-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  background: linear-gradient(90deg, rgba(167,211,167,0.08), rgba(111,175,111,0.05));
+  border: 1px solid rgba(111,175,111,0.12);
+  border-radius: 12px;
+  transition: all 0.2s ease;
+}
+
+.pool-task-card:hover {
+  background: linear-gradient(90deg, rgba(167,211,167,0.12), rgba(111,175,111,0.08));
+  border-color: rgba(111,175,111,0.2);
+  transform: translateX(4px);
+}

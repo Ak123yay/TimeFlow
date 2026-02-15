@@ -1,6 +1,26 @@
 import { useEffect, useState, useRef } from "react";
-import { loadAvailability, getUnfinishedTasksFromPreviousDays, saveTasksForDate, loadTasksForDate } from "../utils/storage";
-import { rescheduleUnfinishedTasks } from "../utils/scheduler";
+import { loadAvailability, getUnfinishedTasksFromPreviousDays, saveTasksForDate, loadTasksForDate, addTaskToWeeklyPool } from "../utils/storage";
+import { rescheduleUnfinishedTasks, detectConflicts, calculateOverflow } from "../utils/scheduler";
+import DetailedTimeline from "./DetailedTimeline";
+import Celebration from "./Celebration";
+import RescheduleModal from "./dialogs/RescheduleModal";
+import EditTaskDialog from "./dialogs/EditTaskDialog";
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+} from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 import "../App.css";
 
 function LeafIcon({ className = "", size = 18, fill = "#3B6E3B" }) {
@@ -43,8 +63,43 @@ const saveTasks = (tasks) => {
   }
 };
 
-export default function Today() {
+// Sortable Task Item Component
+function SortableTaskItem({ task, children }) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging
+  } = useSortable({ id: task.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+    cursor: isDragging ? 'grabbing' : 'grab'
+  };
+
+  return (
+    <div ref={setNodeRef} style={style} {...attributes} {...listeners}>
+      {children}
+    </div>
+  );
+}
+
+export default function Today({ onEndDay, onShowWeek, onShowPool }) {
   const availability = loadAvailability();
+
+  // View mode state
+  const [viewMode, setViewMode] = useState(() => {
+    try {
+      return localStorage.getItem('preferredView') || 'list';
+    } catch {
+      return 'list';
+    }
+  });
+
   // --- keep original UI state names ---
   const [tasks, setTasks] = useState(() => loadTasks());
   const [taskName, setTaskName] = useState("");
@@ -59,8 +114,79 @@ export default function Today() {
   // store the initial seconds at start to calculate remaining if user says "not finished"
   const activeInitialSecRef = useRef(0);
 
-  // UI modal state
-  const [showFinishPrompt, setShowFinishPrompt] = useState(false);
+  // Reschedule modal state (replaces showFinishPrompt)
+  const [showRescheduleModal, setShowRescheduleModal] = useState(false);
+
+  // Edit task dialog state
+  const [showEditDialog, setShowEditDialog] = useState(false);
+  const [editingTask, setEditingTask] = useState(null);
+
+  // Focus mode state
+  const [focusModeEnabled, setFocusModeEnabled] = useState(() => {
+    try {
+      return localStorage.getItem('focusModeEnabled') === 'true';
+    } catch {
+      return false;
+    }
+  });
+
+  const toggleFocusMode = () => {
+    const newValue = !focusModeEnabled;
+    setFocusModeEnabled(newValue);
+    try {
+      localStorage.setItem('focusModeEnabled', newValue.toString());
+    } catch (e) {
+      console.error('Failed to save focus mode preference', e);
+    }
+  };
+
+  // Keyboard shortcut for focus mode (F key)
+  useEffect(() => {
+    const handleKeyPress = (e) => {
+      if (e.key === 'f' || e.key === 'F') {
+        // Only if not typing in an input
+        if (e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
+          e.preventDefault();
+          toggleFocusMode();
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyPress);
+    return () => window.removeEventListener('keydown', handleKeyPress);
+  }, [focusModeEnabled]);
+
+  // Celebration state
+  const [showCelebration, setShowCelebration] = useState(null); // null | 'task' | 'allDone'
+
+  // Drag and drop sensors
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+
+  const handleDragEnd = (event) => {
+    const { active, over } = event;
+
+    if (active && over && active.id !== over.id) {
+      setTasks((items) => {
+        const oldIndex = items.findIndex((item) => item.id === active.id);
+        const newIndex = items.findIndex((item) => item.id === over.id);
+
+        return arrayMove(items, oldIndex, newIndex);
+      });
+    }
+  };
+
+  // Check if all tasks are done
+  useEffect(() => {
+    const allDone = tasks.length > 0 && tasks.every(t => t.completed);
+    if (allDone && !showCelebration) {
+      setShowCelebration('allDone');
+    }
+  }, [tasks, showCelebration]);
 
   // Load unfinished tasks from previous days on mount
   useEffect(() => {
@@ -93,6 +219,13 @@ export default function Today() {
       startTime,
       remaining: parseInt(taskDuration, 10),
       completed: false,
+      // NEW: Add rescheduling tracking fields
+      attempts: 0,
+      scheduledFor: startTime
+        ? new Date(`${getTodayString()}T${startTime}`).toISOString()
+        : null,
+      lastRescheduled: null,
+      rescheduledReasons: []
     };
     setTasks(prev => [...prev, newTask]);
     setTaskName("");
@@ -109,6 +242,16 @@ export default function Today() {
       setShowFinishPrompt(false);
     }
     setTasks(prev => prev.filter(t => t.id !== id));
+  };
+
+  const toggleView = () => {
+    const newView = viewMode === 'list' ? 'calendar' : 'list';
+    setViewMode(newView);
+    try {
+      localStorage.setItem('preferredView', newView);
+    } catch (e) {
+      console.error('Failed to save view preference', e);
+    }
   };
 
   // compute simple sequential scheduling (unchanged UI behavior)
@@ -130,8 +273,24 @@ export default function Today() {
     return { ...task, start, end };
   });
 
-  const overflowing = taskBlocks.some(t => t.end > endM);
+  // Detect conflicts and overflow using enhanced scheduler
+  const conflicts = detectConflicts(taskBlocks);
+  const overflowData = calculateOverflow(tasks, availability);
+  const overflowing = overflowData.severity !== 'none';
   const freeTime = Math.max(0, availableM - totalMinutes);
+
+  // Helper to check if a task has conflicts
+  const hasConflict = (taskId) => {
+    return conflicts.some(c => c.task1.id === taskId || c.task2.id === taskId);
+  };
+
+  // Check if current time indicates a task is running late
+  const isLate = (task) => {
+    if (task.completed || !task.end) return false;
+    const now = new Date();
+    const currentMinutes = now.getHours() * 60 + now.getMinutes();
+    return currentMinutes > task.end && activeTaskId === task.id;
+  };
 
   // ---------- TIMER ENGINE ----------
   // startTask: sets activeTaskId and secondsLeft (based on remaining or duration)
@@ -157,7 +316,7 @@ export default function Today() {
     }
     // if secondsLeft already <= 0, show prompt immediately
     if (secondsLeft <= 0) {
-      setShowFinishPrompt(true);
+      setShowRescheduleModal(true);
       return;
     }
 
@@ -176,40 +335,202 @@ export default function Today() {
 
     // secondsLeft <= 0 -> show finish modal (do not auto-mark)
     clearInterval(timerRef.current);
-    setShowFinishPrompt(true);
+    setShowRescheduleModal(true);
   }, [secondsLeft, activeTaskId]);
 
-  // user selects "Yes, done" in modal
-  const finishTaskConfirmed = () => {
-    setTasks(prev => prev.map(t => (t.id === activeTaskId ? { ...t, completed: true, remaining: 0 } : t)));
+  // NEW: Handler for marking task complete
+  const handleComplete = () => {
+    setTasks(prev => prev.map(t =>
+      t.id === activeTaskId ? { ...t, completed: true, remaining: 0 } : t
+    ));
+
+    clearInterval(timerRef.current);
     setActiveTaskId(null);
     setSecondsLeft(0);
-    setShowFinishPrompt(false);
+    setShowRescheduleModal(false);
+
+    // Trigger celebration
+    const willAllBeDone = tasks.filter(t => t.id !== activeTaskId).every(t => t.completed);
+    if (!willAllBeDone) {
+      setShowCelebration('task');
+      setTimeout(() => setShowCelebration(null), 3000);
+    }
   };
 
-  // user selects "Not yet" in modal — give 1 minute and resume
-  const finishTaskContinue = () => {
-    // Save the current remaining time to the task
+  // NEW: Handler for continuing task (+1 min)
+  const handleContinue = () => {
     const remainingMinutes = Math.ceil(secondsLeft / 60);
-    setTasks(prev => prev.map(t => 
+    setTasks(prev => prev.map(t =>
       t.id === activeTaskId ? { ...t, remaining: remainingMinutes } : t
     ));
-    
-    // give 60s more and resume
-    const give = 60;
-    setSecondsLeft(give);
-    setShowFinishPrompt(false);
-    // restart interval
+    setSecondsLeft(60);
+    setShowRescheduleModal(false);
+    // Resume timer
     clearInterval(timerRef.current);
     timerRef.current = setInterval(() => {
       setSecondsLeft(s => s - 1);
     }, 1000);
   };
 
+  // NEW: Handler for rescheduling to later today
+  const handleLaterToday = (slot) => {
+    const task = tasks.find(t => t.id === activeTaskId);
+    if (!task || !slot) return;
+
+    // Update task with new time and increment attempts
+    setTasks(prev => prev.map(t =>
+      t.id === activeTaskId
+        ? {
+            ...t,
+            startTime: slot.startTime,
+            scheduledFor: new Date(`${getTodayString()}T${slot.startTime}`).toISOString(),
+            attempts: (t.attempts || 0) + 1,
+            lastRescheduled: new Date().toISOString(),
+            rescheduledReasons: [...(t.rescheduledReasons || []), 'later_today']
+          }
+        : t
+    ));
+
+    // Stop timer and close modal
+    clearInterval(timerRef.current);
+    setActiveTaskId(null);
+    setSecondsLeft(0);
+    setShowRescheduleModal(false);
+  };
+
+  // NEW: Handler for rescheduling to tomorrow
+  const handleTomorrow = () => {
+    const task = tasks.find(t => t.id === activeTaskId);
+    if (!task) return;
+
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const tomorrowDate = tomorrow.toISOString().slice(0, 10);
+    const tomorrowTasks = loadTasksForDate(tomorrowDate);
+
+    const rescheduledTask = {
+      ...task,
+      id: Date.now() + Math.random(),
+      carriedOver: true,
+      originalDate: getTodayString(),
+      remaining: task.remaining || task.duration,
+      attempts: (task.attempts || 0) + 1,
+      lastRescheduled: new Date().toISOString(),
+      rescheduledReasons: [...(task.rescheduledReasons || []), 'tomorrow'],
+      startTime: null,
+      scheduledFor: null
+    };
+
+    tomorrowTasks.push(rescheduledTask);
+    saveTasksForDate(tomorrowDate, tomorrowTasks);
+    setTasks(prev => prev.filter(t => t.id !== activeTaskId));
+
+    clearInterval(timerRef.current);
+    setActiveTaskId(null);
+    setSecondsLeft(0);
+    setShowRescheduleModal(false);
+  };
+
+  // NEW: Handler for moving task back to weekly pool
+  const handleBackToPool = () => {
+    const task = tasks.find(t => t.id === activeTaskId);
+    if (!task) return;
+
+    // Add to weekly pool
+    const poolTask = {
+      name: task.name,
+      duration: task.remaining || task.duration,
+      inWeeklyPool: true,
+      createdAt: new Date().toISOString(),
+      movedToTodayCount: task.movedToTodayCount || 0
+    };
+    addTaskToWeeklyPool(poolTask);
+
+    // Remove from today's tasks
+    setTasks(prev => prev.filter(t => t.id !== activeTaskId));
+
+    // Stop timer and close modal
+    clearInterval(timerRef.current);
+    setActiveTaskId(null);
+    setSecondsLeft(0);
+    setShowRescheduleModal(false);
+  };
+
+  // NEW: Handler for picking a specific time (opens edit dialog)
+  const handlePickTime = () => {
+    const task = tasks.find(t => t.id === activeTaskId);
+    if (!task) return;
+
+    setShowRescheduleModal(false);
+    clearInterval(timerRef.current);
+    setActiveTaskId(null);
+    setSecondsLeft(0);
+
+    // Open edit dialog
+    setEditingTask(task);
+    setShowEditDialog(true);
+  };
+
+  // Handler for saving edited task
+  const handleSaveEditedTask = (updatedTask) => {
+    setTasks(prev => prev.map(t =>
+      t.id === updatedTask.id ? updatedTask : t
+    ));
+    setShowEditDialog(false);
+    setEditingTask(null);
+  };
+
+  // Handler for clicking on a task to edit it
+  const handleEditTask = (task) => {
+    setEditingTask(task);
+    setShowEditDialog(true);
+  };
+
+  // NEW: Handler for breaking task into smaller pieces
+  const handleBreakTask = () => {
+    const task = tasks.find(t => t.id === activeTaskId);
+    if (!task) return;
+
+    // Split into 2 tasks of half duration
+    const halfDuration = Math.ceil((task.remaining || task.duration) / 2);
+
+    const part1 = {
+      ...task,
+      id: Date.now(),
+      name: `${task.name} (Part 1)`,
+      duration: halfDuration,
+      remaining: halfDuration,
+      attempts: 0, // Reset attempts for new tasks
+      splitFrom: task.id
+    };
+
+    const part2 = {
+      ...task,
+      id: Date.now() + 1,
+      name: `${task.name} (Part 2)`,
+      duration: halfDuration,
+      remaining: halfDuration,
+      attempts: 0,
+      splitFrom: task.id
+    };
+
+    // Remove original task and add two new ones
+    setTasks(prev => [
+      ...prev.filter(t => t.id !== activeTaskId),
+      part1,
+      part2
+    ]);
+
+    clearInterval(timerRef.current);
+    setActiveTaskId(null);
+    setSecondsLeft(0);
+    setShowRescheduleModal(false);
+  };
+
   // "Finish early" button behaviour: open modal (we pause timer)
   const openFinishPrompt = () => {
     clearInterval(timerRef.current);
-    setShowFinishPrompt(true);
+    setShowRescheduleModal(true);
   };
 
   // helper to render time text for a block (minimal UI change)
@@ -247,8 +568,126 @@ export default function Today() {
               Plan your day with time blocks
             </p>
           </div>
-          <div className="header-decor" aria-hidden>
-            <LeafIcon size={40} fill="#3B6E3B" />
+          <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
+            <button
+              onClick={onEndDay}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "8px",
+                padding: "8px 16px",
+                borderRadius: "9999px",
+                border: "1px solid rgba(111,175,111,0.3)",
+                background: "linear-gradient(135deg, rgba(111,175,111,0.1), rgba(59,110,59,0.05))",
+                color: "#3B6E3B",
+                fontSize: "14px",
+                fontWeight: "600",
+                cursor: "pointer",
+                transition: "all 0.2s ease",
+                boxShadow: "0 2px 6px rgba(59,110,59,0.06)"
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.transform = "translateY(-2px)";
+                e.currentTarget.style.boxShadow = "0 4px 12px rgba(59,110,59,0.12)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = "translateY(0)";
+                e.currentTarget.style.boxShadow = "0 2px 6px rgba(59,110,59,0.06)";
+              }}
+            >
+              <span>🌙</span>
+              <span>End Day</span>
+            </button>
+            <button
+              onClick={onShowWeek}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "8px",
+                padding: "8px 16px",
+                borderRadius: "9999px",
+                border: "1px solid rgba(111,175,111,0.3)",
+                background: "linear-gradient(135deg, rgba(167,211,167,0.1), rgba(111,175,111,0.05))",
+                color: "#3B6E3B",
+                fontSize: "14px",
+                fontWeight: "600",
+                cursor: "pointer",
+                transition: "all 0.2s ease",
+                boxShadow: "0 2px 6px rgba(59,110,59,0.06)"
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.transform = "translateY(-2px)";
+                e.currentTarget.style.boxShadow = "0 4px 12px rgba(59,110,59,0.12)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = "translateY(0)";
+                e.currentTarget.style.boxShadow = "0 2px 6px rgba(59,110,59,0.06)";
+              }}
+            >
+              <span>📅</span>
+              <span>Week</span>
+            </button>
+            <button
+              onClick={onShowPool}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "8px",
+                padding: "8px 16px",
+                borderRadius: "9999px",
+                border: "1px solid rgba(111,175,111,0.3)",
+                background: "linear-gradient(135deg, rgba(167,211,167,0.1), rgba(111,175,111,0.05))",
+                color: "#3B6E3B",
+                fontSize: "14px",
+                fontWeight: "600",
+                cursor: "pointer",
+                transition: "all 0.2s ease",
+                boxShadow: "0 2px 6px rgba(59,110,59,0.06)"
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.transform = "translateY(-2px)";
+                e.currentTarget.style.boxShadow = "0 4px 12px rgba(59,110,59,0.12)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = "translateY(0)";
+                e.currentTarget.style.boxShadow = "0 2px 6px rgba(59,110,59,0.06)";
+              }}
+            >
+              <span>🌊</span>
+              <span>Pool</span>
+            </button>
+            <button
+              onClick={toggleView}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "8px",
+                padding: "8px 16px",
+                borderRadius: "9999px",
+                border: "1px solid rgba(111,175,111,0.3)",
+                background: "linear-gradient(135deg, rgba(167,211,167,0.1), rgba(111,175,111,0.05))",
+                color: "#3B6E3B",
+                fontSize: "14px",
+                fontWeight: "600",
+                cursor: "pointer",
+                transition: "all 0.2s ease",
+                boxShadow: "0 2px 6px rgba(59,110,59,0.06)"
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.transform = "translateY(-2px)";
+                e.currentTarget.style.boxShadow = "0 4px 12px rgba(59,110,59,0.12)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = "translateY(0)";
+                e.currentTarget.style.boxShadow = "0 2px 6px rgba(59,110,59,0.06)";
+              }}
+            >
+              <span>{viewMode === 'list' ? '📋' : '📅'}</span>
+              <span>{viewMode === 'list' ? 'List' : 'Calendar'}</span>
+            </button>
+            <div className="header-decor" aria-hidden>
+              <LeafIcon size={40} fill="#3B6E3B" />
+            </div>
           </div>
         </div>
 
@@ -262,9 +701,28 @@ export default function Today() {
             <div className="preset-text">{Math.floor(totalMinutes/60)}h {totalMinutes%60}m</div>
             <div className="preset-sub">Scheduled</div>
           </div>
-          <div className="preset-pill" style={{ cursor: "default", minWidth: "140px", background: overflowing ? "linear-gradient(180deg, rgba(255,200,200,0.15), rgba(255,220,220,0.08))" : undefined, boxShadow: "0 2px 8px rgba(59,110,59,0.04)" }}>
-            <div className="preset-text" style={{ color: overflowing ? "#b91c1c" : undefined }}>{Math.floor(Math.abs(freeTime)/60)}h {Math.abs(freeTime)%60}m</div>
-            <div className="preset-sub">{overflowing ? "Overflow" : "Free Time"}</div>
+          <div className="preset-pill" style={{
+            cursor: "default",
+            minWidth: "140px",
+            background: overflowData.severity === 'critical'
+              ? "linear-gradient(180deg, rgba(255,200,200,0.2), rgba(255,220,220,0.1))"
+              : overflowData.severity === 'warning'
+              ? "linear-gradient(180deg, rgba(255,230,200,0.15), rgba(255,240,220,0.08))"
+              : undefined,
+            boxShadow: "0 2px 8px rgba(59,110,59,0.04)"
+          }}>
+            <div className="preset-text" style={{
+              color: overflowData.severity === 'critical'
+                ? "#b91c1c"
+                : overflowData.severity === 'warning'
+                ? "#ea580c"
+                : undefined
+            }}>
+              {Math.floor(Math.abs(freeTime)/60)}h {Math.abs(freeTime)%60}m
+            </div>
+            <div className="preset-sub">
+              {overflowing ? `Overflow (${overflowData.severity})` : "Free Time"}
+            </div>
           </div>
         </div>
 
@@ -410,10 +868,21 @@ export default function Today() {
         <div className="timeline-wrap">
           <div className="timeline-scale">
             <span>{availability?.start || "09:00"}</span>
-            <span>Your Timeline</span>
+            <span>{viewMode === 'list' ? 'Your Timeline' : 'Calendar View'}</span>
             <span>{availability?.end || "17:00"}</span>
           </div>
 
+          {viewMode === 'calendar' ? (
+            <div style={{
+              borderRadius: "14px",
+              border: "1px solid rgba(111,175,111,0.15)",
+              overflow: "hidden",
+              background: "#fff",
+              animation: "fadeIn 0.3s ease-out"
+            }}>
+              <DetailedTimeline tasks={taskBlocks} availability={availability} />
+            </div>
+          ) : (
           <div className="timeline-bar" style={{ height: "auto", minHeight: "120px", padding: "16px 12px", maxHeight: "400px", overflowY: "auto" }}>
             {tasks.length === 0 ? (
               <div style={{ textAlign: "center", padding: "30px 20px", opacity: 0.6 }}>
@@ -421,13 +890,244 @@ export default function Today() {
                 <p className="muted" style={{ marginTop: "12px", fontSize: "13px" }}>Add tasks to see your timeline</p>
               </div>
             ) : (
-              <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-                {taskBlocks.map((task, i) => (
+              <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+                {/* Carried Over Tasks Section */}
+                {taskBlocks.filter(t => t.carriedOver).length > 0 && (
+                  <div>
+                    <div style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "8px",
+                      marginBottom: "12px",
+                      padding: "8px 12px",
+                      background: "linear-gradient(90deg, rgba(255,165,0,0.08), rgba(255,165,0,0.04))",
+                      borderRadius: "8px",
+                      border: "1px solid rgba(255,165,0,0.2)"
+                    }}>
+                      <span style={{ fontSize: "16px" }}>🍂</span>
+                      <h3 style={{ margin: 0, fontSize: "14px", fontWeight: "700", color: "#d97706" }}>
+                        Carried from previous days ({taskBlocks.filter(t => t.carriedOver).length})
+                      </h3>
+                    </div>
+                    <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                      {taskBlocks.filter(task => task.carriedOver).filter(task => {
+                        if (focusModeEnabled && activeTaskId) {
+                          if (task.id === activeTaskId) return true;
+                          if (task.completed) return false;
+                          const activeIndex = taskBlocks.findIndex(t => t.id === activeTaskId);
+                          const currentIndex = taskBlocks.findIndex(t => t.id === task.id);
+                          return currentIndex <= activeIndex;
+                        }
+                        return true;
+                      }).map((task, i) => {
+                        const isActiveTask = activeTaskId === task.id;
+                        const shouldDim = activeTaskId && !isActiveTask;
+
+                        return (
+                          <div
+                            key={task.id}
+                            className={isActiveTask ? 'task-focused' : ''}
+                            onClick={() => handleEditTask(task)}
+                            style={{
+                              background: "linear-gradient(90deg, rgba(255,200,150,0.12), rgba(255,210,160,0.08))",
+                              border: hasConflict(task.id)
+                                ? "2px solid #f59e0b"
+                                : isLate(task)
+                                ? "2px solid #ea580c"
+                                : "1px solid rgba(255,165,0,0.25)",
+                              borderRadius: "12px",
+                              padding: "14px 16px",
+                              display: "flex",
+                              alignItems: "center",
+                              gap: "12px",
+                              position: "relative",
+                              overflow: "hidden",
+                              opacity: shouldDim ? 0.4 : (task.completed ? 0.6 : 1),
+                              transition: "all 0.3s ease",
+                              animation: "slideInFromLeft 0.4s ease-out",
+                              cursor: "pointer",
+                              boxShadow: hasConflict(task.id)
+                                ? "0 2px 12px rgba(245,158,11,0.15)"
+                                : isActiveTask
+                                ? "0 0 0 3px rgba(111,175,111,0.3)"
+                                : "0 2px 8px rgba(255,165,0,0.08)"
+                            }}
+                            onMouseEnter={(e) => {
+                              e.currentTarget.style.boxShadow = "0 4px 16px rgba(255,165,0,0.15)";
+                              e.currentTarget.style.transform = "translateX(4px)";
+                            }}
+                            onMouseLeave={(e) => {
+                              e.currentTarget.style.boxShadow = "0 2px 8px rgba(255,165,0,0.08)";
+                              e.currentTarget.style.transform = "translateX(0)";
+                            }}
+                          >
+                            <div style={{
+                              position: "absolute",
+                              left: 0,
+                              top: 0,
+                              bottom: 0,
+                              width: "3px",
+                              background: "linear-gradient(180deg, #f59e0b, #d97706)"
+                            }} />
+
+                            <div style={{
+                              width: "36px",
+                              height: "36px",
+                              borderRadius: "50%",
+                              background: "linear-gradient(135deg, #f59e0b, #d97706)",
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              color: "#fff",
+                              fontSize: "14px",
+                              fontWeight: "700",
+                              flexShrink: 0,
+                              boxShadow: "0 4px 10px rgba(245,158,11,0.2)"
+                            }}>
+                              🍂
+                            </div>
+
+                            <div style={{ flex: 1 }}>
+                              <div style={{ fontSize: "15px", fontWeight: "700", color: "#c2410c", marginBottom: "4px", display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap" }}>
+                                <span>{task.name}{task.completed ? " (done)" : ""}</span>
+                                {task.attempts > 0 && (
+                                  <span style={{
+                                    fontSize: "11px",
+                                    padding: "2px 6px",
+                                    background: "rgba(245,158,11,0.2)",
+                                    color: "#d97706",
+                                    borderRadius: "4px",
+                                    fontWeight: "600",
+                                    display: "inline-flex",
+                                    alignItems: "center",
+                                    gap: "3px"
+                                  }}>
+                                    🔁 {task.attempts}x
+                                  </span>
+                                )}
+                                {hasConflict(task.id) && (
+                                  <span style={{
+                                    fontSize: "11px",
+                                    padding: "2px 6px",
+                                    background: "rgba(245,158,11,0.15)",
+                                    color: "#d97706",
+                                    borderRadius: "4px",
+                                    fontWeight: "600",
+                                    display: "inline-flex",
+                                    alignItems: "center",
+                                    gap: "3px"
+                                  }}>
+                                    ⚠️ Conflict
+                                  </span>
+                                )}
+                                <span style={{ fontSize: "11px", padding: "2px 6px", background: "rgba(255,165,0,0.2)", color: "#c2410c", borderRadius: "4px", fontWeight: "600" }}>from {task.originalDate}</span>
+                              </div>
+                              <div style={{ fontSize: "12px", color: "#92400e" }}>
+                                {minutesToHHMM(task.start)} — {minutesToHHMM(task.end)} • {renderBlockTimeText(task)}
+                              </div>
+                              {task.attempts >= 3 && (
+                                <div style={{
+                                  fontSize: "11px",
+                                  color: "#d97706",
+                                  marginTop: "6px",
+                                  padding: "4px 8px",
+                                  background: "rgba(255,165,0,0.1)",
+                                  borderRadius: "6px",
+                                  border: "1px dashed rgba(245,158,11,0.3)"
+                                }}>
+                                  ⚠️ Consider breaking this into smaller steps
+                                </div>
+                              )}
+                            </div>
+
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                deleteTask(task.id);
+                              }}
+                              style={{
+                                width: "28px",
+                                height: "28px",
+                                borderRadius: "50%",
+                                border: "1px solid rgba(255,165,0,0.3)",
+                                background: "#fff",
+                                color: "#999",
+                                fontSize: "16px",
+                                cursor: "pointer",
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                transition: "all 0.2s",
+                                flexShrink: 0
+                              }}
+                              onMouseEnter={(e) => {
+                                e.currentTarget.style.background = "#fee";
+                                e.currentTarget.style.color = "#c00";
+                                e.currentTarget.style.borderColor = "rgba(200,0,0,0.3)";
+                                e.currentTarget.style.transform = "scale(1.1)";
+                              }}
+                              onMouseLeave={(e) => {
+                                e.currentTarget.style.background = "#fff";
+                                e.currentTarget.style.color = "#999";
+                                e.currentTarget.style.borderColor = "rgba(255,165,0,0.3)";
+                                e.currentTarget.style.transform = "scale(1)";
+                              }}
+                            >
+                              ×
+                            </button>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {/* Today's Tasks Section */}
+                {taskBlocks.filter(t => !t.carriedOver).length > 0 && (
+                  <div>
+                    <div style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "8px",
+                      marginBottom: "12px",
+                      padding: "8px 12px",
+                      background: "linear-gradient(90deg, rgba(111,175,111,0.08), rgba(111,175,111,0.04))",
+                      borderRadius: "8px",
+                      border: "1px solid rgba(111,175,111,0.2)"
+                    }}>
+                      <span style={{ fontSize: "16px" }}>🌿</span>
+                      <h3 style={{ margin: 0, fontSize: "14px", fontWeight: "700", color: "#3B6E3B" }}>
+                        Today's tasks ({taskBlocks.filter(t => !t.carriedOver).length})
+                      </h3>
+                    </div>
+                    <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                {taskBlocks.filter(task => !task.carriedOver).filter(task => {
+                  // In focus mode, hide completed tasks and future tasks (but show active task)
+                  if (focusModeEnabled && activeTaskId) {
+                    if (task.id === activeTaskId) return true;
+                    if (task.completed) return false;
+                    // Hide tasks after the active task
+                    const activeIndex = taskBlocks.findIndex(t => t.id === activeTaskId);
+                    const currentIndex = taskBlocks.findIndex(t => t.id === task.id);
+                    return currentIndex <= activeIndex;
+                  }
+                  return true;
+                }).map((task, i) => {
+                  const isActiveTask = activeTaskId === task.id;
+                  const shouldDim = activeTaskId && !isActiveTask;
+
+                  return (
                   <div
                     key={task.id}
+                    className={isActiveTask ? 'task-focused' : ''}
+                    onClick={() => handleEditTask(task)}
                     style={{
                       background: "linear-gradient(90deg, rgba(167,211,167,0.12), rgba(111,175,111,0.08))",
-                      border: "1px solid rgba(111,175,111,0.15)",
+                      border: hasConflict(task.id)
+                        ? "2px solid #f59e0b"
+                        : isLate(task)
+                        ? "2px solid #ea580c"
+                        : "1px solid rgba(111,175,111,0.15)",
                       borderRadius: "12px",
                       padding: "14px 16px",
                       display: "flex",
@@ -435,10 +1135,15 @@ export default function Today() {
                       gap: "12px",
                       position: "relative",
                       overflow: "hidden",
-                      opacity: task.completed ? 0.6 : 1,
+                      opacity: shouldDim ? 0.4 : (task.completed ? 0.6 : 1),
                       transition: "all 0.3s ease",
                       animation: "slideInFromLeft 0.4s ease-out",
-                      boxShadow: "0 2px 8px rgba(59,110,59,0.05)"
+                      cursor: "pointer",
+                      boxShadow: hasConflict(task.id)
+                        ? "0 2px 12px rgba(245,158,11,0.15)"
+                        : isActiveTask
+                        ? "0 0 0 3px rgba(111,175,111,0.3)"
+                        : "0 2px 8px rgba(59,110,59,0.05)"
                     }}
                     onMouseEnter={(e) => {
                       e.currentTarget.style.boxShadow = "0 4px 16px rgba(59,110,59,0.12)";
@@ -476,17 +1181,63 @@ export default function Today() {
                     </div>
 
                     <div style={{ flex: 1 }}>
-                      <div style={{ fontSize: "15px", fontWeight: "700", color: "#3B6E3B", marginBottom: "4px" }}>
-                        {task.name}{task.completed ? " (done)" : ""}
-                        {task.carriedOver && <span style={{ fontSize: "11px", marginLeft: "6px", padding: "2px 6px", background: "rgba(255,165,0,0.15)", color: "#d97706", borderRadius: "4px", fontWeight: "600" }}>from {task.originalDate}</span>}
+                      <div style={{ fontSize: "15px", fontWeight: "700", color: "#3B6E3B", marginBottom: "4px", display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap" }}>
+                        <span>{task.name}{task.completed ? " (done)" : ""}</span>
+                        {task.attempts > 0 && (
+                          <span style={{
+                            fontSize: "11px",
+                            padding: "2px 6px",
+                            background: "rgba(245,158,11,0.2)",
+                            color: "#d97706",
+                            borderRadius: "4px",
+                            fontWeight: "600",
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: "3px"
+                          }}>
+                            🔁 {task.attempts}x
+                          </span>
+                        )}
+                        {hasConflict(task.id) && (
+                          <span style={{
+                            fontSize: "11px",
+                            padding: "2px 6px",
+                            background: "rgba(245,158,11,0.15)",
+                            color: "#d97706",
+                            borderRadius: "4px",
+                            fontWeight: "600",
+                            display: "inline-flex",
+                            alignItems: "center",
+                            gap: "3px"
+                          }}>
+                            ⚠️ Conflict
+                          </span>
+                        )}
+                        {task.carriedOver && <span style={{ fontSize: "11px", padding: "2px 6px", background: "rgba(255,165,0,0.15)", color: "#d97706", borderRadius: "4px", fontWeight: "600" }}>from {task.originalDate}</span>}
                       </div>
                       <div style={{ fontSize: "12px", color: "#6B8E6B" }}>
                         {minutesToHHMM(task.start)} — {minutesToHHMM(task.end)} • {renderBlockTimeText(task)}
                       </div>
+                      {task.attempts >= 3 && (
+                        <div style={{
+                          fontSize: "11px",
+                          color: "#d97706",
+                          marginTop: "6px",
+                          padding: "4px 8px",
+                          background: "rgba(255,165,0,0.1)",
+                          borderRadius: "6px",
+                          border: "1px dashed rgba(245,158,11,0.3)"
+                        }}>
+                          ⚠️ Consider breaking this into smaller steps
+                        </div>
+                      )}
                     </div>
 
                     <button
-                      onClick={() => deleteTask(task.id)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        deleteTask(task.id);
+                      }}
                       style={{
                         width: "28px",
                         height: "28px",
@@ -518,10 +1269,15 @@ export default function Today() {
                       ×
                     </button>
                   </div>
-                ))}
+                  );
+                })}
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </div>
+          )}
         </div>
 
         {tasks.length > 0 && (
@@ -532,87 +1288,41 @@ export default function Today() {
           </div>
         )}
 
-        {/* ---------- Finish Modal (in-app) ---------- */}
-        {showFinishPrompt && (
-          <div style={{
-            position: "fixed",
-            inset: 0,
-            background: "rgba(0,0,0,0.4)",
-            backdropFilter: "blur(4px)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            zIndex: 9999,
-            animation: "fadeIn 0.2s ease-out"
-          }}>
-            <div style={{
-              background: "#fff",
-              padding: 28,
-              borderRadius: 20,
-              width: "92%",
-              maxWidth: 420,
-              textAlign: "center",
-              boxShadow: "0 30px 80px rgba(0,0,0,0.25)",
-              animation: "scaleIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)"
-            }}>
-              <div style={{ fontSize: 24, fontWeight: 900, color: "#123a12", marginBottom: 12 }}>Task finished?</div>
-              <p style={{ marginTop: 8, color: "#4B6B4B", fontSize: 15, lineHeight: 1.5 }}>
-                Did you complete <strong style={{ color: "#3B6E3B" }}>{activeTask?.name}</strong>?
-              </p>
+        {/* ---------- Reschedule Modal ---------- */}
+        {showRescheduleModal && activeTask && (
+          <RescheduleModal
+            task={activeTask}
+            availability={availability}
+            existingTasks={taskBlocks}
+            onComplete={handleComplete}
+            onContinue={handleContinue}
+            onLaterToday={handleLaterToday}
+            onTomorrow={handleTomorrow}
+            onBackToPool={handleBackToPool}
+            onPickTime={handlePickTime}
+            onBreakTask={handleBreakTask}
+            onClose={() => setShowRescheduleModal(false)}
+          />
+        )}
 
-              <div style={{ display: "flex", gap: 12, marginTop: 20 }}>
-                <button
-                  onClick={() => {
-                    // Not yet: give a minute and resume
-                    finishTaskContinue();
-                  }}
-                  className="btn ghost"
-                  style={{
-                    flex: 1
-                  }}
-                >
-                  Not yet
-                </button>
+        {/* ---------- Edit Task Dialog ---------- */}
+        {showEditDialog && editingTask && (
+          <EditTaskDialog
+            task={editingTask}
+            onSave={handleSaveEditedTask}
+            onClose={() => {
+              setShowEditDialog(false);
+              setEditingTask(null);
+            }}
+          />
+        )}
 
-                <button
-                  onClick={() => {
-                    // Yes done
-                    finishTaskConfirmed();
-                  }}
-                  className="btn primary"
-                  style={{
-                    flex: 1
-                  }}
-                >
-                  Yes, done
-                </button>
-              </div>
-
-              <button
-                onClick={() => {
-                  // close modal and resume with small extra time if user accidentally opened it
-                  setShowFinishPrompt(false);
-                  if (activeTaskId) {
-                    setSecondsLeft(prev => Math.max(1, prev));
-                    timerRef.current = setInterval(() => setSecondsLeft(s => s - 1), 1000);
-                  }
-                }}
-                style={{ 
-                  marginTop: 16, 
-                  background: "transparent", 
-                  border: "none", 
-                  color: "#666", 
-                  cursor: "pointer",
-                  fontSize: 14,
-                  transition: "color 0.2s"
-                }}
-                onMouseEnter={(e) => e.currentTarget.style.color = "#333"}
-                onMouseLeave={(e) => e.currentTarget.style.color = "#666"}
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
+        {/* ---------- Celebration Animation ---------- */}
+        {showCelebration && (
+          <Celebration
+            type={showCelebration}
+            onComplete={() => setShowCelebration(null)}
+          />
         )}
       </div>
     </div>

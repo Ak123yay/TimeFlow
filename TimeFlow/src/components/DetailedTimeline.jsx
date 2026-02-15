@@ -1,5 +1,4 @@
 import React from "react";
-import { loadTasks } from "../utils/storage"; // reuse your loader
 import "../App.css";
 
 function minutesToHHMM(minutes) {
@@ -8,49 +7,95 @@ function minutesToHHMM(minutes) {
   return `${String(h).padStart(2,"0")}:${String(m).padStart(2,"0")}`;
 }
 
-export default function DetailedTimeline() {
-  const tasks = loadTasks();
-
-  // Generate task blocks
+export default function DetailedTimeline({ tasks = [], availability = { start: "09:00", end: "17:00" } }) {
+  // Generate task blocks with positioning
   const hourHeight = 60; // pixels per hour
 
+  // Calculate start hour from availability
+  const startHour = availability.start ? parseInt(availability.start.split(":")[0]) : 9;
+  const endHour = availability.end ? parseInt(availability.end.split(":")[0]) : 17;
+
   const blocks = tasks.map(task => {
-    const start = task.startTime ? task.startTime.split(":").map(Number) : [9,0]; // fallback 9:00
-    const startMinutes = start[0]*60 + start[1];
-    const top = (startMinutes / 60) * hourHeight;
+    // Use task.start (in minutes) if it exists, otherwise calculate from startTime
+    const startMinutes = task.start || 0;
+    const top = ((startMinutes / 60) - startHour) * hourHeight;
     const height = (task.duration / 60) * hourHeight;
-    return { ...task, top, height };
+    return { ...task, top, height, startMinutes };
   });
 
-  // generate hour labels
-  const hours = Array.from({length:24}, (_)=>_);
+  // Generate hour labels based on availability
+  const totalHours = endHour - startHour;
+  const hours = Array.from({ length: totalHours + 1 }, (_, i) => startHour + i);
 
   return (
-    <div className="detailed-timeline-wrap" style={{position:"relative", width:"100%", minHeight: `${24*hourHeight}px`, border:"1px solid #c5e1c5", borderRadius:"12px", overflowY:"auto"}}>
-      {hours.map(h => (
-        <div key={h} style={{position:"absolute", top: `${h*hourHeight}px`, left:0, width:"100%", borderTop:"1px solid rgba(59,110,59,0.08)", fontSize:"12px", color:"#4B6B4B", paddingLeft:"8px"}}>
-          {String(h).padStart(2,"0")}:00
+    <div className="detailed-timeline-wrap" style={{
+      position: "relative",
+      width: "100%",
+      minHeight: `${totalHours * hourHeight}px`,
+      border: "1px solid #c5e1c5",
+      borderRadius: "12px",
+      overflowY: "auto",
+      background: "#fff"
+    }}>
+      {/* Hour grid lines */}
+      {hours.map((h, i) => (
+        <div key={h} style={{
+          position: "absolute",
+          top: `${i * hourHeight}px`,
+          left: 0,
+          width: "100%",
+          borderTop: "1px solid rgba(59,110,59,0.08)",
+          fontSize: "12px",
+          color: "#4B6B4B",
+          paddingLeft: "8px",
+          height: hourHeight
+        }}>
+          {String(h).padStart(2, "0")}:00
         </div>
       ))}
 
-      {blocks.map((task) => (
-        <div key={task.id} style={{
-          position:"absolute",
-          top: `${task.top}px`,
-          left: "60px",
-          width: "calc(100% - 70px)",
-          height: `${task.height}px`,
-          background: "linear-gradient(135deg, #6FAF6F, #3B6E3B)",
-          borderRadius:"8px",
-          color:"#fff",
-          padding:"4px 8px",
-          boxShadow:"0 2px 6px rgba(0,0,0,0.12)",
-          overflow:"hidden"
-        }}>
-          <div style={{fontWeight:"700"}}>{task.name}</div>
-          <div style={{fontSize:"12px"}}>{task.startTime} - {minutesToHHMM(task.startTime ? task.startTime.split(":")[0]*60 + parseInt(task.startTime.split(":")[1]) + task.duration : 540 + task.duration)}</div>
-        </div>
-      ))}
+      {/* Task blocks */}
+      {blocks.map((task) => {
+        const taskStart = minutesToHHMM(task.start || task.startMinutes);
+        const taskEnd = minutesToHHMM((task.start || task.startMinutes) + task.duration);
+
+        return (
+          <div key={task.id} style={{
+            position: "absolute",
+            top: `${task.top}px`,
+            left: "60px",
+            width: "calc(100% - 70px)",
+            height: `${Math.max(task.height, 20)}px`,
+            background: task.attempts >= 3
+              ? "linear-gradient(135deg, #fbbf24, #f59e0b)"
+              : task.carriedOver
+              ? "linear-gradient(135deg, #f59e0b, #d97706)"
+              : task.completed
+              ? "linear-gradient(135deg, rgba(111,175,111,0.5), rgba(59,110,59,0.5))"
+              : "linear-gradient(135deg, #6FAF6F, #3B6E3B)",
+            borderRadius: "8px",
+            color: "#fff",
+            padding: "4px 8px",
+            boxShadow: "0 2px 6px rgba(0,0,0,0.12)",
+            overflow: "hidden",
+            display: "flex",
+            flexDirection: "column",
+            justifyContent: "center"
+          }}>
+            <div style={{ fontWeight: "700", fontSize: "13px" }}>{task.name}</div>
+            <div style={{ fontSize: "11px", opacity: 0.9 }}>
+              {taskStart} - {taskEnd} ({task.duration} min)
+            </div>
+            {task.completed && <div style={{ fontSize: "10px", marginTop: "2px" }}>✓ Completed</div>}
+            {task.carriedOver && <div style={{ fontSize: "10px", marginTop: "2px" }}>🍂 Carried over</div>}
+            {task.attempts > 0 && (
+              <div style={{ fontSize: "10px", marginTop: "2px" }}>
+                🔁 Rescheduled {task.attempts}x
+              </div>
+            )}
+          </div>
+        );
+      })}
     </div>
   );
 }

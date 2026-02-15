@@ -1,21 +1,115 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Setup from "./components/Setup";
 import Today from "./components/Today";
+import DayReflection from "./components/DayReflection";
+import WeeklyView from "./components/WeeklyView";
+import WeeklyPool from "./components/WeeklyPool";
+import Onboarding from "./components/Onboarding";
 import { loadAvailability } from "./utils/storage";
 import "./App.css";
 
+function getTimePeriod() {
+  const hour = new Date().getHours();
+  if (hour >= 5 && hour < 8) return 'dawn';
+  if (hour >= 8 && hour < 17) return 'day';
+  if (hour >= 17 && hour < 20) return 'dusk';
+  return 'night';
+}
+
 export default function App() {
+  const [onboardingDone, setOnboardingDone] = useState(() => {
+    return localStorage.getItem('onboardingCompleted') === 'true';
+  });
+
   const [setupDone, setSetupDone] = useState(() => {
     const availability = loadAvailability();
     return !!(availability && availability.start && availability.end);
   });
 
+  const [currentView, setCurrentView] = useState('today'); // 'today' | 'reflection' | 'week' | 'pool'
+  const [timePeriod, setTimePeriod] = useState(getTimePeriod());
+
+  // Hash routing
+  useEffect(() => {
+    const handleHashChange = () => {
+      const hash = window.location.hash;
+      if (hash === '#/week') {
+        setCurrentView('week');
+      } else if (hash === '#/reflection') {
+        setCurrentView('reflection');
+      } else if (hash === '#/pool') {
+        setCurrentView('pool');
+      } else {
+        setCurrentView('today');
+      }
+    };
+
+    handleHashChange(); // Initial
+    window.addEventListener('hashchange', handleHashChange);
+    return () => window.removeEventListener('hashchange', handleHashChange);
+  }, []);
+
+  // Update time period every minute
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setTimePeriod(getTimePeriod());
+    }, 60000); // Check every minute
+    return () => clearInterval(interval);
+  }, []);
+
+  const showReflection = () => {
+    window.location.hash = '#/reflection';
+  };
+
+  const showWeek = () => {
+    window.location.hash = '#/week';
+  };
+
+  const showPool = () => {
+    window.location.hash = '#/pool';
+  };
+
+  const showToday = () => {
+    window.location.hash = '#/today';
+  };
+
   return (
-    <div className="App">
-      {!setupDone ? (
+    <div className={`App app-${timePeriod}`}>
+      {/* Floating leaves background */}
+      <div className="floating-leaves" aria-hidden="true">
+        {[...Array(5)].map((_, i) => (
+          <div
+            key={i}
+            className="floating-leaf"
+            style={{
+              left: `${20 + i * 20}%`,
+              animationDelay: `${i * 4}s`,
+              '--drift': `${(Math.random() - 0.5) * 200}px`
+            }}
+          >
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <ellipse cx="12" cy="12" rx="8" ry="4" transform="rotate(-45 12 12)" fill="#6FAF6F" opacity="0.3" />
+              <line x1="6" y1="18" x2="18" y2="6" stroke="#2E6B2E" strokeWidth="1" strokeLinecap="round" opacity="0.3" />
+            </svg>
+          </div>
+        ))}
+      </div>
+
+      {!onboardingDone ? (
+        <Onboarding onComplete={() => setOnboardingDone(true)} />
+      ) : !setupDone ? (
         <Setup onDone={() => setSetupDone(true)} />
+      ) : currentView === 'reflection' ? (
+        <DayReflection
+          todayDate={new Date().toISOString().slice(0, 10)}
+          onComplete={showToday}
+        />
+      ) : currentView === 'week' ? (
+        <WeeklyView onBackToToday={showToday} />
+      ) : currentView === 'pool' ? (
+        <WeeklyPool onNavigateToToday={showToday} />
       ) : (
-        <Today />
+        <Today onEndDay={showReflection} onShowWeek={showWeek} onShowPool={showPool} />
       )}
     </div>
   );
