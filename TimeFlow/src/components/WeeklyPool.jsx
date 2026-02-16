@@ -116,6 +116,9 @@ export default function WeeklyPool({ onNavigateToToday }) {
       <MobileLayout showBottomNav={true} onNavigate={(tab) => {
         haptic.light();
         if (tab === 'today') onNavigateToToday();
+        else if (tab === 'week') window.location.hash = '#/week';
+        else if (tab === 'stats') window.location.hash = '#/reflection';
+        else if (tab === 'streak') window.location.hash = '#/streak';
       }} activeTab="pool">
 
         {/* Header */}
@@ -140,7 +143,7 @@ export default function WeeklyPool({ onNavigateToToday }) {
             placeholder="What do you want to work on?"
             style={{
               width: '100%', boxSizing: 'border-box',
-              fontSize: '15px', padding: '12px 14px',
+              fontSize: '16px', padding: '12px 14px',
               border: '1.5px solid #E5E5E5', borderRadius: '10px',
               background: '#FAFAFA', outline: 'none', marginBottom: '10px'
             }}
@@ -158,7 +161,7 @@ export default function WeeklyPool({ onNavigateToToday }) {
               onChange={(e) => setNewTaskDeadline(e.target.value)}
               style={{
                 width: '100%', boxSizing: 'border-box',
-                fontSize: '14px', padding: '10px 12px',
+                fontSize:  '16px', padding: '10px 12px',
                 border: '1.5px solid #E5E5E5', borderRadius: '10px',
                 background: '#FAFAFA', outline: 'none'
               }}

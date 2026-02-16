@@ -244,7 +244,7 @@ export default function DayReflection({ todayDate, onComplete }) {
             style={{
               width: '100%', boxSizing: 'border-box', minHeight: '80px',
               padding: '12px 14px', borderRadius: '12px', border: '1.5px solid #E5E5E5',
-              fontSize: '13px', lineHeight: '1.5', fontFamily: 'inherit',
+              fontSize: '16px', lineHeight: '1.5', fontFamily: 'inherit',
               resize: 'vertical', background: '#FAFAFA', outline: 'none'
             }}
           />

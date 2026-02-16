@@ -2,6 +2,7 @@ import { useState, useEffect, lazy, Suspense } from "react";
 import Setup from "./components/Setup";
 import Today from "./components/Today";
 import DayReflection from "./components/DayReflection";
+import Streak from "./components/Streak";
 // OPTIMIZED: Lazy load WeeklyView and WeeklyPool to reduce initial bundle size
 const WeeklyView = lazy(() => import("./components/WeeklyView"));
 const WeeklyPool = lazy(() => import("./components/WeeklyPool"));
@@ -34,7 +35,7 @@ export default function App() {
     return !!(availability && availability.start && availability.end);
   });
 
-  const [currentView, setCurrentView] = useState('today'); // 'today' | 'reflection' | 'week' | 'pool'
+  const [currentView, setCurrentView] = useState('today'); // 'today' | 'reflection' | 'week' | 'pool' | 'streak'
   const [timePeriod, setTimePeriod] = useState(getTimePeriod());
 
   // Hash routing
@@ -47,6 +48,8 @@ export default function App() {
         setCurrentView('reflection');
       } else if (hash === '#/pool') {
         setCurrentView('pool');
+      } else if (hash === '#/streak') {
+        setCurrentView('streak');
       } else {
         setCurrentView('today');
       }
@@ -75,6 +78,10 @@ export default function App() {
 
   const showPool = () => {
     window.location.hash = '#/pool';
+  };
+
+  const showStreak = () => {
+    window.location.hash = '#/streak';
   };
 
   const showToday = () => {
@@ -120,6 +127,13 @@ export default function App() {
         <Suspense fallback={<LoadingFallback />}>
           <WeeklyPool onNavigateToToday={showToday} />
         </Suspense>
+      ) : currentView === 'streak' ? (
+        <Streak onNavigate={(view) => {
+          if (view === 'today') showToday();
+          else if (view === 'week') showWeek();
+          else if (view === 'pool') showPool();
+          else if (view === 'stats') showReflection();
+        }} />
       ) : (
         <Today onEndDay={showReflection} onShowWeek={showWeek} onShowPool={showPool} />
       )}

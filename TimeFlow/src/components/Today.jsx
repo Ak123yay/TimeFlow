@@ -255,18 +255,9 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
   // Lock body scroll when add sheet opens (iOS fix)
   useEffect(() => {
     if (showAddSheet && isMobile) {
-      // Lock scroll
-      const scrollY = window.scrollY;
-      document.body.style.position = 'fixed';
-      document.body.style.top = `-${scrollY}px`;
-      document.body.style.width = '100%';
+      document.body.style.overflow = 'hidden';
     } else {
-      // Unlock scroll
-      const scrollY = document.body.style.top;
-      document.body.style.position = '';
-      document.body.style.top = '';
-      document.body.style.width = '';
-      window.scrollTo(0, parseInt(scrollY || '0') * -1);
+      document.body.style.overflow = '';
     }
   }, [showAddSheet, isMobile]);
 
@@ -976,6 +967,7 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
       if (tab === 'week') onShowWeek();
       else if (tab === 'pool') onShowPool();
       else if (tab === 'stats') onEndDay();
+      else if (tab === 'streak') window.location.hash = '#/streak';
     };
 
     const carriedTasks = taskBlocks.filter(t => t.carriedOver);
@@ -1248,11 +1240,11 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
               backdropFilter: 'blur(4px)', WebkitBackdropFilter: 'blur(4px)', zIndex: 1000
             }} />
             <div style={{
-              position: 'fixed', bottom: 0, left: 0, right: 0,
+              position: 'fixed', bottom: 'calc(56px + env(safe-area-inset-bottom))', left: 0, right: 0,
               background: '#fff', borderRadius: '18px 18px 0 0',
-              padding: '14px 18px', paddingBottom: 'calc(16px + env(safe-area-inset-bottom))',
+              padding: '14px 18px 20px',
               zIndex: 1001, boxShadow: '0 -4px 20px rgba(0,0,0,0.1)',
-              maxHeight: '80vh', overflowY: 'auto', animation: 'slideUp 0.3s ease-out'
+              maxHeight: 'calc(80vh - 56px - env(safe-area-inset-bottom))', overflowY: 'auto', animation: 'slideUp 0.3s ease-out'
             }}>
               <div style={{ width: '32px', height: '4px', background: '#D1D5DB', borderRadius: '99px', margin: '0 auto 12px' }} />
               <h3 style={{ fontSize: '16px', fontWeight: 700, color: '#1A1A1A', margin: '0 0 12px', textAlign: 'center' }}>New Task</h3>
@@ -1260,7 +1252,7 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
               {/* Name */}
               <input
                 type="text" value={taskName} onChange={(e) => setTaskName(e.target.value)}
-                placeholder="What needs to be done?" autoFocus
+                placeholder="What needs to be done?"
                 style={{
                   width: '100%', boxSizing: 'border-box', fontSize: '16px', padding: '12px 14px',
                   border: '1.5px solid #E5E5E5', borderRadius: '10px', background: '#FAFAFA',

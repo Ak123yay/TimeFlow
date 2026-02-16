@@ -62,6 +62,9 @@ export default function WeeklyView({ onBackToToday }) {
       <MobileLayout showBottomNav={true} onNavigate={(tab) => {
         haptic.light();
         if (tab === 'today') onBackToToday();
+        else if (tab === 'pool') window.location.hash = '#/pool';
+        else if (tab === 'stats') window.location.hash = '#/reflection';
+        else if (tab === 'streak') window.location.hash = '#/streak';
       }} activeTab="week">
 
         {/* Header */}

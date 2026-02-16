@@ -193,6 +193,19 @@ export const getAllReflections = () => {
   }
 };
 
+export const getReflectionHistory = () => {
+  try {
+    const reflections = JSON.parse(localStorage.getItem('timeflow-reflections') || '{}');
+    // Convert to array and sort by date descending
+    return Object.entries(reflections)
+      .map(([date, data]) => ({ date, ...data }))
+      .sort((a, b) => new Date(b.date) - new Date(a.date));
+  } catch (e) {
+    console.error('getReflectionHistory', e);
+    return [];
+  }
+};
+
 // ============================================================================
 // WEEKLY VIEW DATA - OPTIMIZED (eliminates O(n²) nested loops)
 // ============================================================================

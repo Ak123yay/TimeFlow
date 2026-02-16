@@ -52,7 +52,8 @@ export default function MobileLayout({ children, showBottomNav = true, onNavigat
             { id: 'today', icon: '🌿', label: 'Today' },
             { id: 'week', icon: '📅', label: 'Week' },
             { id: 'pool', icon: '🌊', label: 'Pool' },
-            { id: 'stats', icon: '📊', label: 'Stats' }
+            { id: 'stats', icon: '📊', label: 'Stats' },
+            { id: 'streak', icon: '🔥', label: 'Streak' }
           ].map(item => (
             <button
               key={item.id}
@@ -67,11 +68,11 @@ export default function MobileLayout({ children, showBottomNav = true, onNavigat
                 gap: '2px',
                 background: 'none',
                 border: 'none',
-                padding: '4px 16px',
-                minWidth: '44px',
+                padding: '4px 8px',
+                flex: 1,
                 minHeight: '44px',
                 color: activeTab === item.id ? '#3B6E3B' : '#8E8E93',
-                fontSize: '10px',
+                fontSize: '9px',
                 fontWeight: activeTab === item.id ? 600 : 400,
                 cursor: 'pointer',
                 touchAction: 'manipulation',
