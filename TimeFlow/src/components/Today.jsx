@@ -1254,7 +1254,7 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
                 type="text" value={taskName} onChange={(e) => setTaskName(e.target.value)}
                 placeholder="What needs to be done?"
                 style={{
-                  width: '100%', boxSizing: 'border-box', fontSize: '16px', padding: '12px 14px',
+                  width: '100%', height: '44px', boxSizing: 'border-box', fontSize: '16px', padding: '10px 14px',
                   border: '1.5px solid #E5E5E5', borderRadius: '10px', background: '#FAFAFA',
                   outline: 'none', marginBottom: '10px'
                 }}
@@ -1263,30 +1263,30 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
               />
 
               {/* Time + Duration row */}
-              <div style={{ display: 'flex', gap: '8px', marginBottom: '10px' }}>
+              <div style={{ display: 'flex', gap: '8px', marginBottom: '10px', alignItems: 'flex-end' }}>
                 <div style={{ flex: 1 }}>
-                  <label style={{ fontSize: '11px', fontWeight: 600, color: '#8E8E93', marginBottom: '3px', display: 'block' }}>Start</label>
+                  <label style={{ fontSize: '11px', fontWeight: 600, color: '#8E8E93', marginBottom: '6px', display: 'block' }}>Start</label>
                   <input type="time" value={taskStartTime} onChange={(e) => setTaskStartTime(e.target.value)}
-                    style={{ width: '100%', boxSizing: 'border-box', fontSize: '16px', padding: '10px 12px', border: '1.5px solid #E5E5E5', borderRadius: '10px', background: '#FAFAFA', outline: 'none' }}
+                    style={{ width: '100%', height: '44px', boxSizing: 'border-box', fontSize: '16px', padding: '10px 12px', border: '1.5px solid #E5E5E5', borderRadius: '10px', background: '#FAFAFA', outline: 'none' }}
                   />
                 </div>
                 <div style={{ flex: 1 }}>
-                  <label style={{ fontSize: '11px', fontWeight: 600, color: '#8E8E93', marginBottom: '3px', display: 'block' }}>Duration</label>
-                  <div style={{ display: 'flex', alignItems: 'center', border: '1.5px solid #E5E5E5', borderRadius: '10px', background: '#FAFAFA', padding: '0 12px' }}>
+                  <label style={{ fontSize: '11px', fontWeight: 600, color: '#8E8E93', marginBottom: '6px', display: 'block' }}>Duration</label>
+                  <div style={{ display: 'flex', alignItems: 'center', height: '44px', border: '1.5px solid #E5E5E5', borderRadius: '10px', background: '#FAFAFA', padding: '0 12px' }}>
                     <input type="number" value={taskDuration} onChange={(e) => setTaskDuration(e.target.value)}
                       placeholder="30" min="1"
                       style={{ fontSize: '16px', padding: '10px 0', border: 'none', outline: 'none', flex: 1, background: 'transparent', textAlign: 'center', width: '100%' }}
                     />
-                    <span style={{ color: '#8E8E93', fontSize: '12px', fontWeight: 500 }}>min</span>
+                    <span style={{ color: '#8E8E93', fontSize: '12px', fontWeight: 500, marginLeft: '4px' }}>min</span>
                   </div>
                 </div>
               </div>
 
               {/* Deadline */}
               <div style={{ marginBottom: '10px' }}>
-                <label style={{ fontSize: '11px', fontWeight: 600, color: '#8E8E93', marginBottom: '3px', display: 'block' }}>Deadline (optional)</label>
+                <label style={{ fontSize: '11px', fontWeight: 600, color: '#8E8E93', marginBottom: '6px', display: 'block' }}>Deadline (optional)</label>
                 <input type="date" value={taskDeadline} onChange={(e) => setTaskDeadline(e.target.value)}
-                  style={{ width: '100%', boxSizing: 'border-box', fontSize: '14px', padding: '10px 12px', border: '1.5px solid #E5E5E5', borderRadius: '10px', background: '#FAFAFA', outline: 'none' }}
+                  style={{ width: '100%', height: '44px', boxSizing: 'border-box', fontSize: '16px', padding: '10px 12px', border: '1.5px solid #E5E5E5', borderRadius: '10px', background: '#FAFAFA', outline: 'none' }}
                 />
               </div>
 
