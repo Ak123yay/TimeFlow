@@ -977,7 +977,14 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
 
     // Focus mode filter
     const filterForFocus = (list) => {
-      if (!focusModeEnabled || !activeTaskId) return list;
+      if (!focusModeEnabled) return list;
+
+      // If no active task, just hide completed tasks to reduce clutter
+      if (!activeTaskId) {
+        return list.filter(task => !task.completed);
+      }
+
+      // If active task exists, show only active task and incomplete tasks before it
       return list.filter(task => {
         if (task.id === activeTaskId) return true;
         if (task.completed) return false;
@@ -1113,13 +1120,13 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
         )}
 
         {/* ---- Focus Mode Indicator ---- */}
-        {focusModeEnabled && activeTaskId && (
+        {focusModeEnabled && (
           <div style={{
             padding: '8px 12px', marginBottom: '12px', borderRadius: '10px',
             background: 'rgba(59,110,59,0.06)', textAlign: 'center',
             fontSize: '12px', fontWeight: 600, color: '#3B6E3B'
           }}>
-            🎯 Focus Mode
+            🎯 Focus Mode {!activeTaskId && '• Hiding completed tasks'}
           </div>
         )}
 
@@ -1254,30 +1261,67 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
                 type="text" value={taskName} onChange={(e) => setTaskName(e.target.value)}
                 placeholder="What needs to be done?"
                 style={{
-                  width: '100%', height: '44px', boxSizing: 'border-box', fontSize: '16px', padding: '10px 14px',
-                  border: '1.5px solid #E5E5E5', borderRadius: '10px', background: '#FAFAFA',
-                  outline: 'none', marginBottom: '10px'
+                  width: '100%',
+                  height: '44px',
+                  boxSizing: 'border-box',
+                  fontSize: '16px',
+                  padding: '0 14px',
+                  border: '1.5px solid #E5E5E5',
+                  borderRadius: '10px',
+                  background: '#FAFAFA',
+                  outline: 'none',
+                  marginBottom: '10px'
                 }}
                 onFocus={(e) => e.target.style.borderColor = '#3B6E3B'}
                 onBlur={(e) => e.target.style.borderColor = '#E5E5E5'}
               />
 
               {/* Time + Duration row */}
-              <div style={{ display: 'flex', gap: '8px', marginBottom: '10px', alignItems: 'flex-end' }}>
+              <div style={{ display: 'flex', gap: '8px', marginBottom: '10px' }}>
                 <div style={{ flex: 1 }}>
                   <label style={{ fontSize: '11px', fontWeight: 600, color: '#8E8E93', marginBottom: '6px', display: 'block' }}>Start</label>
                   <input type="time" value={taskStartTime} onChange={(e) => setTaskStartTime(e.target.value)}
-                    style={{ width: '100%', height: '44px', boxSizing: 'border-box', fontSize: '16px', padding: '10px 12px', border: '1.5px solid #E5E5E5', borderRadius: '10px', background: '#FAFAFA', outline: 'none' }}
+                    style={{
+                      width: '100%',
+                      height: '44px',
+                      boxSizing: 'border-box',
+                      fontSize: '16px',
+                      padding: '0 12px',
+                      border: '1.5px solid #E5E5E5',
+                      borderRadius: '10px',
+                      background: '#FAFAFA',
+                      outline: 'none',
+                      lineHeight: '44px'
+                    }}
                   />
                 </div>
                 <div style={{ flex: 1 }}>
                   <label style={{ fontSize: '11px', fontWeight: 600, color: '#8E8E93', marginBottom: '6px', display: 'block' }}>Duration</label>
-                  <div style={{ display: 'flex', alignItems: 'center', height: '44px', border: '1.5px solid #E5E5E5', borderRadius: '10px', background: '#FAFAFA', padding: '0 12px' }}>
+                  <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    height: '44px',
+                    border: '1.5px solid #E5E5E5',
+                    borderRadius: '10px',
+                    background: '#FAFAFA',
+                    padding: '0 12px',
+                    boxSizing: 'border-box'
+                  }}>
                     <input type="number" value={taskDuration} onChange={(e) => setTaskDuration(e.target.value)}
                       placeholder="30" min="1"
-                      style={{ fontSize: '16px', padding: '10px 0', border: 'none', outline: 'none', flex: 1, background: 'transparent', textAlign: 'center', width: '100%' }}
+                      style={{
+                        fontSize: '16px',
+                        padding: 0,
+                        border: 'none',
+                        outline: 'none',
+                        flex: 1,
+                        background: 'transparent',
+                        textAlign: 'center',
+                        width: '100%',
+                        height: '100%'
+                      }}
                     />
-                    <span style={{ color: '#8E8E93', fontSize: '12px', fontWeight: 500, marginLeft: '4px' }}>min</span>
+                    <span style={{ color: '#8E8E93', fontSize: '12px', fontWeight: 500, marginLeft: '4px', flexShrink: 0 }}>min</span>
                   </div>
                 </div>
               </div>
