@@ -239,12 +239,21 @@ html {
   .controls-row {
     flex-direction: column;
     align-items: stretch;
-    gap: 12px;
+    gap: 16px; /* Increased from 12px */
   }
 
   .control {
     min-width: unset;
     width: 100%;
+  }
+
+  .time-input {
+    padding: 12px 14px; /* Increased padding for better touch */
+    border-radius: 12px;
+  }
+
+  .time-input input {
+    font-size: 15px; /* Slightly larger for readability */
   }
 }
 .time-input {
@@ -769,92 +778,91 @@ input:focus-visible {
     touch-action: manipulation;
   }
 
-  /* FULLSCREEN MODE: Remove all padding for edge-to-edge mobile experience */
+  /* FULLSCREEN MODE: Mobile optimized with better spacing */
   .setup-fullscreen {
     padding: 0;
     min-height: 100dvh;
-    background-image: none; /* Remove gradient for cleaner fullscreen */
+    background: #ffffff;
+    display: flex;
+    align-items: center; /* Vertically center setup */
+    justify-content: center;
   }
 
   .setup-inner {
-    padding: 16px;
+    padding: 32px; /* Bigger borders for mobile */
     /* Safe area padding for notched devices (iPhone X, etc.) */
-    padding-top: max(16px, env(safe-area-inset-top));
-    padding-bottom: max(16px, env(safe-area-inset-bottom));
-    padding-left: max(16px, env(safe-area-inset-left));
-    padding-right: max(16px, env(safe-area-inset-right));
-    gap: 12px;
-    border-radius: 0; /* Edge-to-edge on mobile */
-    box-shadow: none; /* Cleaner fullscreen look */
+    padding-top: max(32px, env(safe-area-inset-top));
+    padding-bottom: max(32px, env(safe-area-inset-bottom));
+    padding-left: max(32px, env(safe-area-inset-left));
+    padding-right: max(32px, env(safe-area-inset-right));
+    gap: 20px; /* Increased from 12px for better spacing */
+    border-radius: 0;
+    box-shadow: none;
     max-width: 100%;
-    /* REMOVED min-height: 100dvh to prevent double scrollbar */
-    background: var(--bg); /* Match app background for seamless look */
+    background: #ffffff;
   }
 
   /* Make App container truly fullscreen */
   .App {
     min-height: 100dvh;
-    min-height: -webkit-fill-available; /* iOS Safari support */
+    min-height: -webkit-fill-available;
+    background: #ffffff;
   }
 
-  /* Compact section headers */
+  /* Better spacing for section headers */
   .setup-header {
-    gap: 8px;
+    gap: 12px;
+    margin-bottom: 8px;
   }
 
   .title {
-    font-size: 20px !important;
+    font-size: 22px !important; /* Slightly larger */
   }
 
   .muted {
-    font-size: 12px !important;
+    font-size: 13px !important;
   }
 
   /* Optimize preset pills for horizontal scroll */
   .presets.horizontal-scroll {
-    gap: 8px !important;
-    padding: 8px 0 !important;
+    gap: 12px !important;
+    padding: 12px 0 !important;
   }
 
   .preset-pill {
-    min-width: 100px !important;
-    padding: 10px 14px !important;
+    min-width: 110px !important;
+    padding: 12px 16px !important;
   }
 
   .preset-text {
-    font-size: 13px !important;
+    font-size: 14px !important;
     font-weight: 600 !important;
   }
 
   .preset-sub {
-    font-size: 11px !important;
+    font-size: 12px !important;
   }
 
-  /* Touch-friendly buttons */
-  button {
-    min-height: 44px !important;
-  }
-
-  /* Compact task cards */
+  /* Compact task cards with better padding */
   [style*="border-radius: 14px"] {
-    padding: 10px !important;
-    gap: 8px !important;
+    padding: 14px !important; /* Increased from 10px */
+    gap: 10px !important;
   }
 
   /* Stack task content on mobile */
   [style*="flexDirection: column"] > div {
-    gap: 6px !important;
+    gap: 8px !important;
   }
 
-  /* Smaller font sizes for task names */
+  /* Better font sizes for task names */
   [style*="fontSize: 16px"][style*="fontWeight: 700"] {
-    font-size: 14px !important;
+    font-size: 15px !important;
   }
 
-  /* Compact stats badges */
+  /* Stats badges */
   [style*="fontSize: 11px"] {
-    font-size: 10px !important;
-    padding: 2px 6px !important;
+    font-size: 11px !important;
+    padding: 4px 8px !important;
   }
 
   /* Make action buttons stack on very small screens */
