@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from "react";
 import { loadAvailability, getUnfinishedTasksFromPreviousDays, saveTasksForDate, loadTasksForDate, addTaskToWeeklyPool } from "../utils/storage";
-import { rescheduleUnfinishedTasks, detectConflicts, calculateOverflow } from "../utils/scheduler";
+import { rescheduleUnfinishedTasks, detectConflicts, calculateOverflow, getDeadlineUrgency } from "../utils/scheduler";
 import {
   saveTaskToHistory,
   calculateDurationAccuracy,
@@ -234,6 +234,25 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
     }
   }, [taskName]);
 
+  // DEADLINE: Auto-escalate priority when deadline approaches
+  useEffect(() => {
+    const updated = tasks.map(task => {
+      const urgency = getDeadlineUrgency(task);
+      if (urgency && urgency.level === 'today' && !task.escalatedPriority) {
+        return {
+          ...task,
+          originalPriority: task.priority || 3,
+          priority: 5,
+          escalatedPriority: true
+        };
+      }
+      return task;
+    });
+    if (JSON.stringify(updated) !== JSON.stringify(tasks)) {
+      setTasks(updated);
+    }
+  }, [tasks]);
+
   const addTask = (e) => {
     if (e && e.preventDefault) e.preventDefault();
     if (!taskName || !taskDuration) return;
@@ -258,7 +277,12 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
       durationHistory: [],                           // Last 5 completions (populated from history)
       durationAccuracy: null,                        // Calculated after completion
       startedAt: null,                               // When timer starts
-      completedAt: null                              // When task completes
+      completedAt: null,                             // When task completes
+      // DEADLINE: Escalation tracking fields
+      deadline: null,                                // ISO date string
+      deadlineWarnings: [],                          // History of warnings shown
+      escalatedPriority: false,                      // Auto-increased priority?
+      originalPriority: 3                            // Priority before escalation (default: 3)
     };
     setTasks(prev => [...prev, newTask]);
     setTaskName("");
@@ -1321,6 +1345,30 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
                                     ⚠️ Conflict
                                   </span>
                                 )}
+                                {(() => {
+                                  const urgency = getDeadlineUrgency(task);
+                                  if (!urgency) return null;
+                                  return (
+                                    <span style={{
+                                      fontSize: "11px",
+                                      padding: "2px 6px",
+                                      background: urgency.level === 'overdue' || urgency.level === 'today'
+                                        ? "rgba(220, 38, 38, 0.15)"
+                                        : urgency.level === 'tomorrow'
+                                        ? "rgba(245, 158, 11, 0.15)"
+                                        : "rgba(251, 191, 36, 0.12)",
+                                      color: urgency.color,
+                                      borderRadius: "4px",
+                                      fontWeight: "700",
+                                      display: "inline-flex",
+                                      alignItems: "center",
+                                      gap: "3px",
+                                      animation: urgency.shouldBlock ? "focusPulse 2s ease-in-out infinite" : "none"
+                                    }}>
+                                      {urgency.level === 'overdue' ? "🔴" : urgency.level === 'today' ? "🔴" : urgency.level === 'tomorrow' ? "⚠️" : "📅"} {urgency.message}
+                                    </span>
+                                  );
+                                })()}
                                 <span style={{ fontSize: "11px", padding: "2px 6px", background: "rgba(255,165,0,0.2)", color: "#c2410c", borderRadius: "4px", fontWeight: "600" }}>from {task.originalDate}</span>
                               </div>
                               <div style={{ fontSize: "12px", color: "#92400e" }}>
@@ -1488,6 +1536,30 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
                             ⚠️ Conflict
                           </span>
                         )}
+                        {(() => {
+                          const urgency = getDeadlineUrgency(task);
+                          if (!urgency) return null;
+                          return (
+                            <span style={{
+                              fontSize: "11px",
+                              padding: "2px 6px",
+                              background: urgency.level === 'overdue' || urgency.level === 'today'
+                                ? "rgba(220, 38, 38, 0.15)"
+                                : urgency.level === 'tomorrow'
+                                ? "rgba(245, 158, 11, 0.15)"
+                                : "rgba(251, 191, 36, 0.12)",
+                              color: urgency.color,
+                              borderRadius: "4px",
+                              fontWeight: "700",
+                              display: "inline-flex",
+                              alignItems: "center",
+                              gap: "3px",
+                              animation: urgency.shouldBlock ? "focusPulse 2s ease-in-out infinite" : "none"
+                            }}>
+                              {urgency.level === 'overdue' ? "🔴" : urgency.level === 'today' ? "🔴" : urgency.level === 'tomorrow' ? "⚠️" : "📅"} {urgency.message}
+                            </span>
+                          );
+                        })()}
                         {task.carriedOver && <span style={{ fontSize: "11px", padding: "2px 6px", background: "rgba(255,165,0,0.15)", color: "#d97706", borderRadius: "4px", fontWeight: "600" }}>from {task.originalDate}</span>}
                       </div>
                       <div style={{ fontSize: "12px", color: "#6B8E6B" }}>

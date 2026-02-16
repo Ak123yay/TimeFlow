@@ -323,6 +323,31 @@ export const findNextFreeSlot = (taskDuration, existingTasks, availability, only
   return null; // No slot found
 };
 
+/**
+ * Get deadline urgency level for a task
+ * @param {Object} task - Task with deadline field
+ * @returns {Object|null} - Urgency info or null if no deadline
+ */
+export const getDeadlineUrgency = (task) => {
+  if (!task.deadline) return null;
+
+  const daysUntil = Math.ceil((new Date(task.deadline) - new Date()) / (1000 * 60 * 60 * 24));
+
+  if (daysUntil < 0) {
+    return { level: 'overdue', message: 'OVERDUE', color: '#dc2626', shouldBlock: true };
+  } else if (daysUntil === 0) {
+    return { level: 'today', message: 'DUE TODAY', color: '#ea580c', shouldBlock: true };
+  } else if (daysUntil === 1) {
+    return { level: 'tomorrow', message: 'Due tomorrow', color: '#f59e0b', shouldBlock: false };
+  } else if (daysUntil <= 3) {
+    return { level: 'soon', message: `${daysUntil} days left`, color: '#fbbf24', shouldBlock: false };
+  } else if (daysUntil <= 7) {
+    return { level: 'upcoming', message: `${daysUntil} days left`, color: '#6FAF6F', shouldBlock: false };
+  }
+
+  return null;
+};
+
 export const scheduler = {
   schedule: scheduleTasksSequentially,
   reschedule: rescheduleUnfinishedTasks,
