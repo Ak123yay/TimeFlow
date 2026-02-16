@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from "react";
 import { loadAvailability, getUnfinishedTasksFromPreviousDays, saveTasksForDate, loadTasksForDate, addTaskToWeeklyPool } from "../utils/storage";
-import { rescheduleUnfinishedTasks, detectConflicts, calculateOverflow, getDeadlineUrgency } from "../utils/scheduler";
+import { rescheduleUnfinishedTasks, detectConflicts, calculateOverflow, getDeadlineUrgency, detectPotentialConflicts } from "../utils/scheduler";
 import {
   saveTaskToHistory,
   calculateDurationAccuracy,
@@ -284,6 +284,24 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
       escalatedPriority: false,                      // Auto-increased priority?
       originalPriority: 3                            // Priority before escalation (default: 3)
     };
+
+    // CONFLICT PREVENTION: Check for scheduling conflicts
+    const conflictCheck = detectPotentialConflicts(newTask, tasks);
+
+    if (conflictCheck) {
+      // Handle direct overlaps - block task addition
+      if (conflictCheck.conflicts.length > 0) {
+        alert(`Cannot add task: ${conflictCheck.conflicts[0].message}\n\nPlease choose a different time or adjust the conflicting task.`);
+        return; // Block task addition
+      }
+
+      // Handle buffer warnings - show warning but allow
+      if (conflictCheck.warnings.length > 0) {
+        const proceed = confirm(`⚠️ ${conflictCheck.warnings[0].message}\n\nAdd task anyway?`);
+        if (!proceed) return;
+      }
+    }
+
     setTasks(prev => [...prev, newTask]);
     setTaskName("");
     setTaskDuration("");

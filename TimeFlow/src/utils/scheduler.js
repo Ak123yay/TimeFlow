@@ -348,6 +348,49 @@ export const getDeadlineUrgency = (task) => {
   return null;
 };
 
+/**
+ * Detect potential scheduling conflicts when adding a new task
+ * @param {Object} newTask - Task being added with startTime and duration
+ * @param {Array} existingTasks - Already scheduled tasks
+ * @returns {Object|null} - {conflicts: [], warnings: []} or null if no startTime
+ */
+export const detectPotentialConflicts = (newTask, existingTasks) => {
+  if (!newTask.startTime) return null;
+
+  const conflicts = [];
+  const warnings = [];
+
+  const newStart = hhmmToMinutes(newTask.startTime);
+  const newEnd = newStart + (newTask.duration || 0);
+
+  existingTasks.forEach(task => {
+    if (!task.startTime || task.completed) return;
+
+    const start = hhmmToMinutes(task.startTime);
+    const end = start + (task.remaining || task.duration || 0);
+
+    // Direct overlap: new task starts before existing ends AND new task ends after existing starts
+    if (newStart < end && newEnd > start) {
+      conflicts.push({
+        type: 'overlap',
+        task,
+        message: `Overlaps with "${task.name}"`
+      });
+    }
+
+    // Back-to-back (no buffer) - within 5 minutes
+    if (Math.abs(newEnd - start) < 5 || Math.abs(end - newStart) < 5) {
+      warnings.push({
+        type: 'no-buffer',
+        task,
+        message: `Back-to-back with "${task.name}" - add 5-10 min buffer?`
+      });
+    }
+  });
+
+  return { conflicts, warnings };
+};
+
 export const scheduler = {
   schedule: scheduleTasksSequentially,
   reschedule: rescheduleUnfinishedTasks,
