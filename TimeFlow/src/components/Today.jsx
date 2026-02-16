@@ -1280,20 +1280,29 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
               <div style={{ display: 'flex', gap: '8px', marginBottom: '10px' }}>
                 <div style={{ flex: 1 }}>
                   <label style={{ fontSize: '11px', fontWeight: 600, color: '#8E8E93', marginBottom: '6px', display: 'block' }}>Start</label>
-                  <input type="time" value={taskStartTime} onChange={(e) => setTaskStartTime(e.target.value)}
-                    style={{
-                      width: '100%',
-                      height: '44px',
-                      boxSizing: 'border-box',
-                      fontSize: '16px',
-                      padding: '0 12px',
-                      border: '1.5px solid #E5E5E5',
-                      borderRadius: '10px',
-                      background: '#FAFAFA',
-                      outline: 'none',
-                      lineHeight: '44px'
-                    }}
-                  />
+                  <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    height: '44px',
+                    border: '1.5px solid #E5E5E5',
+                    borderRadius: '10px',
+                    background: '#FAFAFA',
+                    padding: '0 12px',
+                    boxSizing: 'border-box'
+                  }}>
+                    <input type="time" value={taskStartTime} onChange={(e) => setTaskStartTime(e.target.value)}
+                      style={{
+                        fontSize: '16px',
+                        padding: 0,
+                        border: 'none',
+                        outline: 'none',
+                        flex: 1,
+                        background: 'transparent',
+                        width: '100%',
+                        height: '100%'
+                      }}
+                    />
+                  </div>
                 </div>
                 <div style={{ flex: 1 }}>
                   <label style={{ fontSize: '11px', fontWeight: 600, color: '#8E8E93', marginBottom: '6px', display: 'block' }}>Duration</label>
@@ -1329,9 +1338,29 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
               {/* Deadline */}
               <div style={{ marginBottom: '10px' }}>
                 <label style={{ fontSize: '11px', fontWeight: 600, color: '#8E8E93', marginBottom: '6px', display: 'block' }}>Deadline (optional)</label>
-                <input type="date" value={taskDeadline} onChange={(e) => setTaskDeadline(e.target.value)}
-                  style={{ width: '100%', height: '44px', boxSizing: 'border-box', fontSize: '16px', padding: '0 12px', lineHeight: '44px', border: '1.5px solid #E5E5E5', borderRadius: '10px', background: '#FAFAFA', outline: 'none' }}
-                />
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  height: '44px',
+                  border: '1.5px solid #E5E5E5',
+                  borderRadius: '10px',
+                  background: '#FAFAFA',
+                  padding: '0 12px',
+                  boxSizing: 'border-box'
+                }}>
+                  <input type="date" value={taskDeadline} onChange={(e) => setTaskDeadline(e.target.value)}
+                    style={{
+                      fontSize: '16px',
+                      padding: 0,
+                      border: 'none',
+                      outline: 'none',
+                      flex: 1,
+                      background: 'transparent',
+                      width: '100%',
+                      height: '100%'
+                    }}
+                  />
+                </div>
               </div>
 
               {/* Duration Suggestion */}
