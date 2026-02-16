@@ -10,10 +10,11 @@
     <meta name="theme-color" content="#F0F8F2" />
     <title>time-flow</title>
     <style>
-      /* Prevent overscroll bounce on iOS for fullscreen feel */
+      /* FIXED: Single scrollbar - body scrolls naturally */
       html, body {
-        overscroll-behavior: none;
-        -webkit-overflow-scrolling: touch;
+        margin: 0;
+        padding: 0;
+        /* Let content scroll naturally - no forced overflow */
       }
 
       /* iOS Safari fullscreen support */
