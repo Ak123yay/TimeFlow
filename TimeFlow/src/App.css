@@ -51,7 +51,6 @@ html {
     radial-gradient(circle at 10% 10%, rgba(167,211,167,0.06), transparent 10%),
     radial-gradient(circle at 90% 90%, rgba(167,211,167,0.04), transparent 12%);
 
-  overflow-y: auto;
   overflow-x: hidden;
 }
 
@@ -113,13 +112,6 @@ html {
 
 /* Mobile: Hide vines completely to prevent overflow */
 @media (max-width: 640px) {
-  .setup-inner {
-    padding: 16px;
-    border-radius: 12px;
-    gap: 12px;
-    max-width: 100%;
-  }
-
   .setup-inner::before,
   .setup-inner::after {
     display: none;
@@ -764,5 +756,155 @@ input:focus-visible {
     width: 44px;
     height: 44px;
     font-size: 22px;
+  }
+}
+
+/* ============================================
+   MOBILE OPTIMIZATIONS FOR TODAY VIEW
+   ============================================ */
+
+@media (max-width: 640px) {
+  /* Prevent double-tap zoom on interactive elements */
+  button, a, input, select, textarea {
+    touch-action: manipulation;
+  }
+
+  /* FULLSCREEN MODE: Remove all padding for edge-to-edge mobile experience */
+  .setup-fullscreen {
+    padding: 0;
+    min-height: 100dvh;
+    background-image: none; /* Remove gradient for cleaner fullscreen */
+  }
+
+  .setup-inner {
+    padding: 16px;
+    /* Safe area padding for notched devices (iPhone X, etc.) */
+    padding-top: max(16px, env(safe-area-inset-top));
+    padding-bottom: max(16px, env(safe-area-inset-bottom));
+    padding-left: max(16px, env(safe-area-inset-left));
+    padding-right: max(16px, env(safe-area-inset-right));
+    gap: 12px;
+    border-radius: 0; /* Edge-to-edge on mobile */
+    box-shadow: none; /* Cleaner fullscreen look */
+    max-width: 100%;
+    min-height: 100dvh;
+    background: var(--bg); /* Match app background for seamless look */
+  }
+
+  /* Make App container truly fullscreen */
+  .App {
+    min-height: 100dvh;
+    min-height: -webkit-fill-available; /* iOS Safari support */
+  }
+
+  /* Compact section headers */
+  .setup-header {
+    gap: 8px;
+  }
+
+  .title {
+    font-size: 20px !important;
+  }
+
+  .muted {
+    font-size: 12px !important;
+  }
+
+  /* Optimize preset pills for horizontal scroll */
+  .presets.horizontal-scroll {
+    gap: 8px !important;
+    padding: 8px 0 !important;
+  }
+
+  .preset-pill {
+    min-width: 100px !important;
+    padding: 10px 14px !important;
+  }
+
+  .preset-text {
+    font-size: 13px !important;
+    font-weight: 600 !important;
+  }
+
+  .preset-sub {
+    font-size: 11px !important;
+  }
+
+  /* Touch-friendly buttons */
+  button {
+    min-height: 44px !important;
+  }
+
+  /* Compact task cards */
+  [style*="border-radius: 14px"] {
+    padding: 10px !important;
+    gap: 8px !important;
+  }
+
+  /* Stack task content on mobile */
+  [style*="flexDirection: column"] > div {
+    gap: 6px !important;
+  }
+
+  /* Smaller font sizes for task names */
+  [style*="fontSize: 16px"][style*="fontWeight: 700"] {
+    font-size: 14px !important;
+  }
+
+  /* Compact stats badges */
+  [style*="fontSize: 11px"] {
+    font-size: 10px !important;
+    padding: 2px 6px !important;
+  }
+
+  /* Make action buttons stack on very small screens */
+  @media (max-width: 380px) {
+    [style*="display: flex"][style*="gap: 8px"] {
+      flex-direction: column !important;
+      gap: 6px !important;
+    }
+
+    button {
+      width: 100% !important;
+    }
+  }
+
+  /* Reduce gap between task sections */
+  [style*="gap: 16px"],
+  [style*="gap: 20px"] {
+    gap: 8px !important;
+  }
+
+  /* Compact navigation */
+  .actions-row {
+    gap: 8px !important;
+    margin-top: 12px !important;
+  }
+
+  /* Hide non-essential decorations on mobile */
+  .header-decor {
+    display: none !important;
+  }
+
+  /* Optimize horizontal scroll areas */
+  .horizontal-scroll {
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+
+  .horizontal-scroll::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Improve tap target sizes */
+  [style*="cursor: pointer"] {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  /* Reduce padding in modal/dialog content */
+  [style*="position: fixed"] > div {
+    padding: 16px !important;
+    max-width: calc(100vw - 16px) !important;
   }
 }

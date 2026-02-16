@@ -1,4 +1,43 @@
 // src/utils/storage.js
+// OPTIMIZED: Import caching utilities for better performance
+import { getCached, setCached, removeCached } from './storageCache';
+
+// ============================================================================
+// TASK DATE MANIFEST - Efficient Tracking of All Task Dates
+// ============================================================================
+const MANIFEST_KEY = 'timeflow-dates-manifest';
+
+// Helper: Add date to manifest
+const addDateToManifest = (dateString) => {
+  try {
+    const manifest = getCached(MANIFEST_KEY, true) || [];
+    if (!manifest.includes(dateString)) {
+      manifest.push(dateString);
+      manifest.sort();
+      setCached(MANIFEST_KEY, manifest, true, false); // Batched write
+    }
+  } catch (e) {
+    console.error('addDateToManifest', e);
+  }
+};
+
+// Helper: Remove date from manifest
+const removeDateFromManifest = (dateString) => {
+  try {
+    const manifest = getCached(MANIFEST_KEY, true) || [];
+    const filtered = manifest.filter(d => d !== dateString);
+    if (filtered.length !== manifest.length) {
+      setCached(MANIFEST_KEY, filtered, true, false);
+    }
+  } catch (e) {
+    console.error('removeDateFromManifest', e);
+  }
+};
+
+// ============================================================================
+// AVAILABILITY SETTINGS
+// ============================================================================
+
 export const saveAvailability = (availability) => {
   localStorage.setItem("availability", JSON.stringify(availability));
 };
@@ -17,7 +56,10 @@ export const clearAvailability = () => {
   localStorage.removeItem("availability");
 };
 
-// Task management functions
+// ============================================================================
+// TASK MANAGEMENT - OPTIMIZED WITH MANIFEST
+// ============================================================================
+
 export const getTasksKeyForDate = (dateString) => `timeflow-tasks-${dateString}`;
 
 export const loadTasksForDate = (dateString) => {
@@ -33,6 +75,12 @@ export const loadTasksForDate = (dateString) => {
 export const saveTasksForDate = (dateString, tasks) => {
   try {
     localStorage.setItem(getTasksKeyForDate(dateString), JSON.stringify(tasks));
+    // Update manifest to track this date
+    if (tasks && tasks.length > 0) {
+      addDateToManifest(dateString);
+    } else {
+      removeDateFromManifest(dateString);
+    }
   } catch (e) {
     console.error("saveTasksForDate", e);
   }
@@ -48,39 +96,64 @@ export const saveTasks = (tasks) => {
   saveTasksForDate(today, tasks);
 };
 
-// Get all stored task dates
+// OPTIMIZED: Get all stored task dates using manifest (O(1) instead of O(n))
 export const getAllTaskDates = () => {
-  const dates = [];
-  for (let i = 0; i < localStorage.length; i++) {
-    const key = localStorage.key(i);
-    if (key && key.startsWith('timeflow-tasks-')) {
-      dates.push(key.replace('timeflow-tasks-', ''));
+  try {
+    const manifest = getCached(MANIFEST_KEY, true);
+    if (manifest && Array.isArray(manifest)) {
+      return manifest;
     }
+    // Fallback: rebuild manifest from localStorage (migration path)
+    return rebuildManifest();
+  } catch (e) {
+    console.error('getAllTaskDates', e);
+    return [];
   }
-  return dates.sort();
 };
 
-// Get unfinished tasks from previous days
+// Rebuild manifest by scanning localStorage (only needed once for migration)
+const rebuildManifest = () => {
+  const dates = [];
+  try {
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key && key.startsWith('timeflow-tasks-')) {
+        dates.push(key.replace('timeflow-tasks-', ''));
+      }
+    }
+    dates.sort();
+    // Save manifest for future use
+    setCached(MANIFEST_KEY, dates, true, true); // Immediate write
+    return dates;
+  } catch (e) {
+    console.error('rebuildManifest', e);
+    return dates;
+  }
+};
+
+// OPTIMIZED: Get unfinished tasks with early termination
 export const getUnfinishedTasksFromPreviousDays = () => {
   const today = new Date().toISOString().slice(0, 10);
   const allDates = getAllTaskDates();
   const unfinished = [];
-  
+
   for (const date of allDates) {
-    if (date < today) {
-      const tasks = loadTasksForDate(date);
-      tasks.forEach(task => {
-        if (!task.completed && task.remaining > 0) {
-          unfinished.push({
-            ...task,
-            originalDate: date,
-            carriedOver: true
-          });
-        }
-      });
-    }
+    // Only check past dates
+    if (date >= today) continue;
+
+    const tasks = loadTasksForDate(date);
+    tasks.forEach(task => {
+      if (!task.completed && task.remaining > 0) {
+        unfinished.push({
+          ...task,
+          originalDate: date,
+          carriedOver: true,
+          attempts: (task.attempts || 0) + 1 // Track reschedule attempts
+        });
+      }
+    });
   }
-  
+
   return unfinished;
 };
 
@@ -121,7 +194,7 @@ export const getAllReflections = () => {
 };
 
 // ============================================================================
-// WEEKLY VIEW DATA
+// WEEKLY VIEW DATA - OPTIMIZED (eliminates O(n²) nested loops)
 // ============================================================================
 
 export const getWeekData = (startDate) => {
@@ -129,6 +202,31 @@ export const getWeekData = (startDate) => {
   const weekData = [];
   const today = new Date().toISOString().slice(0, 10);
 
+  // OPTIMIZATION: Pre-calculate cumulative carry-over counts in single pass
+  const carryOverCounts = new Array(7).fill(0);
+  let cumulativeCarryOver = 0;
+
+  // Single pass to count carry-overs (O(n) instead of O(n²))
+  for (let i = 0; i < 7; i++) {
+    const date = new Date(start);
+    date.setDate(start.getDate() + i);
+    const dateString = date.toISOString().slice(0, 10);
+    const tasks = loadTasksForDate(dateString);
+
+    // Count unfinished tasks that will carry forward
+    const unfinishedCount = tasks.filter(t =>
+      !t.completed && !t.carriedOver && (t.remaining > 0 || t.duration > 0)
+    ).length;
+
+    // Add previous cumulative to current day
+    carryOverCounts[i] = cumulativeCarryOver +
+      tasks.filter(t => t.carriedOver && !t.completed).length;
+
+    // Accumulate for next days
+    cumulativeCarryOver += unfinishedCount;
+  }
+
+  // Build week data array with pre-calculated carry-overs
   for (let i = 0; i < 7; i++) {
     const date = new Date(start);
     date.setDate(start.getDate() + i);
@@ -138,28 +236,6 @@ export const getWeekData = (startDate) => {
     const completed = tasks.filter(t => t.completed);
     const unfinished = tasks.filter(t => !t.completed);
 
-    // Calculate how many tasks are/will be carried over to this day
-    // Count tasks with carriedOver flag that are currently on this day
-    let carriedOverCount = tasks.filter(t => t.carriedOver && !t.completed).length;
-
-    // For all days (not just future), count unfinished tasks from ALL previous days
-    // that would/will carry over to this day
-    for (let j = 0; j < i; j++) {
-      const prevDate = new Date(start);
-      prevDate.setDate(start.getDate() + j);
-      const prevDateString = prevDate.toISOString().slice(0, 10);
-      const prevTasks = loadTasksForDate(prevDateString);
-
-      // Count tasks that are incomplete and not already marked as carried over
-      // (to avoid double counting)
-      const prevUnfinished = prevTasks.filter(t =>
-        !t.completed &&
-        !t.carriedOver &&
-        (t.remaining > 0 || t.duration > 0)
-      );
-      carriedOverCount += prevUnfinished.length;
-    }
-
     weekData.push({
       date: dateString,
       dayOfWeek: date.toLocaleDateString('en-US', { weekday: 'short' }),
@@ -168,12 +244,12 @@ export const getWeekData = (startDate) => {
       taskCount: tasks.length,
       completedCount: completed.length,
       completionRate: tasks.length > 0 ? Math.round((completed.length / tasks.length) * 100) : 0,
-      carriedOverCount,
+      carriedOverCount: carryOverCounts[i],
       unfinishedCount: unfinished.length,
       isToday: dateString === today,
       isPast: dateString < today,
       isFuture: dateString > today,
-      hasTasks: tasks.length > 0 || carriedOverCount > 0
+      hasTasks: tasks.length > 0 || carryOverCounts[i] > 0
     });
   }
 

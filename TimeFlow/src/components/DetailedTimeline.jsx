@@ -1,17 +1,14 @@
 import React, { useState, useEffect } from "react";
+import { minutesToHHMM } from "../utils/timeUtils";
+import { throttle } from "../utils/timeUtils";
 import "../App.css";
-
-function minutesToHHMM(minutes) {
-  const h = Math.floor(minutes / 60);
-  const m = minutes % 60;
-  return `${String(h).padStart(2,"0")}:${String(m).padStart(2,"0")}`;
-}
 
 export default function DetailedTimeline({ tasks = [], availability = { start: "09:00", end: "17:00" } }) {
   const [windowWidth, setWindowWidth] = useState(typeof window !== 'undefined' ? window.innerWidth : 1024);
 
+  // OPTIMIZED: Throttle resize handler to prevent excessive re-renders
   useEffect(() => {
-    const handleResize = () => setWindowWidth(window.innerWidth);
+    const handleResize = throttle(() => setWindowWidth(window.innerWidth), 200);
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);

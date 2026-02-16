@@ -1,19 +1,27 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, lazy, Suspense } from "react";
 import Setup from "./components/Setup";
 import Today from "./components/Today";
 import DayReflection from "./components/DayReflection";
-import WeeklyView from "./components/WeeklyView";
-import WeeklyPool from "./components/WeeklyPool";
+// OPTIMIZED: Lazy load WeeklyView and WeeklyPool to reduce initial bundle size
+const WeeklyView = lazy(() => import("./components/WeeklyView"));
+const WeeklyPool = lazy(() => import("./components/WeeklyPool"));
 import Onboarding from "./components/Onboarding";
 import { loadAvailability } from "./utils/storage";
+import { getTimePeriod } from "./utils/timeUtils";
 import "./App.css";
 
-function getTimePeriod() {
-  const hour = new Date().getHours();
-  if (hour >= 5 && hour < 8) return 'dawn';
-  if (hour >= 8 && hour < 17) return 'day';
-  if (hour >= 17 && hour < 20) return 'dusk';
-  return 'night';
+// Loading fallback component for lazy-loaded routes
+function LoadingFallback() {
+  return (
+    <div className="setup-fullscreen">
+      <div className="setup-inner" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '200px' }}>
+        <div style={{ textAlign: 'center' }}>
+          <div style={{ fontSize: '24px', marginBottom: '12px' }}>🌿</div>
+          <div style={{ color: '#3B6E3B', fontWeight: 600 }}>Loading...</div>
+        </div>
+      </div>
+    </div>
+  );
 }
 
 export default function App() {
@@ -105,9 +113,13 @@ export default function App() {
           onComplete={showToday}
         />
       ) : currentView === 'week' ? (
-        <WeeklyView onBackToToday={showToday} />
+        <Suspense fallback={<LoadingFallback />}>
+          <WeeklyView onBackToToday={showToday} />
+        </Suspense>
       ) : currentView === 'pool' ? (
-        <WeeklyPool onNavigateToToday={showToday} />
+        <Suspense fallback={<LoadingFallback />}>
+          <WeeklyPool onNavigateToToday={showToday} />
+        </Suspense>
       ) : (
         <Today onEndDay={showReflection} onShowWeek={showWeek} onShowPool={showPool} />
       )}
