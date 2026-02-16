@@ -1,6 +1,7 @@
 import { useEffect, useState, useRef } from "react";
 import { loadAvailability, getUnfinishedTasksFromPreviousDays, saveTasksForDate, loadTasksForDate, addTaskToWeeklyPool } from "../utils/storage";
-import { rescheduleUnfinishedTasks, detectConflicts, calculateOverflow, getDeadlineUrgency, detectPotentialConflicts } from "../utils/scheduler";
+import { rescheduleUnfinishedTasks, detectConflicts, calculateOverflow, getDeadlineUrgency, detectPotentialConflicts, getTaskHealth } from "../utils/scheduler";
+import TaskHealthIndicator from "./TaskHealthIndicator";
 import {
   saveTaskToHistory,
   calculateDurationAccuracy,
@@ -190,8 +191,12 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
       setTasks((items) => {
         const oldIndex = items.findIndex((item) => item.id === active.id);
         const newIndex = items.findIndex((item) => item.id === over.id);
+        const reordered = arrayMove(items, oldIndex, newIndex);
 
-        return arrayMove(items, oldIndex, newIndex);
+        // Persist to localStorage
+        saveTasks(reordered);
+
+        return reordered;
       });
     }
   };
@@ -1233,8 +1238,13 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
                 <p className="muted" style={{ marginTop: "12px", fontSize: "13px" }}>Add tasks to see your timeline</p>
               </div>
             ) : (
-              <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-                {/* Carried Over Tasks Section */}
+              <DndContext
+                sensors={sensors}
+                collisionDetection={closestCenter}
+                onDragEnd={handleDragEnd}
+              >
+                <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+                  {/* Carried Over Tasks Section */}
                 {taskBlocks.filter(t => t.carriedOver).length > 0 && (
                   <div>
                     <div style={{
@@ -1252,7 +1262,11 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
                         Carried from previous days ({taskBlocks.filter(t => t.carriedOver).length})
                       </h3>
                     </div>
-                    <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                    <SortableContext
+                      items={taskBlocks.filter(t => t.carriedOver).map(t => t.id)}
+                      strategy={verticalListSortingStrategy}
+                    >
+                      <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
                       {taskBlocks.filter(task => task.carriedOver).filter(task => {
                         if (focusModeEnabled && activeTaskId) {
                           if (task.id === activeTaskId) return true;
@@ -1265,19 +1279,17 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
                       }).map((task, i) => {
                         const isActiveTask = activeTaskId === task.id;
                         const shouldDim = activeTaskId && !isActiveTask;
+                        const health = getTaskHealth(task, tasks, availability);
 
                         return (
-                          <div
+                          <SortableTaskItem
+                            task={task}
                             key={task.id}
                             className={isActiveTask ? 'task-focused' : ''}
                             onClick={() => handleEditTask(task)}
                             style={{
                               background: "linear-gradient(90deg, rgba(255,200,150,0.12), rgba(255,210,160,0.08))",
-                              border: hasConflict(task.id)
-                                ? "2px solid #f59e0b"
-                                : isLate(task)
-                                ? "2px solid #ea580c"
-                                : "1px solid rgba(255,165,0,0.25)",
+                              border: `2px solid ${health.color}`,
                               borderRadius: "12px",
                               padding: "14px 16px",
                               display: "flex",
@@ -1388,6 +1400,7 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
                                   );
                                 })()}
                                 <span style={{ fontSize: "11px", padding: "2px 6px", background: "rgba(255,165,0,0.2)", color: "#c2410c", borderRadius: "4px", fontWeight: "600" }}>from {task.originalDate}</span>
+                                <TaskHealthIndicator health={health} compact={true} />
                               </div>
                               <div style={{ fontSize: "12px", color: "#92400e" }}>
                                 {minutesToHHMM(task.start)} — {minutesToHHMM(task.end)} • {renderBlockTimeText(task)}
@@ -1416,10 +1429,11 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
                             >
                               ×
                             </button>
-                          </div>
+                          </SortableTaskItem>
                         );
                       })}
                     </div>
+                    </SortableContext>
                   </div>
                 )}
 
@@ -1441,7 +1455,11 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
                         Today's tasks ({taskBlocks.filter(t => !t.carriedOver).length})
                       </h3>
                     </div>
-                    <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+                    <SortableContext
+                      items={taskBlocks.filter(t => !t.carriedOver).map(t => t.id)}
+                      strategy={verticalListSortingStrategy}
+                    >
+                    <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
                 {taskBlocks.filter(task => !task.carriedOver).filter(task => {
                   // In focus mode, hide completed tasks and future tasks (but show active task)
                   if (focusModeEnabled && activeTaskId) {
@@ -1456,19 +1474,17 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
                 }).map((task, i) => {
                   const isActiveTask = activeTaskId === task.id;
                   const shouldDim = activeTaskId && !isActiveTask;
+                  const health = getTaskHealth(task, tasks, availability);
 
                   return (
-                  <div
+                  <SortableTaskItem
+                    task={task}
                     key={task.id}
                     className={isActiveTask ? 'task-focused' : ''}
                     onClick={() => handleEditTask(task)}
                     style={{
                       background: "linear-gradient(90deg, rgba(167,211,167,0.12), rgba(111,175,111,0.08))",
-                      border: hasConflict(task.id)
-                        ? "2px solid #f59e0b"
-                        : isLate(task)
-                        ? "2px solid #ea580c"
-                        : "1px solid rgba(111,175,111,0.15)",
+                      border: `2px solid ${health.color}`,
                       borderRadius: "12px",
                       padding: "14px 16px",
                       display: "flex",
@@ -1579,6 +1595,7 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
                           );
                         })()}
                         {task.carriedOver && <span style={{ fontSize: "11px", padding: "2px 6px", background: "rgba(255,165,0,0.15)", color: "#d97706", borderRadius: "4px", fontWeight: "600" }}>from {task.originalDate}</span>}
+                        <TaskHealthIndicator health={health} compact={true} />
                       </div>
                       <div style={{ fontSize: "12px", color: "#6B8E6B" }}>
                         {minutesToHHMM(task.start)} — {minutesToHHMM(task.end)} • {renderBlockTimeText(task)}
@@ -1607,13 +1624,15 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
                     >
                       ×
                     </button>
-                  </div>
+                  </SortableTaskItem>
                   );
                 })}
                     </div>
+                    </SortableContext>
                   </div>
                 )}
               </div>
+              </DndContext>
             )}
           </div>
           )}

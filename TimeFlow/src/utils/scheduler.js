@@ -391,6 +391,93 @@ export const detectPotentialConflicts = (newTask, existingTasks) => {
   return { conflicts, warnings };
 };
 
+/**
+ * Assess task health/risk level based on multiple factors
+ * @param {Object} task - Task to assess
+ * @param {Array} allTasks - All tasks for context (for conflict detection)
+ * @param {Object} availability - User's availability window
+ * @returns {Object} - {status: 'healthy'|'warning'|'critical', reasons: [], score: number}
+ */
+export const getTaskHealth = (task, allTasks = [], availability = null) => {
+  const reasons = [];
+  let riskScore = 0; // Higher score = higher risk
+
+  // Factor 1: Reschedule attempts (0-40 points)
+  const attempts = task.attempts || 0;
+  if (attempts >= 5) {
+    riskScore += 40;
+    reasons.push('Rescheduled 5+ times - chronic procrastination');
+  } else if (attempts >= 3) {
+    riskScore += 25;
+    reasons.push(`Rescheduled ${attempts} times - consider breaking down`);
+  } else if (attempts >= 1) {
+    riskScore += 10;
+    reasons.push(`Rescheduled ${attempts} time(s)`);
+  }
+
+  // Factor 2: Deadline proximity (0-30 points)
+  const urgency = getDeadlineUrgency(task);
+  if (urgency) {
+    if (urgency.level === 'overdue') {
+      riskScore += 30;
+      reasons.push('OVERDUE');
+    } else if (urgency.level === 'today') {
+      riskScore += 25;
+      reasons.push('Due today');
+    } else if (urgency.level === 'tomorrow') {
+      riskScore += 15;
+      reasons.push('Due tomorrow');
+    } else if (urgency.level === 'soon') {
+      riskScore += 8;
+      reasons.push(urgency.message);
+    }
+  }
+
+  // Factor 3: Conflicts with other tasks (0-20 points)
+  if (task.startTime && allTasks.length > 0) {
+    const conflicts = detectConflicts(allTasks.filter(t =>
+      t.start && t.end && !t.completed
+    ));
+    const taskConflicts = conflicts.filter(c =>
+      c.task1.id === task.id || c.task2.id === task.id
+    );
+    if (taskConflicts.length > 0) {
+      riskScore += Math.min(20, taskConflicts.length * 10);
+      reasons.push(`Conflicts with ${taskConflicts.length} other task(s)`);
+    }
+  }
+
+  // Factor 4: Contributes to overflow (0-10 points)
+  if (availability && allTasks.length > 0) {
+    const overflow = calculateOverflow(
+      allTasks.filter(t => !t.completed),
+      availability
+    );
+    if (overflow.severity !== 'none') {
+      const isAffected = overflow.affectedTasks.some(t => t.id === task.id);
+      if (isAffected) {
+        riskScore += overflow.severity === 'critical' ? 10 : 5;
+        reasons.push('Contributes to schedule overflow');
+      }
+    }
+  }
+
+  // Determine status based on score
+  let status = 'healthy';
+  if (riskScore >= 50) {
+    status = 'critical';
+  } else if (riskScore >= 25) {
+    status = 'warning';
+  }
+
+  return {
+    status,
+    score: riskScore,
+    reasons,
+    color: status === 'critical' ? '#dc2626' : status === 'warning' ? '#f59e0b' : '#6FAF6F'
+  };
+};
+
 export const scheduler = {
   schedule: scheduleTasksSequentially,
   reschedule: rescheduleUnfinishedTasks,
@@ -399,5 +486,6 @@ export const scheduler = {
   prioritizeTasks,
   splitTaskAcrossDays,
   migrateTask,
+  getTaskHealth,
   optimize: (schedule) => schedule
 };
