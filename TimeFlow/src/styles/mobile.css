@@ -1,0 +1,559 @@
+/* Mobile-First CSS System for TimeFlow */
+/* Optimized for phones (375px-430px) with iOS-native patterns */
+
+:root {
+  /* Touch Target Sizing (iOS HIG) */
+  --touch-min: 44px;
+  --touch-comfortable: 48px;
+  --touch-large: 56px;
+
+  /* Mobile Spacing Scale */
+  --spacing-xs: 8px;
+  --spacing-sm: 12px;
+  --spacing-md: 16px;
+  --spacing-lg: 20px;
+  --spacing-xl: 24px;
+  --spacing-xxl: 32px;
+
+  /* iOS-Style Animation Curves */
+  --spring-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  --iOS-ease: cubic-bezier(0.4, 0, 0.2, 1);
+  --iOS-ease-in: cubic-bezier(0.42, 0, 1, 1);
+  --iOS-ease-out: cubic-bezier(0, 0, 0.58, 1);
+
+  /* Safe Area Insets (iPhone notch support) */
+  --safe-top: env(safe-area-inset-top);
+  --safe-bottom: env(safe-area-inset-bottom);
+  --safe-left: env(safe-area-inset-left);
+  --safe-right: env(safe-area-inset-right);
+
+  /* Mobile Typography Scale */
+  --font-xs: 12px;
+  --font-sm: 14px;
+  --font-base: 15px;
+  --font-md: 16px; /* Minimum for inputs to prevent iOS zoom */
+  --font-lg: 18px;
+  --font-xl: 20px;
+  --font-xxl: 24px;
+
+  /* Z-Index Scale */
+  --z-base: 1;
+  --z-dropdown: 100;
+  --z-sticky: 200;
+  --z-modal: 300;
+  --z-overlay: 400;
+  --z-toast: 500;
+}
+
+/* ============================================
+   MOBILE LAYOUT SYSTEM
+   ============================================ */
+
+.mobile-layout {
+  display: flex;
+  flex-direction: column;
+  min-height: 100dvh; /* Dynamic viewport height */
+  height: 100dvh;
+  padding-top: var(--safe-top);
+  padding-bottom: var(--safe-bottom);
+  overflow: hidden;
+}
+
+.mobile-header {
+  position: sticky;
+  top: 0;
+  z-index: var(--z-sticky);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  background: rgba(255, 255, 255, 0.85);
+  border-bottom: 0.5px solid rgba(0, 0, 0, 0.1);
+  padding: var(--spacing-md) var(--spacing-lg);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 56px;
+}
+
+.mobile-header h1 {
+  font-size: var(--font-lg);
+  font-weight: 700;
+  color: var(--primary, #3B6E3B);
+  margin: 0;
+}
+
+.mobile-main {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  padding: var(--spacing-md);
+  padding-bottom: calc(var(--spacing-xxl) + 56px); /* Bottom nav clearance */
+}
+
+/* ============================================
+   BOTTOM NAVIGATION (iOS-Style Tab Bar)
+   ============================================ */
+
+.bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: calc(56px + var(--safe-bottom));
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  background: rgba(255, 255, 255, 0.8);
+  border-top: 0.5px solid rgba(0, 0, 0, 0.1);
+  display: flex;
+  justify-content: space-around;
+  align-items: flex-start;
+  padding-top: 8px;
+  padding-bottom: max(8px, var(--safe-bottom));
+  z-index: var(--z-sticky);
+  box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.bottom-nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  min-width: var(--touch-min);
+  min-height: var(--touch-min);
+  padding: 4px 12px;
+  background: none;
+  border: none;
+  color: #8E8E93; /* iOS inactive gray */
+  font-size: var(--font-xs);
+  font-weight: 500;
+  cursor: pointer;
+  transition: color 0.2s var(--iOS-ease);
+  touch-action: manipulation;
+}
+
+.bottom-nav-item.active {
+  color: var(--primary, #3B6E3B);
+}
+
+.bottom-nav-item:active {
+  transform: scale(0.94);
+  transition: transform 0.1s;
+}
+
+.bottom-nav-icon {
+  font-size: 24px;
+  line-height: 1;
+}
+
+/* ============================================
+   MOBILE CARDS
+   ============================================ */
+
+.mobile-card {
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 16px;
+  padding: var(--spacing-md);
+  margin-bottom: var(--spacing-md);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  border: 1px solid rgba(111, 175, 111, 0.15);
+}
+
+.mobile-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--spacing-sm);
+}
+
+.mobile-card-title {
+  font-size: var(--font-md);
+  font-weight: 600;
+  color: var(--text-primary, #1C1C1E);
+  margin: 0;
+}
+
+/* ============================================
+   TOUCH TARGETS & BUTTONS
+   ============================================ */
+
+.touch-target {
+  min-height: var(--touch-min);
+  min-width: var(--touch-min);
+  padding: var(--spacing-sm) var(--spacing-md);
+  touch-action: manipulation; /* Prevents double-tap zoom */
+  -webkit-tap-highlight-color: transparent;
+}
+
+.btn-mobile {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--touch-comfortable);
+  padding: var(--spacing-sm) var(--spacing-lg);
+  border-radius: 12px;
+  font-size: var(--font-base);
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  touch-action: manipulation;
+  transition: all 0.2s var(--iOS-ease);
+}
+
+.btn-mobile:active {
+  transform: scale(0.96);
+}
+
+.btn-mobile-primary {
+  background: linear-gradient(135deg, #6FAF6F 0%, #3B6E3B 100%);
+  color: white;
+  box-shadow: 0 2px 8px rgba(111, 175, 111, 0.3);
+}
+
+.btn-mobile-primary:active {
+  box-shadow: 0 1px 4px rgba(111, 175, 111, 0.4);
+}
+
+.btn-mobile-secondary {
+  background: rgba(111, 175, 111, 0.1);
+  color: var(--primary, #3B6E3B);
+}
+
+.btn-mobile-danger {
+  background: rgba(255, 59, 48, 0.1);
+  color: #FF3B30;
+}
+
+/* ============================================
+   FORM INPUTS (Mobile-Optimized)
+   ============================================ */
+
+.input-mobile {
+  font-size: var(--font-md); /* 16px prevents iOS zoom on focus */
+  padding: var(--spacing-sm) var(--spacing-md);
+  min-height: var(--touch-comfortable);
+  border: 2px solid rgba(111, 175, 111, 0.2);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.9);
+  transition: all 0.2s var(--iOS-ease);
+  width: 100%;
+}
+
+.input-mobile:focus {
+  border-color: var(--primary, #6FAF6F);
+  outline: none;
+  box-shadow: 0 0 0 4px rgba(111, 175, 111, 0.1);
+  background: white;
+}
+
+.input-mobile::placeholder {
+  color: #C7C7CC; /* iOS placeholder gray */
+}
+
+/* ============================================
+   BOTTOM SHEET (iOS-Style Modal)
+   ============================================ */
+
+.bottom-sheet-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  z-index: var(--z-overlay);
+  touch-action: none;
+}
+
+.bottom-sheet {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  max-height: 90vh;
+  background: white;
+  border-radius: 20px 20px 0 0;
+  padding: var(--spacing-md);
+  padding-bottom: calc(var(--spacing-lg) + var(--safe-bottom));
+  z-index: var(--z-modal);
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.15);
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.bottom-sheet-drag-handle {
+  width: 40px;
+  height: 5px;
+  background: #D1D1D6; /* iOS handle gray */
+  border-radius: 3px;
+  margin: 8px auto 16px;
+  cursor: grab;
+}
+
+.bottom-sheet-drag-handle:active {
+  cursor: grabbing;
+}
+
+.bottom-sheet-title {
+  font-size: var(--font-lg);
+  font-weight: 700;
+  color: var(--text-primary, #1C1C1E);
+  margin: 0 0 var(--spacing-md) 0;
+  text-align: center;
+}
+
+.bottom-sheet-action {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  min-height: var(--touch-large);
+  padding: var(--spacing-md);
+  background: rgba(111, 175, 111, 0.05);
+  border: none;
+  border-radius: 12px;
+  margin-bottom: var(--spacing-sm);
+  font-size: var(--font-base);
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s var(--iOS-ease);
+  width: 100%;
+  text-align: left;
+}
+
+.bottom-sheet-action:active {
+  background: rgba(111, 175, 111, 0.15);
+  transform: scale(0.98);
+}
+
+.bottom-sheet-action-primary {
+  background: rgba(111, 175, 111, 0.1);
+  color: var(--primary, #3B6E3B);
+  font-weight: 600;
+}
+
+.bottom-sheet-action-danger {
+  background: rgba(255, 59, 48, 0.05);
+  color: #FF3B30;
+}
+
+.bottom-sheet-action-icon {
+  font-size: 20px;
+  min-width: 24px;
+  text-align: center;
+}
+
+/* ============================================
+   UTILITY CLASSES
+   ============================================ */
+
+.mobile-only {
+  display: block;
+}
+
+.desktop-only {
+  display: none;
+}
+
+/* Accessibility: Respect user's motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ============================================
+   RESPONSIVE BREAKPOINTS (Mobile-First)
+   ============================================ */
+
+/* Tablet: 431px+ */
+@media (min-width: 431px) {
+  .mobile-main {
+    padding: var(--spacing-lg);
+  }
+
+  .mobile-card {
+    padding: var(--spacing-lg);
+  }
+}
+
+/* Tablet: 768px+ */
+@media (min-width: 768px) {
+  .mobile-only {
+    display: none;
+  }
+
+  .desktop-only {
+    display: block;
+  }
+
+  .bottom-nav {
+    display: none; /* Hide on tablet/desktop */
+  }
+
+  .mobile-main {
+    padding-bottom: var(--spacing-xl); /* No bottom nav clearance */
+  }
+
+  .mobile-layout {
+    max-width: 768px;
+    margin: 0 auto;
+  }
+}
+
+/* Desktop: 1024px+ */
+@media (min-width: 1024px) {
+  .mobile-layout {
+    max-width: 960px;
+  }
+}
+
+/* ============================================
+   ANIMATIONS
+   ============================================ */
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.fade-in-up {
+  animation: fadeInUp 0.4s var(--iOS-ease);
+}
+
+.scale-in {
+  animation: scaleIn 0.3s var(--spring-bounce);
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+/* ============================================
+   PERFORMANCE OPTIMIZATIONS
+   ============================================ */
+
+/* Optimize touch scrolling */
+.mobile-main,
+.bottom-sheet {
+  will-change: scroll-position;
+}
+
+/* Optimize animations */
+.bottom-sheet-overlay,
+.bottom-sheet {
+  will-change: transform, opacity;
+}
+
+/* Prevent text selection on interactive elements */
+.touch-target,
+.btn-mobile,
+.bottom-nav-item {
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* ============================================
+   MOBILE TASK INPUT FORM
+   ============================================ */
+
+.mobile-task-input {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 16px;
+  background: rgba(255,255,255,0.95);
+  border-radius: 16px;
+  border: 1px solid rgba(111,175,111,0.15);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  margin-bottom: 16px;
+}
+
+.mobile-task-input input {
+  font-size: 16px !important; /* Prevents iOS zoom */
+  min-height: 48px;
+  padding: 12px 16px;
+  border: 2px solid rgba(111,175,111,0.2);
+  border-radius: 12px;
+  background: white;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  box-sizing: border-box;
+}
+
+.mobile-task-input input:focus {
+  border-color: #6FAF6F;
+  box-shadow: 0 0 0 4px rgba(111,175,111,0.1);
+}
+
+.mobile-task-input input::placeholder {
+  color: #C7C7CC;
+}
+
+.mobile-add-btn {
+  min-height: 52px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #6FAF6F, #3B6E3B);
+  color: white;
+  font-size: 16px;
+  font-weight: 700;
+  border: none;
+  box-shadow: 0 4px 12px rgba(59,110,59,0.25);
+  cursor: pointer;
+  touch-action: manipulation;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.mobile-add-btn:active {
+  transform: scale(0.97);
+  box-shadow: 0 2px 6px rgba(59,110,59,0.3);
+}
+
+/* ============================================
+   MOBILE TASK CARD STYLES
+   ============================================ */
+
+.task-card-mobile {
+  transition: transform 0.15s ease, box-shadow 0.2s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.task-card-mobile:active {
+  transform: scale(0.98);
+}
+
+.task-card-mobile.completed {
+  opacity: 0.5;
+}
+
+.task-card-mobile.active {
+  animation: scaleIn 0.3s var(--spring-bounce);
+}

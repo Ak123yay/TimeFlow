@@ -1,5 +1,8 @@
 /* src/App.css — Nature-themed Setup screen styles */
 
+/* Import mobile-first CSS system */
+@import url('./styles/mobile.css');
+
 /* Palette */
 :root{
   --bg: #F0F8F2;        /* soft green / cream */
@@ -11,6 +14,25 @@
   --soft-shadow: rgba(12, 34, 12, 0.06);
   --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   --transition-fast: all 0.15s ease;
+
+  /* NEW: Enhanced nature-inspired earthy tones */
+  --moss: #7C9A73;           /* Soft moss green */
+  --sage: #9DB39B;           /* Sage green */
+  --earth: #8B7355;          /* Earthy brown */
+  --sand: #F5F1E8;           /* Warm sand */
+  --sky: #E8F4F2;            /* Light sky blue */
+  --sunset: #FFB88C;         /* Warm sunset orange */
+
+  /* Status colors - nature-inspired */
+  --success: #52B788;        /* Fresh leaf green */
+  --warning: #F9C74F;        /* Golden sunflower */
+  --danger: #FF6B6B;         /* Autumn berry red */
+  --info: #90E0EF;           /* Clear water blue */
+
+  /* Gradients */
+  --gradient-dawn: linear-gradient(135deg, #FFE5D4, #FFB88C);
+  --gradient-forest: linear-gradient(135deg, #6FAF6F, #3B6E3B);
+  --gradient-mist: linear-gradient(135deg, rgba(255,255,255,0.98), rgba(240,248,242,0.95));
 
   /* Responsive breakpoints */
   --bp-mobile: 640px;
@@ -698,6 +720,14 @@ input:focus-visible {
   }
 }
 
+/* Disable floating leaves on mobile to save battery */
+@media (max-width:768px) {
+  .floating-leaf {
+    animation: none !important;
+    display: none !important;
+  }
+}
+
 /* Ensure content is above floating leaves */
 .App > * {
   position: relative;
@@ -778,35 +808,39 @@ input:focus-visible {
     touch-action: manipulation;
   }
 
-  /* FULLSCREEN MODE: Mobile optimized with better spacing */
+  /* FULLSCREEN MODE: Mobile optimized - immersive sheet design */
   .setup-fullscreen {
-    padding: 40px 32px 24px 32px; /* More space at top and sides */
+    padding: 0;  /* Edge-to-edge */
     min-height: 100dvh;
-    background: #ffffff;
+    background: var(--sand);  /* Warm sandy background instead of pure white */
     display: flex;
-    align-items: center; /* Vertically center setup */
-    justify-content: center;
+    align-items: flex-end;  /* Align to bottom for sheet effect */
+    justify-content:center;
   }
 
   .setup-inner {
-    padding: 20px; /* Reduced since outer container has padding now */
+    padding: 20px 16px 24px;  /* Tighter horizontal padding */
+    border-radius: 24px 24px 0 0;  /* Rounded top corners (card from bottom) */
+    background: linear-gradient(180deg, #FFFEF9 0%, #F5F1E8 100%);  /* Subtle gradient */
+    box-shadow: 0 -4px 24px rgba(59,110,59,0.08);  /* Soft upward shadow */
+    min-height: calc(100dvh - 40px);
+    width: 100%;
+    max-width: 100%;
     /* Safe area padding for notched devices (iPhone X, etc.) */
     padding-top: max(20px, env(safe-area-inset-top));
-    padding-bottom: max(20px, env(safe-area-inset-bottom));
-    padding-left: max(20px, env(safe-area-inset-left));
-    padding-right: max(20px, env(safe-area-inset-right));
-    gap: 20px; /* Increased from 12px for better spacing */
-    border-radius: 0;
-    box-shadow: none;
-    max-width: 100%;
-    background: #ffffff;
+    padding-bottom: max(24px, env(safe-area-inset-bottom));
+    padding-left: max(16px, env(safe-area-inset-left));
+    padding-right: max(16px, env(safe-area-inset-right));
+    gap: 20px;
+    display: flex;
+    flex-direction: column;
   }
 
   /* Make App container truly fullscreen */
   .App {
     min-height: 100dvh;
     min-height: -webkit-fill-available;
-    background: #ffffff;
+    background: var(--sand);  /* Warm sandy background */
   }
 
   /* Better spacing for section headers */
@@ -841,6 +875,275 @@ input:focus-visible {
 
   .preset-sub {
     font-size: 12px !important;
+  }
+
+  /* ============================================
+     ENHANCED MOBILE TASK CARDS - NATURE-INSPIRED
+     ============================================ */
+
+  /* Modern task card design with organic shapes */
+  .task-card {
+    padding: 18px !important;
+    margin-bottom: 14px !important;
+    border-radius: 16px !important;
+    background: linear-gradient(135deg,
+      rgba(255,255,255,0.98) 0%,
+      rgba(245,253,250,0.95) 100%) !important;
+    border: 1.5px solid rgba(111,175,111,0.15) !important;
+    box-shadow:
+      0 2px 8px rgba(59,110,59,0.06),
+      0 0 0 1px rgba(255,255,255,0.5) inset !important;
+    border-left: 4px solid var(--primary-2) !important;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  }
+
+  /* Press feedback */
+  .task-card:active {
+    transform: scale(0.98) !important;
+    box-shadow: 0 1px 4px rgba(59,110,59,0.08) !important;
+  }
+
+  /* Active/current task - prominent hero styling */
+  .task-card.active,
+  [data-task-active="true"] {
+    background: var(--gradient-forest) !important;
+    color: white !important;
+    box-shadow:
+      0 8px 24px rgba(59,110,59,0.25),
+      0 0 0 2px rgba(111,175,111,0.4) !important;
+    border-left-color: rgba(255,255,255,0.8) !important;
+  }
+
+  /* Active task text color override */
+  .task-card.active *,
+  [data-task-active="true"] * {
+    color: white !important;
+  }
+
+  /* Completed tasks - muted appearance */
+  .task-card.completed,
+  [data-task-completed="true"] {
+    opacity: 0.5 !important;
+    background: rgba(245,241,232,0.6) !important;
+    border-left-color: var(--sage) !important;
+  }
+
+  /* Task name text */
+  .task-name,
+  [data-task-name] {
+    font-size: 16px !important;
+    font-weight: 600 !important;
+    line-height: 1.4 !important;
+    margin-bottom: 6px !important;
+  }
+
+  /* Task time and duration */
+  .task-time,
+  [data-task-time] {
+    font-size: 14px !important;
+    font-weight: 500 !important;
+    color: var(--muted) !important;
+  }
+
+  .task-duration,
+  [data-task-duration] {
+    font-size: 13px !important;
+    font-weight: 500 !important;
+    color: var(--moss) !important;
+  }
+
+  /* Status badges - larger and more visible */
+  .task-badge,
+  [data-task-badge] {
+    font-size: 12px !important;
+    font-weight: 600 !important;
+    padding: 6px 10px !important;
+    border-radius: 8px !important;
+    letter-spacing: 0.3px !important;
+  }
+
+  /* ============================================
+     MOBILE TYPOGRAPHY SCALE
+     ============================================ */
+
+  /* Headings - clear hierarchy */
+  h1 {
+    font-size: 28px !important;
+    font-weight: 800 !important;
+    line-height: 1.2 !important;
+  }
+
+  h2 {
+    font-size: 22px !important;
+    font-weight: 700 !important;
+    line-height: 1.3 !important;
+  }
+
+  h3 {
+    font-size: 18px !important;
+    font-weight: 700 !important;
+    line-height: 1.4 !important;
+  }
+
+  /* Body text and labels */
+  p, label, span {
+    font-size: 15px !important;
+    line-height: 1.5 !important;
+  }
+
+  /* Form inputs - 16px prevents iOS zoom */
+  input,
+  select,
+  textarea {
+    font-size: 16px !important;
+    line-height: 1.4 !important;
+  }
+
+  input::placeholder {
+    font-size: 15px !important;
+  }
+
+  /* Buttons - clear and tappable */
+  button {
+    font-size: 15px !important;
+    font-weight: 600 !important;
+    min-height: 44px !important; /* Apple touch target guideline */
+  }
+
+  /* ============================================
+     MOBILE SPACING IMPROVEMENTS
+     ============================================ */
+
+  /* Section spacing */
+  .section,
+  section {
+    margin-bottom: 32px !important;
+  }
+
+  /* Form groups */
+  .form-group,
+  .control {
+    margin-bottom: 20px !important;
+  }
+
+  /* Button groups */
+  .button-group,
+  .actions-row {
+    gap: 12px !important;
+  }
+
+  /* Card spacing */
+  .card,
+  [data-card] {
+    padding: 20px !important;
+    margin-bottom: 16px !important;
+  }
+
+  /* List item spacing */
+  li {
+    margin-bottom: 12px !important;
+  }
+
+  /* ============================================
+     ACTIVE TIMER HERO SECTION
+     ============================================ */
+
+  /* Floating hero card when task is active */
+  .active-timer-hero {
+    position: sticky !important;
+    top: 16px !important;
+    z-index: 100 !important;
+    margin: -8px 0 24px !important;
+    padding: 24px 20px !important;
+    border-radius: 20px !important;
+    background: var(--gradient-forest) !important;
+    color: white !important;
+    box-shadow:
+      0 12px 32px rgba(59, 110, 59, 0.3),
+      0 0 0 1px rgba(255, 255, 255, 0.2) inset !important;
+    border: 2px solid rgba(255, 255, 255, 0.15) !important;
+  }
+
+  /* Timer countdown - large and prominent */
+  .timer-countdown {
+    font-size: 56px !important;
+    font-weight: 900 !important;
+    letter-spacing: -2px !important;
+    text-align: center !important;
+    margin: 16px 0 !important;
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.15) !important;
+    color: white !important;
+  }
+
+  /* Timer task name */
+  .timer-task-name {
+    font-size: 18px !important;
+    font-weight: 700 !important;
+    margin: 0 0 16px !important;
+    text-align: center !important;
+    color: white !important;
+  }
+
+  /* Circular progress ring */
+  .progress-ring {
+    stroke: rgba(255, 255, 255, 0.3) !important;
+    stroke-width: 6 !important;
+    fill: none !important;
+  }
+
+  .progress-ring-fill {
+    stroke: white !important;
+    stroke-width: 6 !important;
+    stroke-linecap: round !important;
+    fill: none !important;
+    transform-origin: center !important;
+    transition: stroke-dashoffset 0.3s ease !important;
+  }
+
+  /* Timer action buttons */
+  .timer-actions {
+    display: flex !important;
+    gap: 12px !important;
+    margin-top: 20px !important;
+  }
+
+  .timer-actions button {
+    flex: 1 !important;
+    padding: 14px !important;
+    border-radius: 12px !important;
+    background: rgba(255, 255, 255, 0.2) !important;
+    color: white !important;
+    border: none !important;
+    font-weight: 600 !important;
+    transition: all 0.2s ease !important;
+  }
+
+  .timer-actions button:active {
+    background: rgba(255, 255, 255, 0.3) !important;
+    transform: scale(0.96) !important;
+  }
+
+  /* Timer container with circular progress */
+  .timer-container {
+    position: relative !important;
+    width: 200px !important;
+    height: 200px !important;
+    margin: 0 auto !important;
+  }
+
+  .timer-container svg {
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    transform: rotate(-90deg) !important;
+  }
+
+  .timer-container .timer-countdown {
+    position: absolute !important;
+    top: 50% !important;
+    left: 50% !important;
+    transform: translate(-50%, -50%) !important;
+    margin: 0 !important;
   }
 
   /* Compact task cards with better padding */
@@ -914,5 +1217,17 @@ input:focus-visible {
   [style*="position: fixed"] > div {
     padding: 16px !important;
     max-width: calc(100vw - 16px) !important;
+  }
+
+  /* Mobile-only button - shown on mobile, hidden on desktop */
+  .mobile-only-button {
+    display: flex !important;
+  }
+}
+
+/* Desktop: Hide mobile-only elements */
+@media (min-width: 769px) {
+  .mobile-only-button {
+    display: none !important;
   }
 }

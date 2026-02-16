@@ -3,6 +3,7 @@ import { loadAvailability, getUnfinishedTasksFromPreviousDays, saveTasksForDate,
 import { rescheduleUnfinishedTasks, detectConflicts, calculateOverflow, getDeadlineUrgency, detectPotentialConflicts, getTaskHealth } from "../utils/scheduler";
 import { hhmmToMinutes, minutesToHHMM, getTodayString, formatDuration } from "../utils/timeUtils";
 import { getCached, setCached, flushNow } from "../utils/storageCache";
+import { haptic } from "../utils/haptics";
 import TaskHealthIndicator from "./TaskHealthIndicator";
 import {
   saveTaskToHistory,
@@ -13,6 +14,14 @@ import {
   suggestDuration
 } from "../utils/analytics";
 import { updateStreak, markMeaningfulAction, loadStreak } from "../utils/streaks";
+import {
+  requestNotificationPermission,
+  scheduleAllTaskNotifications,
+  cancelNotifications,
+  areNotificationsEnabled,
+  getNotificationPreference,
+  setNotificationPreference
+} from "../utils/notifications";
 import DetailedTimeline from "./DetailedTimeline";
 import Celebration from "./Celebration";
 import RescheduleModal from "./dialogs/RescheduleModal";
@@ -36,6 +45,12 @@ import {
 import { CSS } from '@dnd-kit/utilities';
 import React from 'react';
 import "../App.css";
+import MobileLayout from './mobile/MobileLayout';
+import TaskCard from './mobile/TaskCard';
+import TaskTimerComponent from './shared/TaskTimer';
+import StatsBar, { OverflowWarning } from './shared/StatsBar';
+import GrowingVine from './mobile/animations/GrowingVine';
+import { LeafSwipeLeft, LeafCelebration } from './mobile/animations/LeafSwipe';
 
 // Memoized LeafIcon component to prevent unnecessary re-renders
 const LeafIcon = React.memo(({ className = "", size = 18, fill = "#3B6E3B" }) => {
@@ -190,6 +205,15 @@ function SortableTaskItem({ task, children, onClick, style: customStyle, classNa
 export default function Today({ onEndDay, onShowWeek, onShowPool }) {
   const availability = loadAvailability();
 
+  // Mobile detection
+  const [isMobile, setIsMobile] = useState(() => window.matchMedia('(max-width: 768px)').matches);
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 768px)');
+    const handler = (e) => setIsMobile(e.matches);
+    mq.addEventListener('change', handler);
+    return () => mq.removeEventListener('change', handler);
+  }, []);
+
   // View mode state
   const [viewMode, setViewMode] = useState(() => {
     try {
@@ -225,6 +249,9 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [editingTask, setEditingTask] = useState(null);
 
+  // Mobile add-task bottom sheet state
+  const [showAddSheet, setShowAddSheet] = useState(false);
+
   // Focus mode state
   const [focusModeEnabled, setFocusModeEnabled] = useState(() => {
     try {
@@ -234,9 +261,16 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
     }
   });
 
+  // Notification state
+  const [notificationsEnabled, setNotificationsEnabled] = useState(() => {
+    return getNotificationPreference();
+  });
+  const notificationTimeoutsRef = useRef([]);
+
   const toggleFocusMode = () => {
     const newValue = !focusModeEnabled;
     setFocusModeEnabled(newValue);
+    haptic.medium(); // Haptic feedback on focus mode toggle
     try {
       localStorage.setItem('focusModeEnabled', newValue.toString());
     } catch (e) {
@@ -254,6 +288,45 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
     setShowFocusModeToast(true);
     setTimeout(() => setShowFocusModeToast(false), 2000);
   };
+
+  // Toggle notifications
+  const toggleNotifications = async () => {
+    if (!notificationsEnabled) {
+      // Request permission
+      const granted = await requestNotificationPermission();
+      if (granted) {
+        setNotificationsEnabled(true);
+        setNotificationPreference(true);
+        // Schedule notifications for current tasks
+        const timeouts = scheduleAllTaskNotifications(tasks);
+        notificationTimeoutsRef.current = timeouts;
+      }
+    } else {
+      // Disable notifications
+      setNotificationsEnabled(false);
+      setNotificationPreference(false);
+      // Cancel all scheduled notifications
+      cancelNotifications(notificationTimeoutsRef.current);
+      notificationTimeoutsRef.current = [];
+    }
+  };
+
+  // Schedule notifications when tasks change
+  useEffect(() => {
+    if (notificationsEnabled && areNotificationsEnabled()) {
+      // Cancel existing notifications
+      cancelNotifications(notificationTimeoutsRef.current);
+
+      // Schedule new notifications
+      const timeouts = scheduleAllTaskNotifications(tasks);
+      notificationTimeoutsRef.current = timeouts;
+    }
+
+    return () => {
+      // Cleanup on unmount
+      cancelNotifications(notificationTimeoutsRef.current);
+    };
+  }, [tasks, notificationsEnabled]);
 
   // Keyboard shortcut for focus mode (F key)
   useEffect(() => {
@@ -289,6 +362,7 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
     const { active, over } = event;
 
     if (active && over && active.id !== over.id) {
+      haptic.selection(); // Haptic feedback on drag reorder
       setTasks((items) => {
         const oldIndex = items.findIndex((item) => item.id === active.id);
         const newIndex = items.findIndex((item) => item.id === over.id);
@@ -302,13 +376,18 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
     }
   };
 
-  // Check if all tasks are done
+  // Check if all tasks are done (only trigger once via ref)
+  const hasShownAllDone = useRef(false);
   useEffect(() => {
     const allDone = tasks.length > 0 && tasks.every(t => t.completed);
-    if (allDone && !showCelebration) {
+    if (allDone && !hasShownAllDone.current) {
+      hasShownAllDone.current = true;
       setShowCelebration('allDone');
     }
-  }, [tasks, showCelebration]);
+    if (!allDone) {
+      hasShownAllDone.current = false;
+    }
+  }, [tasks]);
 
   // Load unfinished tasks from previous days on mount
   useEffect(() => {
@@ -429,6 +508,7 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
     if (conflictCheck) {
       // Handle direct overlaps - block task addition
       if (conflictCheck.conflicts.length > 0) {
+        haptic.warning(); // Haptic feedback on conflict
         alert(`Cannot add task: ${conflictCheck.conflicts[0].message}\n\nPlease choose a different time or adjust the conflicting task.`);
         return; // Block task addition
       }
@@ -441,6 +521,7 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
     }
 
     setTasks(prev => [...prev, newTask]);
+    haptic.light(); // Haptic feedback on successful task addition
     setTaskName("");
     setTaskDuration("");
     setTaskStartTime("");
@@ -453,8 +534,9 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
       clearInterval(timerRef.current);
       setActiveTaskId(null);
       setSecondsLeft(0);
-      setShowFinishPrompt(false);
+      setShowRescheduleModal(false);
     }
+    haptic.heavy(); // Haptic feedback on task deletion
     setTasks(prev => prev.filter(t => t.id !== id));
   };
 
@@ -538,6 +620,7 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
     activeInitialSecRef.current = seconds;
     setActiveTaskId(t.id);
     setSecondsLeft(seconds);
+    haptic.medium(); // Haptic feedback on task start
 
     // ANALYTICS: Track when task starts
     setTasks(prev => prev.map(x =>
@@ -581,6 +664,7 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
     if (secondsLeft > 0) return;
 
     // secondsLeft <= 0 -> show finish modal (do not auto-mark)
+    haptic.notification(); // Haptic feedback when timer finishes
     clearInterval(timerRef.current);
     setShowRescheduleModal(true);
   }, [secondsLeft, activeTaskId]);
@@ -612,6 +696,7 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
           }
         : t
     ));
+    haptic.success(); // Haptic feedback on task completion
 
     // ANALYTICS: Save to history for future duration predictions
     const taskToSave = {
@@ -866,6 +951,401 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
   const activeTask = tasks.find(t => t.id === activeTaskId) ?? null;
   const progressPct = activeTask ? Math.max(0, Math.min(100, (secondsLeft / ((activeInitialSecRef.current || 1))) * 100)) : 0;
 
+  // ==================== MOBILE RENDER ====================
+  if (isMobile) {
+    const handleMobileNav = (tab) => {
+      haptic.light();
+      if (tab === 'week') onShowWeek();
+      else if (tab === 'pool') onShowPool();
+      else if (tab === 'stats') onEndDay();
+    };
+
+    const carriedTasks = taskBlocks.filter(t => t.carriedOver);
+    const todayTasks = taskBlocks.filter(t => !t.carriedOver);
+    const completedCount = tasks.filter(t => t.completed).length;
+    const progressPercent = tasks.length > 0 ? Math.round((completedCount / tasks.length) * 100) : 0;
+
+    // Focus mode filter
+    const filterForFocus = (list) => {
+      if (!focusModeEnabled || !activeTaskId) return list;
+      return list.filter(task => {
+        if (task.id === activeTaskId) return true;
+        if (task.completed) return false;
+        const activeIndex = taskBlocks.findIndex(t => t.id === activeTaskId);
+        const currentIndex = taskBlocks.findIndex(t => t.id === task.id);
+        return currentIndex <= activeIndex;
+      });
+    };
+
+    const hour = new Date().getHours();
+    const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
+
+    return (
+      <MobileLayout showBottomNav={!activeTaskId} onNavigate={handleMobileNav}>
+
+        {/* ---- Hero Card ---- */}
+        {!activeTask ? (
+          <div style={{
+            background: '#fff',
+            borderRadius: '16px',
+            padding: '16px',
+            marginBottom: '12px',
+            boxShadow: '0 1px 8px rgba(0,0,0,0.05)'
+          }}>
+            {/* Top row: greeting + toggles */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '10px' }}>
+              <div>
+                <p style={{ fontSize: '12px', color: '#8E8E93', margin: 0, fontWeight: 500 }}>{greeting}</p>
+                <h1 style={{ fontSize: '20px', fontWeight: 800, color: '#1A1A1A', margin: '2px 0 0', letterSpacing: '-0.3px' }}>
+                  Today's Flow
+                </h1>
+              </div>
+              <div style={{ display: 'flex', gap: '6px' }}>
+                <button
+                  onClick={toggleFocusMode}
+                  style={{
+                    width: '34px', height: '34px', borderRadius: '10px',
+                    border: 'none',
+                    background: focusModeEnabled ? '#3B6E3B' : '#F0F0F0',
+                    color: focusModeEnabled ? '#fff' : '#8E8E93',
+                    fontSize: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    cursor: 'pointer', touchAction: 'manipulation'
+                  }}
+                  aria-label="Focus mode"
+                >{focusModeEnabled ? '🎯' : '👁️'}</button>
+                <button
+                  onClick={toggleNotifications}
+                  style={{
+                    width: '34px', height: '34px', borderRadius: '10px',
+                    border: 'none',
+                    background: notificationsEnabled ? '#3B6E3B' : '#F0F0F0',
+                    color: notificationsEnabled ? '#fff' : '#8E8E93',
+                    fontSize: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    cursor: 'pointer', touchAction: 'manipulation'
+                  }}
+                  aria-label="Notifications"
+                >{notificationsEnabled ? '🔔' : '🔕'}</button>
+              </div>
+            </div>
+
+            {/* Progress bar */}
+            {tasks.length > 0 && (
+              <div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
+                  <span style={{ fontSize: '11px', color: '#8E8E93', fontWeight: 500 }}>{completedCount} of {tasks.length} tasks</span>
+                  <span style={{ fontSize: '11px', color: '#3B6E3B', fontWeight: 700 }}>{progressPercent}%</span>
+                </div>
+                <div style={{ height: '5px', background: '#F0F0F0', borderRadius: '99px', overflow: 'hidden' }}>
+                  <div style={{
+                    height: '100%', width: `${progressPercent}%`,
+                    background: '#3B6E3B', borderRadius: '99px', transition: 'width 0.4s ease'
+                  }} />
+                </div>
+              </div>
+            )}
+
+            {/* Streak */}
+            {streak && streak.current > 0 && (
+              <div style={{ marginTop: '10px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <span style={{ fontSize: '14px' }}>🌿</span>
+                <span style={{ fontSize: '11px', fontWeight: 600, color: '#3B6E3B' }}>{streak.current} day streak</span>
+              </div>
+            )}
+          </div>
+        ) : (
+          /* Active Timer Hero */
+          <div style={{
+            background: '#fff', borderRadius: '16px', padding: '16px',
+            marginBottom: '12px', boxShadow: '0 1px 8px rgba(0,0,0,0.05)'
+          }}>
+            <TaskTimerComponent
+              activeTask={activeTask}
+              secondsLeft={secondsLeft}
+              totalSeconds={activeInitialSecRef.current}
+              onFinishEarly={openFinishPrompt}
+            />
+          </div>
+        )}
+
+        {/* ---- Stat Pills ---- */}
+        {!activeTask && tasks.length > 0 && !(focusModeEnabled && activeTaskId) && (
+          <div style={{ display: 'flex', gap: '8px', marginBottom: '14px' }}>
+            {[
+              { label: `${Math.floor(totalMinutes/60)}h ${totalMinutes%60}m`, sub: 'Scheduled' },
+              { label: `${Math.floor(Math.abs(freeTime)/60)}h ${Math.abs(freeTime)%60}m`, sub: overflowing ? 'Overflow' : 'Free', warn: overflowing },
+              { label: `${tasks.length}`, sub: 'Tasks' }
+            ].map((pill, i) => (
+              <div key={i} style={{
+                flex: 1, padding: '10px 8px',
+                background: pill.warn ? 'rgba(220,38,38,0.05)' : '#fff',
+                borderRadius: '12px', boxShadow: '0 1px 4px rgba(0,0,0,0.04)',
+                textAlign: 'center'
+              }}>
+                <div style={{ fontSize: '14px', fontWeight: 700, color: pill.warn ? '#DC2626' : '#1A1A1A' }}>{pill.label}</div>
+                <div style={{ fontSize: '10px', color: pill.warn ? '#DC2626' : '#8E8E93', fontWeight: 500, marginTop: '1px' }}>{pill.sub}</div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* ---- Overflow Warning ---- */}
+        {overflowing && !activeTask && !(focusModeEnabled && activeTaskId) && (
+          <div style={{
+            padding: '10px 14px', marginBottom: '12px', borderRadius: '10px',
+            background: overflowData.severity === 'critical' ? 'rgba(220,38,38,0.06)' : 'rgba(245,158,11,0.06)',
+            display: 'flex', alignItems: 'center', gap: '8px',
+            fontSize: '12px', fontWeight: 600,
+            color: overflowData.severity === 'critical' ? '#DC2626' : '#D97706'
+          }}>
+            <span>{overflowData.severity === 'critical' ? '🔴' : '🟡'}</span>
+            <span>Schedule overflows by {Math.floor(Math.abs(freeTime)/60)}h {Math.abs(freeTime)%60}m</span>
+          </div>
+        )}
+
+        {/* ---- Focus Mode Indicator ---- */}
+        {focusModeEnabled && activeTaskId && (
+          <div style={{
+            padding: '8px 12px', marginBottom: '12px', borderRadius: '10px',
+            background: 'rgba(59,110,59,0.06)', textAlign: 'center',
+            fontSize: '12px', fontWeight: 600, color: '#3B6E3B'
+          }}>
+            🎯 Focus Mode
+          </div>
+        )}
+
+        {/* ---- Task List ---- */}
+        {tasks.length === 0 ? (
+          <div style={{ textAlign: 'center', padding: '40px 20px' }}>
+            <div style={{ fontSize: '36px', marginBottom: '12px' }}>🌱</div>
+            <p style={{ fontSize: '15px', fontWeight: 600, color: '#1A1A1A', margin: '0 0 4px' }}>Start your day</p>
+            <p style={{ fontSize: '13px', color: '#8E8E93', margin: 0 }}>Tap + to add your first task</p>
+          </div>
+        ) : (
+          <div>
+            {/* Carried Over */}
+            {filterForFocus(carriedTasks).length > 0 && (
+              <div style={{ marginBottom: '14px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px', paddingLeft: '2px' }}>
+                  <span style={{ fontSize: '11px', fontWeight: 700, color: '#D97706', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                    Carried Over
+                  </span>
+                  <span style={{ fontSize: '10px', fontWeight: 600, background: 'rgba(217,119,6,0.1)', color: '#D97706', padding: '1px 6px', borderRadius: '99px' }}>
+                    {filterForFocus(carriedTasks).length}
+                  </span>
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                  {filterForFocus(carriedTasks).map((task, i) => (
+                    <TaskCard
+                      key={task.id}
+                      task={{
+                        ...task, position: i + 1,
+                        startTime: minutesToHHMM(task.start),
+                        endTime: minutesToHHMM(task.end),
+                        conflicts: hasConflict(task.id)
+                      }}
+                      isActive={activeTaskId === task.id}
+                      onStart={() => startTask(task)}
+                      onComplete={() => {
+                        haptic.success();
+                        setTasks(prev => prev.map(t =>
+                          t.id === task.id ? { ...t, completed: true, remaining: 0, completedAt: new Date().toISOString() } : t
+                        ));
+                        setShowCelebration('task');
+                        setTimeout(() => setShowCelebration(null), 3000);
+                      }}
+                      onDelete={() => deleteTask(task.id)}
+                      onEdit={() => handleEditTask(task)}
+                      showSwipeActions={activeTaskId !== task.id}
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Today's Tasks */}
+            {filterForFocus(todayTasks).length > 0 && (
+              <div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px', paddingLeft: '2px' }}>
+                  <span style={{ fontSize: '11px', fontWeight: 700, color: '#1A1A1A', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                    Tasks
+                  </span>
+                  <span style={{ fontSize: '10px', fontWeight: 600, background: 'rgba(59,110,59,0.08)', color: '#3B6E3B', padding: '1px 6px', borderRadius: '99px' }}>
+                    {filterForFocus(todayTasks).length}
+                  </span>
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                  {filterForFocus(todayTasks).map((task, i) => (
+                    <TaskCard
+                      key={task.id}
+                      task={{
+                        ...task, position: i + 1,
+                        startTime: minutesToHHMM(task.start),
+                        endTime: minutesToHHMM(task.end),
+                        conflicts: hasConflict(task.id)
+                      }}
+                      isActive={activeTaskId === task.id}
+                      onStart={() => startTask(task)}
+                      onComplete={() => {
+                        haptic.success();
+                        setTasks(prev => prev.map(t =>
+                          t.id === task.id ? { ...t, completed: true, remaining: 0, completedAt: new Date().toISOString() } : t
+                        ));
+                        setShowCelebration('task');
+                        setTimeout(() => setShowCelebration(null), 3000);
+                      }}
+                      onDelete={() => deleteTask(task.id)}
+                      onEdit={() => handleEditTask(task)}
+                      showSwipeActions={activeTaskId !== task.id}
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ---- FAB ---- */}
+        {!activeTask && !(focusModeEnabled && activeTaskId) && (
+          <button
+            onClick={() => { setShowAddSheet(true); haptic.medium(); }}
+            style={{
+              position: 'fixed', bottom: '72px', right: '18px',
+              width: '52px', height: '52px', borderRadius: '50%',
+              background: '#3B6E3B', color: '#fff', border: 'none',
+              fontSize: '26px', fontWeight: 300, lineHeight: 1,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              boxShadow: '0 4px 14px rgba(59,110,59,0.35)',
+              cursor: 'pointer', touchAction: 'manipulation',
+              WebkitTapHighlightColor: 'transparent', zIndex: 150
+            }}
+            aria-label="Add task"
+          >+</button>
+        )}
+
+        {/* ---- Add Task Bottom Sheet ---- */}
+        {showAddSheet && (
+          <>
+            <div onClick={() => setShowAddSheet(false)} style={{
+              position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.3)',
+              backdropFilter: 'blur(4px)', WebkitBackdropFilter: 'blur(4px)', zIndex: 1000
+            }} />
+            <div style={{
+              position: 'fixed', bottom: 0, left: 0, right: 0,
+              background: '#fff', borderRadius: '18px 18px 0 0',
+              padding: '14px 18px', paddingBottom: 'calc(16px + env(safe-area-inset-bottom))',
+              zIndex: 1001, boxShadow: '0 -4px 20px rgba(0,0,0,0.1)',
+              maxHeight: '80vh', overflowY: 'auto', animation: 'slideUp 0.3s ease-out'
+            }}>
+              <div style={{ width: '32px', height: '4px', background: '#D1D5DB', borderRadius: '99px', margin: '0 auto 12px' }} />
+              <h3 style={{ fontSize: '16px', fontWeight: 700, color: '#1A1A1A', margin: '0 0 12px', textAlign: 'center' }}>New Task</h3>
+
+              {/* Name */}
+              <input
+                type="text" value={taskName} onChange={(e) => setTaskName(e.target.value)}
+                placeholder="What needs to be done?" autoFocus
+                style={{
+                  width: '100%', boxSizing: 'border-box', fontSize: '15px', padding: '12px 14px',
+                  border: '1.5px solid #E5E5E5', borderRadius: '10px', background: '#FAFAFA',
+                  outline: 'none', marginBottom: '10px'
+                }}
+                onFocus={(e) => e.target.style.borderColor = '#3B6E3B'}
+                onBlur={(e) => e.target.style.borderColor = '#E5E5E5'}
+              />
+
+              {/* Time + Duration row */}
+              <div style={{ display: 'flex', gap: '8px', marginBottom: '10px' }}>
+                <div style={{ flex: 1 }}>
+                  <label style={{ fontSize: '11px', fontWeight: 600, color: '#8E8E93', marginBottom: '3px', display: 'block' }}>Start</label>
+                  <input type="time" value={taskStartTime} onChange={(e) => setTaskStartTime(e.target.value)}
+                    style={{ width: '100%', boxSizing: 'border-box', fontSize: '14px', padding: '10px 12px', border: '1.5px solid #E5E5E5', borderRadius: '10px', background: '#FAFAFA', outline: 'none' }}
+                  />
+                </div>
+                <div style={{ flex: 1 }}>
+                  <label style={{ fontSize: '11px', fontWeight: 600, color: '#8E8E93', marginBottom: '3px', display: 'block' }}>Duration</label>
+                  <div style={{ display: 'flex', alignItems: 'center', border: '1.5px solid #E5E5E5', borderRadius: '10px', background: '#FAFAFA', padding: '0 12px' }}>
+                    <input type="number" value={taskDuration} onChange={(e) => setTaskDuration(e.target.value)}
+                      placeholder="30" min="1"
+                      style={{ fontSize: '14px', padding: '10px 0', border: 'none', outline: 'none', flex: 1, background: 'transparent', textAlign: 'center', width: '100%' }}
+                    />
+                    <span style={{ color: '#8E8E93', fontSize: '12px', fontWeight: 500 }}>min</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Deadline */}
+              <div style={{ marginBottom: '10px' }}>
+                <label style={{ fontSize: '11px', fontWeight: 600, color: '#8E8E93', marginBottom: '3px', display: 'block' }}>Deadline (optional)</label>
+                <input type="date" value={taskDeadline} onChange={(e) => setTaskDeadline(e.target.value)}
+                  style={{ width: '100%', boxSizing: 'border-box', fontSize: '14px', padding: '10px 12px', border: '1.5px solid #E5E5E5', borderRadius: '10px', background: '#FAFAFA', outline: 'none' }}
+                />
+              </div>
+
+              {/* Duration Suggestion */}
+              {durationSuggestion && !taskDuration && (
+                <div style={{
+                  display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                  padding: '8px 12px', marginBottom: '10px', background: '#F5FAF5', borderRadius: '8px'
+                }}>
+                  <span style={{ fontSize: '12px', fontWeight: 500, color: '#3B6E3B' }}>Usually {durationSuggestion.suggested} min</span>
+                  <button type="button" onClick={() => setTaskDuration(durationSuggestion.suggested.toString())}
+                    style={{ padding: '4px 12px', borderRadius: '6px', border: 'none', background: '#3B6E3B', color: '#fff', fontSize: '11px', fontWeight: 600, cursor: 'pointer', touchAction: 'manipulation' }}>
+                    Use
+                  </button>
+                </div>
+              )}
+
+              {/* Presets */}
+              <div style={{ display: 'flex', gap: '6px', marginBottom: '12px', flexWrap: 'wrap' }}>
+                {[{n:"Break",d:15},{n:"Meeting",d:30},{n:"Deep Work",d:90},{n:"Email",d:20}].map(p => (
+                  <button key={p.n} onClick={() => { setTaskName(p.n); setTaskDuration(p.d.toString()); haptic.light(); }}
+                    style={{ padding: '6px 12px', borderRadius: '99px', border: '1px solid #E5E5E5', background: '#fff', color: '#1A1A1A', fontSize: '12px', fontWeight: 500, cursor: 'pointer', touchAction: 'manipulation' }}>
+                    {p.n} · {p.d}m
+                  </button>
+                ))}
+              </div>
+
+              {/* Add Button */}
+              <button onClick={() => { addTask(); setShowAddSheet(false); }}
+                style={{ width: '100%', padding: '14px', borderRadius: '12px', background: '#3B6E3B', color: '#fff', fontSize: '15px', fontWeight: 700, border: 'none', cursor: 'pointer', touchAction: 'manipulation' }}>
+                Add Task
+              </button>
+            </div>
+          </>
+        )}
+
+        {/* ---- Modals ---- */}
+        {showRescheduleModal && activeTask && (
+          <RescheduleModal
+            task={activeTask}
+            availability={availability}
+            existingTasks={taskBlocks}
+            onComplete={handleComplete}
+            onContinue={handleContinue}
+            onLaterToday={handleLaterToday}
+            onTomorrow={handleTomorrow}
+            onBackToPool={handleBackToPool}
+            onPickTime={handlePickTime}
+            onBreakTask={handleBreakTask}
+            onClose={() => setShowRescheduleModal(false)}
+          />
+        )}
+
+        {showEditDialog && editingTask && (
+          <EditTaskDialog
+            task={editingTask}
+            onSave={handleSaveEditedTask}
+            onClose={() => { setShowEditDialog(false); setEditingTask(null); }}
+          />
+        )}
+
+        {showCelebration && (
+          <Celebration type={showCelebration} onComplete={() => setShowCelebration(null)} />
+        )}
+      </MobileLayout>
+    );
+  }
+
+  // ==================== DESKTOP RENDER ====================
   return (
     <div className="setup-fullscreen nat-bg">
       <div className="setup-inner nat-card">
@@ -1006,6 +1486,46 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
             >
               <span>{focusModeEnabled ? "🎯" : "👁️"}</span>
               <span>{focusModeEnabled ? "Focus On" : "Focus"}</span>
+            </button>
+
+            {/* Notification Toggle - Mobile only */}
+            <button
+              onClick={toggleNotifications}
+              className="mobile-only-button"
+              style={{
+                alignItems: "center",
+                gap: "8px",
+                padding: "8px 16px",
+                borderRadius: "9999px",
+                border: `2px solid ${notificationsEnabled ? "#3B6E3B" : "rgba(111,175,111,0.3)"}`,
+                background: notificationsEnabled
+                  ? "linear-gradient(135deg, #6FAF6F, #3B6E3B)"
+                  : "linear-gradient(135deg, rgba(167,211,167,0.1), rgba(111,175,111,0.05))",
+                color: notificationsEnabled ? "#fff" : "#3B6E3B",
+                fontSize: "14px",
+                fontWeight: "600",
+                cursor: "pointer",
+                transition: "all 0.2s ease",
+                boxShadow: notificationsEnabled
+                  ? "0 4px 12px rgba(59,110,59,0.3)"
+                  : "0 2px 6px rgba(59,110,59,0.06)"
+              }}
+              onMouseEnter={(e) => {
+                if (!notificationsEnabled) {
+                  e.currentTarget.style.transform = "translateY(-2px)";
+                  e.currentTarget.style.boxShadow = "0 4px 12px rgba(59,110,59,0.12)";
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (!notificationsEnabled) {
+                  e.currentTarget.style.transform = "translateY(0)";
+                  e.currentTarget.style.boxShadow = "0 2px 6px rgba(59,110,59,0.06)";
+                }
+              }}
+              title="Get notifications 5 min before and when tasks start"
+            >
+              <span>{notificationsEnabled ? "🔔" : "🔕"}</span>
+              <span>{notificationsEnabled ? "Alerts On" : "Alerts"}</span>
             </button>
 
             <button
