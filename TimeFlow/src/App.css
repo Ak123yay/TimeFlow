@@ -740,7 +740,7 @@ input:focus-visible {
 .delete-button {
   width: 32px;
   height: 32px;
-  border-radius: 50%;
+  border-radius: 8px;
   border: 1px solid rgba(220,38,38,0.3);
   background: rgba(255,255,255,0.9);
   color: #dc2626;
@@ -780,7 +780,7 @@ input:focus-visible {
 
   /* FULLSCREEN MODE: Mobile optimized with better spacing */
   .setup-fullscreen {
-    padding: 0;
+    padding: 40px 32px 24px 32px; /* More space at top and sides */
     min-height: 100dvh;
     background: #ffffff;
     display: flex;
@@ -789,12 +789,12 @@ input:focus-visible {
   }
 
   .setup-inner {
-    padding: 32px; /* Bigger borders for mobile */
+    padding: 20px; /* Reduced since outer container has padding now */
     /* Safe area padding for notched devices (iPhone X, etc.) */
-    padding-top: max(32px, env(safe-area-inset-top));
-    padding-bottom: max(32px, env(safe-area-inset-bottom));
-    padding-left: max(32px, env(safe-area-inset-left));
-    padding-right: max(32px, env(safe-area-inset-right));
+    padding-top: max(20px, env(safe-area-inset-top));
+    padding-bottom: max(20px, env(safe-area-inset-bottom));
+    padding-left: max(20px, env(safe-area-inset-left));
+    padding-right: max(20px, env(safe-area-inset-right));
     gap: 20px; /* Increased from 12px for better spacing */
     border-radius: 0;
     box-shadow: none;
