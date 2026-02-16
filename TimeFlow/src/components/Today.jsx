@@ -1330,7 +1330,7 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
               <div style={{ marginBottom: '10px' }}>
                 <label style={{ fontSize: '11px', fontWeight: 600, color: '#8E8E93', marginBottom: '6px', display: 'block' }}>Deadline (optional)</label>
                 <input type="date" value={taskDeadline} onChange={(e) => setTaskDeadline(e.target.value)}
-                  style={{ width: '100%', height: '44px', boxSizing: 'border-box', fontSize: '16px', padding: '10px 12px', border: '1.5px solid #E5E5E5', borderRadius: '10px', background: '#FAFAFA', outline: 'none' }}
+                  style={{ width: '100%', height: '44px', boxSizing: 'border-box', fontSize: '16px', padding: '0 12px', lineHeight: '44px', border: '1.5px solid #E5E5E5', borderRadius: '10px', background: '#FAFAFA', outline: 'none' }}
                 />
               </div>
 
