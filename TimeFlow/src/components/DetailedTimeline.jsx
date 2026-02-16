@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import "../App.css";
 
 function minutesToHHMM(minutes) {
@@ -8,8 +8,20 @@ function minutesToHHMM(minutes) {
 }
 
 export default function DetailedTimeline({ tasks = [], availability = { start: "09:00", end: "17:00" } }) {
+  const [windowWidth, setWindowWidth] = useState(typeof window !== 'undefined' ? window.innerWidth : 1024);
+
+  useEffect(() => {
+    const handleResize = () => setWindowWidth(window.innerWidth);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   // Generate task blocks with positioning
   const hourHeight = 60; // pixels per hour
+
+  // Responsive left offset for mobile
+  const timelinePadding = windowWidth < 640 ? 40 : 60;
+  const widthCalc = `calc(100% - ${timelinePadding + 10}px)`;
 
   // Calculate start hour from availability
   const startHour = availability.start ? parseInt(availability.start.split(":")[0]) : 9;
@@ -63,8 +75,8 @@ export default function DetailedTimeline({ tasks = [], availability = { start: "
           <div key={task.id} style={{
             position: "absolute",
             top: `${task.top}px`,
-            left: "60px",
-            width: "calc(100% - 70px)",
+            left: `${timelinePadding}px`,
+            width: widthCalc,
             height: `${Math.max(task.height, 20)}px`,
             background: task.attempts >= 3
               ? "linear-gradient(135deg, #fbbf24, #f59e0b)"

@@ -1,5 +1,5 @@
 // src/components/Setup.jsx
-import { useLayoutEffect, useRef, useState } from "react";
+import { useLayoutEffect, useRef, useState, useEffect } from "react";
 import { saveAvailability, loadAvailability } from "../utils/storage";
 import "../App.css";
 
@@ -54,6 +54,13 @@ export default function Setup({ onDone }) {
   const [start, setStart] = useState(saved?.start ?? "09:00");
   const [end, setEnd] = useState(saved?.end ?? "17:00");
   const [error, setError] = useState("");
+  const [windowWidth, setWindowWidth] = useState(typeof window !== 'undefined' ? window.innerWidth : 1024);
+
+  useEffect(() => {
+    const handleResize = () => setWindowWidth(window.innerWidth);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   const timelineRef = useRef(null);
   const labelRef = useRef(null);
@@ -208,6 +215,111 @@ export default function Setup({ onDone }) {
               <span className="label-text">
                 {shortLabel ? `${start} — ${end}` : `${start} — ${end} (${Math.floor(durationM/60)}h ${durationM%60}m)`}
               </span>
+            </div>
+          </div>
+        </div>
+
+        {/* Features Section */}
+        <div style={{
+          marginTop: "28px",
+          marginBottom: "20px",
+          padding: "20px",
+          background: "linear-gradient(135deg, rgba(167,211,167,0.08), rgba(111,175,111,0.04))",
+          borderRadius: "16px",
+          border: "1px solid rgba(111,175,111,0.15)"
+        }}>
+          <div style={{
+            fontSize: "16px",
+            fontWeight: "700",
+            color: "#3B6E3B",
+            marginBottom: "16px",
+            display: "flex",
+            alignItems: "center",
+            gap: "8px"
+          }}>
+            <LeafIcon size={20} fill="#3B6E3B" />
+            <span>What makes TimeFlow special</span>
+          </div>
+
+          <div style={{
+            display: "grid",
+            gridTemplateColumns: windowWidth < 640
+              ? "1fr"
+              : windowWidth < 1024
+              ? "repeat(2, 1fr)"
+              : "repeat(3, 1fr)",
+            gap: "14px"
+          }}>
+            <div style={{ display: "flex", gap: "10px" }}>
+              <span style={{ fontSize: "18px", flexShrink: 0 }}>🔄</span>
+              <div>
+                <div style={{ fontSize: "13px", fontWeight: "600", color: "#3B6E3B", marginBottom: "4px" }}>
+                  Adaptive Rescheduling
+                </div>
+                <div style={{ fontSize: "12px", color: "#6B8E6B", lineHeight: "1.4" }}>
+                  Running late? We'll help you find the next available slot or move tasks to tomorrow
+                </div>
+              </div>
+            </div>
+
+            <div style={{ display: "flex", gap: "10px" }}>
+              <span style={{ fontSize: "18px", flexShrink: 0 }}>🌊</span>
+              <div>
+                <div style={{ fontSize: "13px", fontWeight: "600", color: "#3B6E3B", marginBottom: "4px" }}>
+                  Weekly Pool
+                </div>
+                <div style={{ fontSize: "12px", color: "#6B8E6B", lineHeight: "1.4" }}>
+                  Capture tasks without time pressure, then select what to tackle each day
+                </div>
+              </div>
+            </div>
+
+            <div style={{ display: "flex", gap: "10px" }}>
+              <span style={{ fontSize: "18px", flexShrink: 0 }}>📝</span>
+              <div>
+                <div style={{ fontSize: "13px", fontWeight: "600", color: "#3B6E3B", marginBottom: "4px" }}>
+                  Daily Reflections
+                </div>
+                <div style={{ fontSize: "12px", color: "#6B8E6B", lineHeight: "1.4" }}>
+                  End each day with a moment of reflection on what went well
+                </div>
+              </div>
+            </div>
+
+            <div style={{ display: "flex", gap: "10px" }}>
+              <span style={{ fontSize: "18px", flexShrink: 0 }}>🎯</span>
+              <div>
+                <div style={{ fontSize: "13px", fontWeight: "600", color: "#3B6E3B", marginBottom: "4px" }}>
+                  Focus Mode
+                </div>
+                <div style={{ fontSize: "12px", color: "#6B8E6B", lineHeight: "1.4" }}>
+                  Hide distractions and focus on your current task with timer support
+                </div>
+              </div>
+            </div>
+
+            <div style={{ display: "flex", gap: "10px" }}>
+              <span style={{ fontSize: "18px", flexShrink: 0 }}>🌿</span>
+              <div>
+                <div style={{ fontSize: "13px", fontWeight: "600", color: "#3B6E3B", marginBottom: "4px" }}>
+                  Calm Interface
+                </div>
+                <div style={{ fontSize: "12px", color: "#6B8E6B", lineHeight: "1.4" }}>
+                  Nature-themed design that adapts throughout the day for mindful productivity
+                </div>
+              </div>
+            </div>
+
+            <div style={{ display: "flex", gap: "10px" }}>
+              <span style={{ fontSize: "18px", flexShrink: 0 }}>📊</span>
+              <div>
+                <div style={{ fontSize: "13px", fontWeight: "600", color: "#3B6E3B", marginBottom: "4px" }}>
+                  Weekly Overview
+                </div>
+                <div style={{ fontSize: "12px", color: "#6B8E6B", lineHeight: "1.4" }}>
+                  Track your progress and reflections across the week at a glance
+                </div>
+              </div>
             </div>
           </div>
         </div>

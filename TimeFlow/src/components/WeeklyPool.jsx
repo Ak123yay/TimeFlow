@@ -200,34 +200,8 @@ export default function WeeklyPool({ onNavigateToToday }) {
                     Move to Today →
                   </button>
                   <button
+                    className="delete-button"
                     onClick={() => deleteTask(task.id)}
-                    style={{
-                      width: "28px",
-                      height: "28px",
-                      borderRadius: "50%",
-                      border: "1px solid rgba(111,175,111,0.2)",
-                      background: "#fff",
-                      color: "#999",
-                      fontSize: "16px",
-                      cursor: "pointer",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      transition: "all 0.2s",
-                      flexShrink: 0
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.background = "#fee";
-                      e.currentTarget.style.color = "#c00";
-                      e.currentTarget.style.borderColor = "rgba(200,0,0,0.3)";
-                      e.currentTarget.style.transform = "scale(1.1)";
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.background = "#fff";
-                      e.currentTarget.style.color = "#999";
-                      e.currentTarget.style.borderColor = "rgba(111,175,111,0.2)";
-                      e.currentTarget.style.transform = "scale(1)";
-                    }}
                   >
                     ×
                   </button>

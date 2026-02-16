@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { findNextFreeSlot } from "../../utils/scheduler";
+import { getRescheduleOptionFrequencies } from "../../utils/analytics";
 import "../../App.css";
 
 export default function RescheduleModal({
@@ -16,6 +17,7 @@ export default function RescheduleModal({
   onClose
 }) {
   const [suggestedSlot, setSuggestedSlot] = useState(null);
+  const [smartRecommendation, setSmartRecommendation] = useState(null);
 
   useEffect(() => {
     if (task && availability && existingTasks) {
@@ -28,6 +30,56 @@ export default function RescheduleModal({
       setSuggestedSlot(slot);
     }
   }, [task, availability, existingTasks]);
+
+  // ANALYTICS: Calculate smart recommendation based on user patterns
+  useEffect(() => {
+    if (!task) return;
+
+    const frequencies = getRescheduleOptionFrequencies();
+    const attempts = task.attempts || 0;
+
+    // Priority-based recommendation logic
+    let recommendation = null;
+
+    // High-attempt tasks (>= 3): Strongly suggest breaking
+    if (attempts >= 3) {
+      recommendation = {
+        option: 'break',
+        reason: 'This task has been rescheduled multiple times. Breaking it into smaller pieces might help.',
+        confidence: 'high',
+        icon: '🔨'
+      };
+    }
+    // If user historically reschedules to tomorrow frequently (>40% of the time)
+    else if (frequencies.tomorrow && frequencies.tomorrow > (frequencies.complete || 0) * 0.4) {
+      recommendation = {
+        option: 'tomorrow',
+        reason: 'You often move tasks to tomorrow. This gives you a fresh start.',
+        confidence: 'moderate',
+        icon: '📅'
+      };
+    }
+    // If later today slot is available and user uses it sometimes
+    else if (suggestedSlot && frequencies.later_today > 0) {
+      recommendation = {
+        option: 'later_today',
+        reason: `Free time available at ${suggestedSlot.startTime}. Finish it today while it's fresh.`,
+        confidence: 'high',
+        icon: '🕐'
+      };
+    }
+    // Default: Encourage completion
+    else {
+      recommendation = {
+        option: 'complete',
+        reason: 'You\'re making progress! Mark it done to build momentum.',
+        confidence: 'moderate',
+        icon: '✓'
+      };
+    }
+
+    setSmartRecommendation(recommendation);
+  }, [task, suggestedSlot]);
 
   if (!task) return null;
 
@@ -62,6 +114,49 @@ export default function RescheduleModal({
         <p style={{ fontSize: 16, fontWeight: 600, color: "#3B6E3B", marginBottom: 12 }}>
           "{task.name}"
         </p>
+
+        {/* Smart Recommendation Banner */}
+        {smartRecommendation && (
+          <div style={{
+            background: smartRecommendation.confidence === 'high'
+              ? "linear-gradient(135deg, rgba(111,175,111,0.15), rgba(59,110,59,0.08))"
+              : "linear-gradient(135deg, rgba(167,211,167,0.12), rgba(111,175,111,0.06))",
+            border: `1px solid ${smartRecommendation.confidence === 'high' ? 'rgba(59,110,59,0.25)' : 'rgba(111,175,111,0.2)'}`,
+            borderRadius: 12,
+            padding: "10px 14px",
+            marginBottom: 16,
+            fontSize: 13,
+            textAlign: "left",
+            animation: "fadeIn 0.3s ease-out"
+          }}>
+            <div style={{
+              fontWeight: 700,
+              color: "#3B6E3B",
+              marginBottom: 4,
+              display: "flex",
+              alignItems: "center",
+              gap: 6
+            }}>
+              <span>{smartRecommendation.icon}</span>
+              <span>Recommendation</span>
+              {smartRecommendation.confidence === 'high' && (
+                <span style={{
+                  fontSize: 10,
+                  fontWeight: 600,
+                  padding: "2px 6px",
+                  background: "rgba(59,110,59,0.2)",
+                  borderRadius: 4,
+                  color: "#2E6B2E"
+                }}>
+                  HIGH CONFIDENCE
+                </span>
+              )}
+            </div>
+            <div style={{ fontSize: 12, color: "#4B6B4B", lineHeight: 1.4 }}>
+              {smartRecommendation.reason}
+            </div>
+          </div>
+        )}
 
         {/* Warning badge for multiple reschedules */}
         {attempts >= 2 && (

@@ -1,6 +1,14 @@
 import { useEffect, useState, useRef } from "react";
 import { loadAvailability, getUnfinishedTasksFromPreviousDays, saveTasksForDate, loadTasksForDate, addTaskToWeeklyPool } from "../utils/storage";
 import { rescheduleUnfinishedTasks, detectConflicts, calculateOverflow } from "../utils/scheduler";
+import {
+  saveTaskToHistory,
+  calculateDurationAccuracy,
+  trackRescheduleOption,
+  trackCompletionByHour,
+  trackAttemptByHour,
+  suggestDuration
+} from "../utils/analytics";
 import DetailedTimeline from "./DetailedTimeline";
 import Celebration from "./Celebration";
 import RescheduleModal from "./dialogs/RescheduleModal";
@@ -105,6 +113,7 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
   const [taskName, setTaskName] = useState("");
   const [taskDuration, setTaskDuration] = useState("");
   const [taskStartTime, setTaskStartTime] = useState("");
+  const [durationSuggestion, setDurationSuggestion] = useState(null);
   const [hasLoadedCarryOver, setHasLoadedCarryOver] = useState(false);
 
   // --- TIMER STATE (non-UI changes) ---
@@ -138,6 +147,10 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
     } catch (e) {
       console.error('Failed to save focus mode preference', e);
     }
+
+    // Show toast notification
+    setShowFocusModeToast(true);
+    setTimeout(() => setShowFocusModeToast(false), 2000);
   };
 
   // Keyboard shortcut for focus mode (F key)
@@ -158,6 +171,9 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
 
   // Celebration state
   const [showCelebration, setShowCelebration] = useState(null); // null | 'task' | 'allDone'
+
+  // Focus mode toast state
+  const [showFocusModeToast, setShowFocusModeToast] = useState(false);
 
   // Drag and drop sensors
   const sensors = useSensors(
@@ -208,6 +224,16 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
     saveTasks(tasks);
   }, [tasks]);
 
+  // ANALYTICS: Get duration suggestion when task name changes
+  useEffect(() => {
+    if (taskName.trim().length >= 3) {
+      const suggestion = suggestDuration(taskName);
+      setDurationSuggestion(suggestion);
+    } else {
+      setDurationSuggestion(null);
+    }
+  }, [taskName]);
+
   const addTask = (e) => {
     if (e && e.preventDefault) e.preventDefault();
     if (!taskName || !taskDuration) return;
@@ -225,7 +251,14 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
         ? new Date(`${getTodayString()}T${startTime}`).toISOString()
         : null,
       lastRescheduled: null,
-      rescheduledReasons: []
+      rescheduledReasons: [],
+      // ANALYTICS: Duration tracking fields
+      estimatedDuration: parseInt(taskDuration, 10), // Original user estimate
+      actualDuration: null,                          // Set when completed
+      durationHistory: [],                           // Last 5 completions (populated from history)
+      durationAccuracy: null,                        // Calculated after completion
+      startedAt: null,                               // When timer starts
+      completedAt: null                              // When task completes
     };
     setTasks(prev => [...prev, newTask]);
     setTaskName("");
@@ -303,6 +336,13 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
     activeInitialSecRef.current = seconds;
     setActiveTaskId(t.id);
     setSecondsLeft(seconds);
+
+    // ANALYTICS: Track when task starts
+    setTasks(prev => prev.map(x =>
+      x.id === t.id ? { ...x, startedAt: new Date().toISOString() } : x
+    ));
+    trackAttemptByHour(new Date().toISOString());
+
     // ensure any previous interval is cleared — effect below will set a new one
     clearInterval(timerRef.current);
   };
@@ -340,9 +380,42 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
 
   // NEW: Handler for marking task complete
   const handleComplete = () => {
+    const completedTask = tasks.find(t => t.id === activeTaskId);
+    if (!completedTask) return;
+
+    // ANALYTICS: Calculate actual duration and accuracy
+    const completedAt = new Date().toISOString();
+    const startedAt = completedTask.startedAt || completedAt; // Fallback if not tracked
+    const actualDuration = Math.round((new Date(completedAt) - new Date(startedAt)) / (1000 * 60));
+    const durationAccuracy = calculateDurationAccuracy(
+      completedTask.estimatedDuration || completedTask.duration,
+      actualDuration
+    );
+
+    // Update task with completion data
     setTasks(prev => prev.map(t =>
-      t.id === activeTaskId ? { ...t, completed: true, remaining: 0 } : t
+      t.id === activeTaskId
+        ? {
+            ...t,
+            completed: true,
+            remaining: 0,
+            completedAt,
+            actualDuration,
+            durationAccuracy
+          }
+        : t
     ));
+
+    // ANALYTICS: Save to history for future duration predictions
+    const taskToSave = {
+      ...completedTask,
+      completedAt,
+      actualDuration,
+      durationAccuracy
+    };
+    saveTaskToHistory(taskToSave);
+    trackCompletionByHour(taskToSave);
+    trackRescheduleOption('complete');
 
     clearInterval(timerRef.current);
     setActiveTaskId(null);
@@ -365,6 +438,10 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
     ));
     setSecondsLeft(60);
     setShowRescheduleModal(false);
+
+    // ANALYTICS: Track option selection
+    trackRescheduleOption('continue');
+
     // Resume timer
     clearInterval(timerRef.current);
     timerRef.current = setInterval(() => {
@@ -390,6 +467,9 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
           }
         : t
     ));
+
+    // ANALYTICS: Track option selection
+    trackRescheduleOption('later_today');
 
     // Stop timer and close modal
     clearInterval(timerRef.current);
@@ -425,6 +505,9 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
     saveTasksForDate(tomorrowDate, tomorrowTasks);
     setTasks(prev => prev.filter(t => t.id !== activeTaskId));
 
+    // ANALYTICS: Track option selection
+    trackRescheduleOption('tomorrow');
+
     clearInterval(timerRef.current);
     setActiveTaskId(null);
     setSecondsLeft(0);
@@ -449,6 +532,9 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
     // Remove from today's tasks
     setTasks(prev => prev.filter(t => t.id !== activeTaskId));
 
+    // ANALYTICS: Track option selection
+    trackRescheduleOption('back_to_pool');
+
     // Stop timer and close modal
     clearInterval(timerRef.current);
     setActiveTaskId(null);
@@ -465,6 +551,9 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
     clearInterval(timerRef.current);
     setActiveTaskId(null);
     setSecondsLeft(0);
+
+    // ANALYTICS: Track option selection
+    trackRescheduleOption('pick_time');
 
     // Open edit dialog
     setEditingTask(task);
@@ -521,6 +610,9 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
       part2
     ]);
 
+    // ANALYTICS: Track option selection
+    trackRescheduleOption('break_task');
+
     clearInterval(timerRef.current);
     setActiveTaskId(null);
     setSecondsLeft(0);
@@ -568,7 +660,7 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
               Plan your day with time blocks
             </p>
           </div>
-          <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
             <button
               onClick={onEndDay}
               style={{
@@ -656,6 +748,47 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
               <span>🌊</span>
               <span>Pool</span>
             </button>
+
+            {/* Focus Mode Toggle */}
+            <button
+              onClick={toggleFocusMode}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "8px",
+                padding: "8px 16px",
+                borderRadius: "9999px",
+                border: `2px solid ${focusModeEnabled ? "#3B6E3B" : "rgba(111,175,111,0.3)"}`,
+                background: focusModeEnabled
+                  ? "linear-gradient(135deg, #6FAF6F, #3B6E3B)"
+                  : "linear-gradient(135deg, rgba(167,211,167,0.1), rgba(111,175,111,0.05))",
+                color: focusModeEnabled ? "#fff" : "#3B6E3B",
+                fontSize: "14px",
+                fontWeight: "600",
+                cursor: "pointer",
+                transition: "all 0.2s ease",
+                boxShadow: focusModeEnabled
+                  ? "0 4px 12px rgba(59,110,59,0.3)"
+                  : "0 2px 6px rgba(59,110,59,0.06)"
+              }}
+              onMouseEnter={(e) => {
+                if (!focusModeEnabled) {
+                  e.currentTarget.style.transform = "translateY(-2px)";
+                  e.currentTarget.style.boxShadow = "0 4px 12px rgba(59,110,59,0.12)";
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (!focusModeEnabled) {
+                  e.currentTarget.style.transform = "translateY(0)";
+                  e.currentTarget.style.boxShadow = "0 2px 6px rgba(59,110,59,0.06)";
+                }
+              }}
+              title="Press F to toggle (hides everything except active task)"
+            >
+              <span>{focusModeEnabled ? "🎯" : "👁️"}</span>
+              <span>{focusModeEnabled ? "Focus On" : "Focus"}</span>
+            </button>
+
             <button
               onClick={toggleView}
               style={{
@@ -691,113 +824,278 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
           </div>
         </div>
 
-        {/* Stats Row */}
-        <div className="presets horizontal-scroll" role="list" style={{ marginBottom: "20px" }}>
-          <div className="preset-pill" style={{ cursor: "default", minWidth: "140px", boxShadow: "0 2px 8px rgba(59,110,59,0.04)" }}>
-            <div className="preset-text">{tasks.length} Tasks</div>
-            <div className="preset-sub">Planned</div>
-          </div>
-          <div className="preset-pill" style={{ cursor: "default", minWidth: "140px", boxShadow: "0 2px 8px rgba(59,110,59,0.04)" }}>
-            <div className="preset-text">{Math.floor(totalMinutes/60)}h {totalMinutes%60}m</div>
-            <div className="preset-sub">Scheduled</div>
-          </div>
-          <div className="preset-pill" style={{
-            cursor: "default",
-            minWidth: "140px",
-            background: overflowData.severity === 'critical'
-              ? "linear-gradient(180deg, rgba(255,200,200,0.2), rgba(255,220,220,0.1))"
-              : overflowData.severity === 'warning'
-              ? "linear-gradient(180deg, rgba(255,230,200,0.15), rgba(255,240,220,0.08))"
-              : undefined,
-            boxShadow: "0 2px 8px rgba(59,110,59,0.04)"
-          }}>
-            <div className="preset-text" style={{
-              color: overflowData.severity === 'critical'
-                ? "#b91c1c"
-                : overflowData.severity === 'warning'
-                ? "#ea580c"
-                : undefined
-            }}>
-              {Math.floor(Math.abs(freeTime)/60)}h {Math.abs(freeTime)%60}m
+        {/* Conditionally hide stats, form, and presets in full focus mode */}
+        {!(focusModeEnabled && activeTaskId) && (
+          <>
+            {/* Stats Row */}
+            <div className="presets horizontal-scroll" role="list" style={{ marginBottom: "20px" }}>
+              <div className="preset-pill" style={{ cursor: "default", minWidth: "140px", boxShadow: "0 2px 8px rgba(59,110,59,0.04)" }}>
+                <div className="preset-text">{tasks.length} Tasks</div>
+                <div className="preset-sub">Planned</div>
+              </div>
+              <div className="preset-pill" style={{ cursor: "default", minWidth: "140px", boxShadow: "0 2px 8px rgba(59,110,59,0.04)" }}>
+                <div className="preset-text">{Math.floor(totalMinutes/60)}h {totalMinutes%60}m</div>
+                <div className="preset-sub">Scheduled</div>
+              </div>
+              <div className="preset-pill" style={{
+                cursor: "default",
+                minWidth: "140px",
+                background: overflowData.severity === 'critical'
+                  ? "linear-gradient(180deg, rgba(255,200,200,0.2), rgba(255,220,220,0.1))"
+                  : overflowData.severity === 'warning'
+                  ? "linear-gradient(180deg, rgba(255,230,200,0.15), rgba(255,240,220,0.08))"
+                  : undefined,
+                boxShadow: "0 2px 8px rgba(59,110,59,0.04)"
+              }}>
+                <div className="preset-text" style={{
+                  color: overflowData.severity === 'critical'
+                    ? "#b91c1c"
+                    : overflowData.severity === 'warning'
+                    ? "#ea580c"
+                    : undefined
+                }}>
+                  {Math.floor(Math.abs(freeTime)/60)}h {Math.abs(freeTime)%60}m
+                </div>
+                <div className="preset-sub">
+                  {overflowing ? `Overflow (${overflowData.severity})` : "Free Time"}
+                </div>
+              </div>
             </div>
-            <div className="preset-sub">
-              {overflowing ? `Overflow (${overflowData.severity})` : "Free Time"}
+
+            {/* Overflow Warning Banner */}
+            {overflowing && (
+              <div style={{
+                marginBottom: "20px",
+                padding: "14px 16px",
+                background: overflowData.severity === 'critical'
+                  ? "linear-gradient(135deg, rgba(185,28,28,0.12), rgba(185,28,28,0.06))"
+                  : "linear-gradient(135deg, rgba(234,88,12,0.12), rgba(234,88,12,0.06))",
+                border: overflowData.severity === 'critical'
+                  ? "2px solid rgba(185,28,28,0.3)"
+                  : "2px solid rgba(234,88,12,0.3)",
+                borderRadius: "14px",
+                animation: "fadeIn 0.3s ease-out"
+              }}>
+                <div style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "12px",
+                  justifyContent: "space-between",
+                  flexWrap: "wrap"
+                }}>
+                  <div style={{ flex: 1, minWidth: "200px" }}>
+                    <div style={{
+                      fontSize: "15px",
+                      fontWeight: "700",
+                      color: overflowData.severity === 'critical' ? "#b91c1c" : "#ea580c",
+                      marginBottom: "4px",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "8px"
+                    }}>
+                      <span>{overflowData.severity === 'critical' ? '🚨' : '⚠️'}</span>
+                      <span>
+                        {overflowData.severity === 'critical'
+                          ? "Critical: Day overbooked!"
+                          : "Warning: Schedule is tight"}
+                      </span>
+                    </div>
+                    <div style={{
+                      fontSize: "13px",
+                      color: overflowData.severity === 'critical' ? "#7f1d1d" : "#7c2d12",
+                      lineHeight: 1.4
+                    }}>
+                      {overflowData.overflowMinutes > 0
+                        ? `You've scheduled ${Math.floor(overflowData.overflowMinutes / 60)}h ${overflowData.overflowMinutes % 60}m more than available time.`
+                        : `Your schedule is at ${Math.round((totalMinutes / availableM) * 100)}% capacity.`
+                      }
+                      {overflowData.severity === 'critical' && ' Some tasks need to be rescheduled.'}
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => {
+                      // TODO: In future, this could open an OverflowWizard dialog
+                      // For now, just scroll to the task list
+                      alert('Suggestion: Review your task list and consider:\n• Moving less urgent tasks to tomorrow\n• Breaking large tasks into smaller pieces\n• Moving flexible tasks to the Weekly Pool');
+                    }}
+                    style={{
+                      padding: "8px 16px",
+                      borderRadius: "10px",
+                      border: "none",
+                      background: overflowData.severity === 'critical'
+                        ? "linear-gradient(135deg, #b91c1c, #7f1d1d)"
+                        : "linear-gradient(135deg, #ea580c, #c2410c)",
+                      color: "#fff",
+                      fontSize: "13px",
+                      fontWeight: "600",
+                      cursor: "pointer",
+                      transition: "all 0.2s ease",
+                      whiteSpace: "nowrap",
+                      boxShadow: "0 2px 8px rgba(0,0,0,0.15)"
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.transform = "translateY(-2px)";
+                      e.currentTarget.style.boxShadow = "0 4px 12px rgba(0,0,0,0.25)";
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.transform = "translateY(0)";
+                      e.currentTarget.style.boxShadow = "0 2px 8px rgba(0,0,0,0.15)";
+                    }}
+                  >
+                    Help me fix this →
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Add Task Form */}
+            <div className="controls-row">
+              <label className="control" style={{ flex: 2 }}>
+                <div className="control-label">Task Name</div>
+                <div className="time-input">
+                  <LeafIcon size={18} fill="#4F7A4F" />
+                  <input
+                    type="text"
+                    value={taskName}
+                    onChange={(e) => setTaskName(e.target.value)}
+                    placeholder="What needs to be done?"
+                    style={{ border: "none", outline: "none", flex: 1, background: "transparent" }}
+                  />
+                </div>
+              </label>
+
+              <label className="control">
+                <div className="control-label">Start Time</div>
+                <div className="time-input">
+                  <input
+                    type="time"
+                    value={taskStartTime}
+                    onChange={(e) => setTaskStartTime(e.target.value)}
+                    style={{ border: "none", outline: "none", flex: 1, background: "transparent" }}
+                  />
+                </div>
+              </label>
+
+              <label className="control">
+                <div className="control-label">Duration</div>
+                <div className="time-input">
+                  <input
+                    type="number"
+                    value={taskDuration}
+                    onChange={(e) => setTaskDuration(e.target.value)}
+                    placeholder="30"
+                    min="1"
+                    style={{ border: "none", outline: "none", flex: 1, background: "transparent", textAlign: "center" }}
+                  />
+                  <span style={{ color: "#6B8E6B", fontSize: "13px" }}>min</span>
+                </div>
+                {/* Duration Suggestion */}
+                {durationSuggestion && !taskDuration && (
+                  <div style={{
+                    marginTop: "6px",
+                    padding: "6px 10px",
+                    background: "linear-gradient(135deg, rgba(167,211,167,0.15), rgba(111,175,111,0.08))",
+                    borderRadius: "8px",
+                    border: "1px solid rgba(111,175,111,0.2)",
+                    fontSize: "12px",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "8px",
+                    justifyContent: "space-between"
+                  }}>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontWeight: "600", color: "#3B6E3B", marginBottom: "2px" }}>
+                        💡 Usually {durationSuggestion.suggested} min
+                      </div>
+                      <div style={{ fontSize: "11px", color: "#6B8E6B" }}>
+                        Based on {Math.round(durationSuggestion.confidence)}% confidence ({durationSuggestion.min}-{durationSuggestion.max} min range)
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setTaskDuration(durationSuggestion.suggested.toString())}
+                      style={{
+                        padding: "4px 10px",
+                        borderRadius: "6px",
+                        border: "1px solid rgba(111,175,111,0.3)",
+                        background: "#fff",
+                        color: "#3B6E3B",
+                        fontSize: "11px",
+                        fontWeight: "600",
+                        cursor: "pointer",
+                        transition: "all 0.2s",
+                        whiteSpace: "nowrap"
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.background = "linear-gradient(135deg, #6FAF6F, #3B6E3B)";
+                        e.currentTarget.style.color = "#fff";
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.background = "#fff";
+                        e.currentTarget.style.color = "#3B6E3B";
+                      }}
+                    >
+                      Use this
+                    </button>
+                  </div>
+                )}
+              </label>
             </div>
-          </div>
-        </div>
 
-        {/* Add Task Form */}
-        <div className="controls-row">
-          <label className="control" style={{ flex: 2 }}>
-            <div className="control-label">Task Name</div>
-            <div className="time-input">
-              <LeafIcon size={18} fill="#4F7A4F" />
-              <input
-                type="text"
-                value={taskName}
-                onChange={(e) => setTaskName(e.target.value)}
-                placeholder="What needs to be done?"
-                style={{ border: "none", outline: "none", flex: 1, background: "transparent" }}
-              />
-            </div>
-          </label>
-
-          <label className="control">
-            <div className="control-label">Start Time</div>
-            <div className="time-input">
-              <input
-                type="time"
-                value={taskStartTime}
-                onChange={(e) => setTaskStartTime(e.target.value)}
-                style={{ border: "none", outline: "none", flex: 1, background: "transparent" }}
-              />
-            </div>
-          </label>
-
-          <label className="control">
-            <div className="control-label">Duration</div>
-            <div className="time-input">
-              <input
-                type="number"
-                value={taskDuration}
-                onChange={(e) => setTaskDuration(e.target.value)}
-                placeholder="30"
-                min="1"
-                style={{ border: "none", outline: "none", flex: 1, background: "transparent", textAlign: "center" }}
-              />
-              <span style={{ color: "#6B8E6B", fontSize: "13px" }}>min</span>
-            </div>
-          </label>
-        </div>
-
-        <button 
-          onClick={addTask} 
-          className="btn primary"
-          style={{ 
-            width: "100%", 
-            marginBottom: "18px", 
-            fontSize: "15px",
-            position: "relative",
-            overflow: "hidden"
-          }}
-        >
-          + Add Task
-        </button>
-
-        {/* Quick Add Presets */}
-        <div className="presets horizontal-scroll" role="list">
-          {[{n:"Break",d:15},{n:"Meeting",d:30},{n:"Deep Work",d:90},{n:"Email",d:20}].map(p => (
             <button
-              key={p.n}
-              onClick={() => { setTaskName(p.n); setTaskDuration(p.d.toString()); }}
-              className="preset-pill"
-              aria-label={`Quick add ${p.n}`}
+              onClick={addTask}
+              className="btn primary"
+              style={{
+                width: "100%",
+                marginBottom: "18px",
+                fontSize: "15px",
+                position: "relative",
+                overflow: "hidden"
+              }}
             >
-              <div className="preset-text">{p.n}</div>
-              <div className="preset-sub">{p.d} min</div>
+              + Add Task
             </button>
-          ))}
-        </div>
+
+            {/* Quick Add Presets */}
+            <div className="presets horizontal-scroll" role="list">
+              {[{n:"Break",d:15},{n:"Meeting",d:30},{n:"Deep Work",d:90},{n:"Email",d:20}].map(p => (
+                <button
+                  key={p.n}
+                  onClick={() => { setTaskName(p.n); setTaskDuration(p.d.toString()); }}
+                  className="preset-pill"
+                  aria-label={`Quick add ${p.n}`}
+                >
+                  <div className="preset-text">{p.n}</div>
+                  <div className="preset-sub">{p.d} min</div>
+                </button>
+              ))}
+            </div>
+          </>
+        )}
+
+        {/* Focus Mode Active Indicator */}
+        {focusModeEnabled && activeTaskId && (
+          <div style={{
+            marginBottom: "24px",
+            marginTop: "12px",
+            padding: "12px 20px",
+            background: "linear-gradient(135deg, rgba(111,175,111,0.15), rgba(59,110,59,0.08))",
+            borderRadius: "12px",
+            border: "1px solid rgba(111,175,111,0.3)",
+            fontSize: "14px",
+            fontWeight: "600",
+            color: "#3B6E3B",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: "8px",
+            animation: "fadeIn 0.3s ease-out"
+          }}>
+            <span>🎯</span>
+            <span>Focus Mode Active</span>
+            <span style={{ fontSize: "12px", opacity: 0.7, fontWeight: "500" }}>(Press F or click button to exit)</span>
+          </div>
+        )}
 
         {/* ----- Active Task Timer Panel (added, small UI block) ----- */}
         {activeTask && (
@@ -864,13 +1162,16 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
           </div>
         )}
 
-        {/* Timeline */}
-        <div className="timeline-wrap">
-          <div className="timeline-scale">
-            <span>{availability?.start || "09:00"}</span>
-            <span>{viewMode === 'list' ? 'Your Timeline' : 'Calendar View'}</span>
-            <span>{availability?.end || "17:00"}</span>
-          </div>
+        {/* Conditionally hide timeline and task lists in full focus mode */}
+        {!(focusModeEnabled && activeTaskId) && (
+          <>
+            {/* Timeline */}
+            <div className="timeline-wrap">
+              <div className="timeline-scale">
+                <span>{availability?.start || "09:00"}</span>
+                <span>{viewMode === 'list' ? 'Your Timeline' : 'Calendar View'}</span>
+                <span>{availability?.end || "17:00"}</span>
+              </div>
 
           {viewMode === 'calendar' ? (
             <div style={{
@@ -1041,36 +1342,10 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
                             </div>
 
                             <button
+                              className="delete-button"
                               onClick={(e) => {
                                 e.stopPropagation();
                                 deleteTask(task.id);
-                              }}
-                              style={{
-                                width: "28px",
-                                height: "28px",
-                                borderRadius: "50%",
-                                border: "1px solid rgba(255,165,0,0.3)",
-                                background: "#fff",
-                                color: "#999",
-                                fontSize: "16px",
-                                cursor: "pointer",
-                                display: "flex",
-                                alignItems: "center",
-                                justifyContent: "center",
-                                transition: "all 0.2s",
-                                flexShrink: 0
-                              }}
-                              onMouseEnter={(e) => {
-                                e.currentTarget.style.background = "#fee";
-                                e.currentTarget.style.color = "#c00";
-                                e.currentTarget.style.borderColor = "rgba(200,0,0,0.3)";
-                                e.currentTarget.style.transform = "scale(1.1)";
-                              }}
-                              onMouseLeave={(e) => {
-                                e.currentTarget.style.background = "#fff";
-                                e.currentTarget.style.color = "#999";
-                                e.currentTarget.style.borderColor = "rgba(255,165,0,0.3)";
-                                e.currentTarget.style.transform = "scale(1)";
                               }}
                             >
                               ×
@@ -1234,36 +1509,10 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
                     </div>
 
                     <button
+                      className="delete-button"
                       onClick={(e) => {
                         e.stopPropagation();
                         deleteTask(task.id);
-                      }}
-                      style={{
-                        width: "28px",
-                        height: "28px",
-                        borderRadius: "50%",
-                        border: "1px solid rgba(111,175,111,0.2)",
-                        background: "#fff",
-                        color: "#999",
-                        fontSize: "16px",
-                        cursor: "pointer",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        transition: "all 0.2s",
-                        flexShrink: 0
-                      }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.background = "#fee";
-                        e.currentTarget.style.color = "#c00";
-                        e.currentTarget.style.borderColor = "rgba(200,0,0,0.3)";
-                        e.currentTarget.style.transform = "scale(1.1)";
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.background = "#fff";
-                        e.currentTarget.style.color = "#999";
-                        e.currentTarget.style.borderColor = "rgba(111,175,111,0.2)";
-                        e.currentTarget.style.transform = "scale(1)";
                       }}
                     >
                       ×
@@ -1286,6 +1535,8 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
               Start First Task →
             </button>
           </div>
+        )}
+          </>
         )}
 
         {/* ---------- Reschedule Modal ---------- */}
@@ -1323,6 +1574,36 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
             type={showCelebration}
             onComplete={() => setShowCelebration(null)}
           />
+        )}
+
+        {/* Focus Mode Toast */}
+        {showFocusModeToast && (
+          <div style={{
+            position: "fixed",
+            bottom: "24px",
+            left: "50%",
+            transform: "translateX(-50%)",
+            padding: "12px 24px",
+            background: focusModeEnabled
+              ? "linear-gradient(135deg, #6FAF6F, #3B6E3B)"
+              : "linear-gradient(135deg, rgba(167,211,167,0.95), rgba(111,175,111,0.9))",
+            color: "#fff",
+            borderRadius: "12px",
+            boxShadow: "0 8px 24px rgba(0,0,0,0.15)",
+            fontSize: "14px",
+            fontWeight: "600",
+            zIndex: 10000,
+            animation: "fadeInToast 0.2s ease-out",
+            display: "flex",
+            alignItems: "center",
+            gap: "8px"
+          }}>
+            <span>{focusModeEnabled ? "🎯" : "👁️"}</span>
+            <span>{focusModeEnabled ? "Focus Mode ON" : "Focus Mode OFF"}</span>
+            <span style={{ fontSize: "12px", opacity: 0.8 }}>
+              {focusModeEnabled ? "(Press F to exit)" : "(Press F to enable)"}
+            </span>
+          </div>
         )}
       </div>
     </div>

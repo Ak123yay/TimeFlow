@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
-import { getWeekData, getCurrentWeekStart } from "../utils/storage";
+import { getWeekData, getCurrentWeekStart, loadReflection } from "../utils/storage";
+import ReflectionViewer from "./dialogs/ReflectionViewer";
 import "../App.css";
 
 function LeafIcon({ size = 18, fill = "#3B6E3B" }) {
@@ -14,10 +15,23 @@ function LeafIcon({ size = 18, fill = "#3B6E3B" }) {
 export default function WeeklyView({ onBackToToday }) {
   const [weekStart, setWeekStart] = useState(getCurrentWeekStart());
   const [weekData, setWeekData] = useState([]);
+  const [selectedDay, setSelectedDay] = useState(null);
+  const [windowWidth, setWindowWidth] = useState(window.innerWidth);
+
+  useEffect(() => {
+    const handleResize = () => setWindowWidth(window.innerWidth);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   useEffect(() => {
     const data = getWeekData(weekStart);
-    setWeekData(data);
+    // Load reflections for each day
+    const dataWithReflections = data.map(day => ({
+      ...day,
+      reflection: loadReflection(day.date)
+    }));
+    setWeekData(dataWithReflections);
   }, [weekStart]);
 
   const goToPreviousWeek = () => {
@@ -133,7 +147,11 @@ export default function WeeklyView({ onBackToToday }) {
         {/* Week Grid */}
         <div style={{
           display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))",
+          gridTemplateColumns: windowWidth < 640
+            ? "1fr"
+            : windowWidth < 1024
+            ? "repeat(3, 1fr)"
+            : "repeat(7, 1fr)",
           gap: "16px",
           marginBottom: "24px"
         }}>
@@ -163,6 +181,7 @@ export default function WeeklyView({ onBackToToday }) {
             return (
               <div
                 key={day.date}
+                onClick={() => setSelectedDay(day)}
                 style={{
                   background: cardBackground,
                   border: `2px solid ${borderColor}`,
@@ -178,8 +197,10 @@ export default function WeeklyView({ onBackToToday }) {
                   boxShadow: day.isToday ? "0 4px 16px rgba(111,175,111,0.15)" : "0 2px 8px rgba(0,0,0,0.04)"
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.transform = "translateY(-4px)";
-                  e.currentTarget.style.boxShadow = "0 6px 20px rgba(59,110,59,0.15)";
+                  e.currentTarget.style.transform = day.reflection ? "translateY(-6px)" : "translateY(-4px)";
+                  e.currentTarget.style.boxShadow = day.reflection
+                    ? "0 8px 24px rgba(59,110,59,0.2)"
+                    : "0 6px 20px rgba(59,110,59,0.15)";
                 }}
                 onMouseLeave={(e) => {
                   e.currentTarget.style.transform = "translateY(0)";
@@ -221,6 +242,27 @@ export default function WeeklyView({ onBackToToday }) {
                     </div>
                   )}
                 </div>
+
+                {/* Reflection indicator badge */}
+                {day.reflection && (
+                  <div style={{
+                    position: "absolute",
+                    top: "12px",
+                    right: "12px",
+                    width: "24px",
+                    height: "24px",
+                    borderRadius: "50%",
+                    background: "linear-gradient(135deg, #A7D3A7, #6FAF6F)",
+                    border: "2px solid #fff",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    fontSize: "12px",
+                    boxShadow: "0 2px 6px rgba(59,110,59,0.2)"
+                  }}>
+                    📝
+                  </div>
+                )}
 
                 {/* Stats */}
                 {day.hasTasks ? (
@@ -282,6 +324,19 @@ export default function WeeklyView({ onBackToToday }) {
                     No tasks
                   </div>
                 )}
+
+                {/* Click hint for reflections */}
+                {day.reflection && (
+                  <div style={{
+                    fontSize: 11,
+                    color: "#6B8E6B",
+                    textAlign: "center",
+                    marginTop: 4,
+                    opacity: 0.7
+                  }}>
+                    Click to view reflection
+                  </div>
+                )}
               </div>
             );
           })}
@@ -315,6 +370,15 @@ export default function WeeklyView({ onBackToToday }) {
             </div>
           </div>
         </div>
+
+        {/* Reflection Viewer Modal */}
+        {selectedDay && selectedDay.reflection && (
+          <ReflectionViewer
+            date={selectedDay.date}
+            reflection={selectedDay.reflection}
+            onClose={() => setSelectedDay(null)}
+          />
+        )}
       </div>
     </div>
   );

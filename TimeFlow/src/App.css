@@ -11,6 +11,11 @@
   --soft-shadow: rgba(12, 34, 12, 0.06);
   --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   --transition-fast: all 0.15s ease;
+
+  /* Responsive breakpoints */
+  --bp-mobile: 640px;
+  --bp-tablet: 768px;
+  --bp-desktop: 1024px;
 }
 
 /* base */
@@ -80,6 +85,14 @@ html {
 /* decorative vine corners */
 
 /* ---------- working corner vine art ---------- */
+.setup-inner::before,
+.setup-inner::after {
+  content: '';
+  position: absolute;
+  background-size: contain;
+  background-repeat: no-repeat;
+}
+
 .setup-inner::before{
   left: -28px;
   top: -20px;
@@ -87,9 +100,8 @@ html {
   height: 180px;
   opacity: 0.12;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 120'%3E%3Cg fill='%233B6E3B' fill-opacity='0.14'%3E%3Cpath d='M10 80c20-40 60-40 90-10c-10 10-25 25-45 25C35 95 18 90 10 80z'/%3E%3Cpath d='M30 55c10-8 28-8 38 2c-8 6-18 12-30 10C30 67 28 62 30 55z'/%3E%3C/g%3E%3C/svg%3E");
-  background-size: contain;
-  background-repeat: no-repeat;
 }
+
 .setup-inner::after{
   right: -28px;
   bottom: -20px;
@@ -97,8 +109,46 @@ html {
   height: 180px;
   opacity: 0.10;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 120'%3E%3Cg fill='%236FAF6F' fill-opacity='0.10'%3E%3Cpath d='M110 40c-20 40-60 40-90 10c10-10 25-25 45-25C85 5 102 10 110 20z'/%3E%3Cpath d='M90 65c-10 8-28 8-38-2c8-6 18-12 30-10C90 53 92 58 90 65z'/%3E%3C/g%3E%3C/svg%3E");
-  background-size: contain;
-  background-repeat: no-repeat;
+}
+
+/* Mobile: Hide vines completely to prevent overflow */
+@media (max-width: 640px) {
+  .setup-inner {
+    padding: 16px;
+    border-radius: 12px;
+    gap: 12px;
+    max-width: 100%;
+  }
+
+  .setup-inner::before,
+  .setup-inner::after {
+    display: none;
+  }
+}
+
+/* Tablet: Scale down vines */
+@media (min-width: 641px) and (max-width: 1024px) {
+  .setup-inner {
+    max-width: 90%;
+    padding: 20px;
+  }
+
+  .setup-inner::before,
+  .setup-inner::after {
+    width: 120px;
+    height: 120px;
+    opacity: 0.08;
+  }
+
+  .setup-inner::before {
+    left: -15px;
+    top: -10px;
+  }
+
+  .setup-inner::after {
+    right: -15px;
+    bottom: -10px;
+  }
 }
 
 /* header */
@@ -115,6 +165,23 @@ html {
   color: var(--primary);
 }
 .header-left .muted{ margin-top:6px; color:var(--muted); font-size:13px; }
+
+/* Mobile: Stack header elements vertically */
+@media (max-width: 640px) {
+  .setup-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .header-left {
+    width: 100%;
+  }
+
+  .header-decor {
+    align-self: flex-end;
+  }
+}
 
 /* presets scroll row */
 .presets{
@@ -174,6 +241,20 @@ html {
 }
 .control{ display:flex; flex-direction:column; gap:6px; min-width:150px; }
 .control-label{ font-size:13px; color:var(--muted); }
+
+/* Mobile: Stack form controls vertically, remove min-width */
+@media (max-width: 640px) {
+  .controls-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  .control {
+    min-width: unset;
+    width: 100%;
+  }
+}
 .time-input {
   display: flex;
   align-items: center;
@@ -210,6 +291,16 @@ html {
 .summary-main{ font-weight:700; color:var(--primary); }
 .summary-sub{ color:var(--muted); font-size:13px; }
 
+/* Mobile: Reposition summary below controls */
+@media (max-width: 640px) {
+  .summary {
+    margin-left: 0;
+    margin-top: 8px;
+    text-align: left;
+    width: 100%;
+  }
+}
+
 /* timeline */
 .timeline-wrap{ display:flex; flex-direction:column; gap:8px; }
 .timeline-scale{ display:flex; justify-content:space-between; color:var(--muted); font-size:12px; }
@@ -220,6 +311,24 @@ html {
   background: linear-gradient(180deg, rgba(250,255,250,1), rgba(240,248,242,1));
   border:1px solid rgba(111,175,111,0.06);
   overflow: visible;
+}
+
+/* Mobile: Smaller timeline bars */
+@media (max-width: 640px) {
+  .timeline-bar {
+    height: 60px;
+  }
+
+  .timeline-scale {
+    font-size: 10px;
+    gap: 4px;
+  }
+
+  .timeline-label {
+    font-size: 11px;
+    padding: 6px 10px;
+    max-width: 90%;
+  }
 }
 
 /* connector (vine) */
@@ -349,14 +458,35 @@ html {
 }
 
 
-/* larger clickable area on mobile */
-@media (max-width:640px) {
-  .btn.primary, .btn.ghost { padding: 14px 18px; font-size:15px; }
+/* Enhanced mobile button sizing with touch targets */
+@media (max-width: 640px) {
+  .btn.primary,
+  .btn.ghost {
+    padding: 14px 20px;
+    font-size: 15px;
+    min-height: 44px; /* Ensure minimum touch target */
+  }
+}
+
+/* Tablet button sizing */
+@media (min-width: 641px) and (max-width: 1024px) {
+  .btn.primary,
+  .btn.ghost {
+    padding: 12px 18px;
+  }
 }
 
 /* make preset pills softer */
 .preset-pill {
   border-radius: 18px;
+}
+
+/* Mobile: Smaller preset pills */
+@media (max-width: 640px) {
+  .preset-pill {
+    min-width: 90px;
+    padding: 8px 10px;
+  }
 }
 
 /* markers: make leaf sit in a soft circular background */
@@ -485,7 +615,8 @@ input:focus-visible {
 
 /* Focus mode styles */
 .task-focused {
-  animation: focusPulse 2s ease-in-out infinite;
+  animation: focusPulse 2s ease-in-out infinite !important;
+  box-shadow: 0 0 0 3px rgba(111,175,111,0.3) !important;
 }
 
 .task-dimmed {
@@ -495,20 +626,28 @@ input:focus-visible {
 
 @keyframes focusPulse {
   0%, 100% {
-    box-shadow: 0 0 0 3px rgba(111,175,111,0.3);
+    box-shadow: 0 0 0 3px rgba(111,175,111,0.3), 0 8px 32px rgba(59,110,59,0.12);
   }
   50% {
-    box-shadow: 0 0 0 6px rgba(111,175,111,0.15);
+    box-shadow: 0 0 0 6px rgba(111,175,111,0.15), 0 12px 40px rgba(59,110,59,0.18);
+  }
+}
+
+/* Focus Mode Toast Fade In */
+@keyframes fadeInToast {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
   }
 }
 
 /* ==================== Time-of-Day Backgrounds ==================== */
 .app-dawn {
   background: linear-gradient(135deg, #FFF5F5, #F0F8F2) !important;
-}
-
-.app-day {
-  /* Uses default --bg variable */
 }
 
 .app-dusk {
@@ -580,4 +719,50 @@ input:focus-visible {
   background: linear-gradient(90deg, rgba(167,211,167,0.12), rgba(111,175,111,0.08));
   border-color: rgba(111,175,111,0.2);
   transform: translateX(4px);
+}
+
+/* Mobile: Stack pool task card buttons vertically */
+@media (max-width: 640px) {
+  .pool-task-card {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+    padding: 12px;
+  }
+
+  .pool-task-card button {
+    width: 100%;
+  }
+}
+
+/* Delete button responsive sizing */
+.delete-button {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 1px solid rgba(220,38,38,0.3);
+  background: rgba(255,255,255,0.9);
+  color: #dc2626;
+  font-size: 20px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+}
+
+.delete-button:hover {
+  background: rgba(220,38,38,0.1);
+  border-color: rgba(220,38,38,0.5);
+  transform: scale(1.1);
+}
+
+@media (max-width: 640px) {
+  .delete-button {
+    width: 44px;
+    height: 44px;
+    font-size: 22px;
+  }
 }
