@@ -136,36 +136,65 @@ export default function WeeklyPool({ onNavigateToToday }) {
           background: '#fff', borderRadius: '14px', padding: '14px',
           marginBottom: '14px', boxShadow: '0 1px 6px rgba(0,0,0,0.04)'
         }}>
-          <input
-            type="text"
-            value={newTaskName}
-            onChange={(e) => setNewTaskName(e.target.value)}
-            placeholder="What do you want to work on?"
-            style={{
-              width: '100%', boxSizing: 'border-box',
-              fontSize: '16px', padding: '12px 14px',
-              border: '1.5px solid #E5E5E5', borderRadius: '10px',
-              background: '#FAFAFA', outline: 'none', marginBottom: '10px'
-            }}
-            onFocus={(e) => e.target.style.borderColor = '#3B6E3B'}
-            onBlur={(e) => e.target.style.borderColor = '#E5E5E5'}
-          />
-
-          <div style={{ marginBottom: '10px' }}>
-            <label style={{ fontSize: '11px', fontWeight: 600, color: '#8E8E93', marginBottom: '3px', display: 'block' }}>
-              Deadline (optional)
-            </label>
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            height: '44px',
+            border: '1.5px solid #E5E5E5',
+            borderRadius: '10px',
+            background: '#FAFAFA',
+            padding: '0 14px',
+            boxSizing: 'border-box',
+            marginBottom: '10px'
+          }}>
             <input
-              type="date"
-              value={newTaskDeadline}
-              onChange={(e) => setNewTaskDeadline(e.target.value)}
+              type="text"
+              value={newTaskName}
+              onChange={(e) => setNewTaskName(e.target.value)}
+              placeholder="What do you want to work on?"
               style={{
-                width: '100%', boxSizing: 'border-box',
-                fontSize:  '16px', padding: '10px 12px',
-                border: '1.5px solid #E5E5E5', borderRadius: '10px',
-                background: '#FAFAFA', outline: 'none'
+                fontSize: '16px',
+                padding: 0,
+                border: 'none',
+                outline: 'none',
+                flex: 1,
+                background: 'transparent',
+                width: '100%',
+                height: '100%'
               }}
             />
+          </div>
+
+          <div style={{ marginBottom: '10px' }}>
+            <label style={{ fontSize: '11px', fontWeight: 600, color: '#8E8E93', marginBottom: '6px', display: 'block' }}>
+              Deadline (optional)
+            </label>
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              height: '44px',
+              border: '1.5px solid #E5E5E5',
+              borderRadius: '10px',
+              background: '#FAFAFA',
+              padding: '0 12px',
+              boxSizing: 'border-box'
+            }}>
+              <input
+                type="date"
+                value={newTaskDeadline}
+                onChange={(e) => setNewTaskDeadline(e.target.value)}
+                style={{
+                  fontSize: '16px',
+                  padding: 0,
+                  border: 'none',
+                  outline: 'none',
+                  flex: 1,
+                  background: 'transparent',
+                  width: '100%',
+                  height: '100%'
+                }}
+              />
+            </div>
           </div>
 
           <button

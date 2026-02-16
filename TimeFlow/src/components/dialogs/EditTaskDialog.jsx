@@ -5,6 +5,7 @@ export default function EditTaskDialog({ task, onSave, onClose }) {
   const [taskName, setTaskName] = useState(task?.name || "");
   const [taskDuration, setTaskDuration] = useState(task?.duration || "");
   const [taskStartTime, setTaskStartTime] = useState(task?.startTime || "");
+  const [taskDeadline, setTaskDeadline] = useState(task?.deadline || "");
 
   if (!task) return null;
 
@@ -17,6 +18,7 @@ export default function EditTaskDialog({ task, onSave, onClose }) {
       duration: parseInt(taskDuration, 10),
       remaining: parseInt(taskDuration, 10),
       startTime: taskStartTime || null,
+      deadline: taskDeadline || null,
       scheduledFor: taskStartTime
         ? new Date(`${new Date().toISOString().slice(0, 10)}T${taskStartTime}`).toISOString()
         : null
@@ -55,71 +57,137 @@ export default function EditTaskDialog({ task, onSave, onClose }) {
           <div style={{ fontSize: 13, fontWeight: 600, color: "#3B6E3B", marginBottom: 6 }}>
             Task Name
           </div>
-          <input
-            type="text"
-            value={taskName}
-            onChange={(e) => setTaskName(e.target.value)}
-            placeholder="What needs to be done?"
-            style={{
-              width: "100%",
-              padding: "10px 12px",
-              borderRadius: "10px",
-              border: "1px solid rgba(111,175,111,0.3)",
-              fontSize: "14px",
-              outline: "none",
-              transition: "border-color 0.2s"
-            }}
-            onFocus={(e) => e.target.style.borderColor = "rgba(111,175,111,0.6)"}
-            onBlur={(e) => e.target.style.borderColor = "rgba(111,175,111,0.3)"}
-          />
-        </label>
-
-        {/* Start Time */}
-        <label style={{ display: "block", marginBottom: 16 }}>
-          <div style={{ fontSize: 13, fontWeight: 600, color: "#3B6E3B", marginBottom: 6 }}>
-            Start Time (optional)
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            height: '44px',
+            border: '1px solid rgba(111,175,111,0.3)',
+            borderRadius: '10px',
+            background: '#fff',
+            padding: '0 12px',
+            boxSizing: 'border-box'
+          }}>
+            <input
+              type="text"
+              value={taskName}
+              onChange={(e) => setTaskName(e.target.value)}
+              placeholder="What needs to be done?"
+              style={{
+                fontSize: '16px',
+                padding: 0,
+                border: 'none',
+                outline: 'none',
+                flex: 1,
+                background: 'transparent',
+                width: '100%',
+                height: '100%'
+              }}
+            />
           </div>
-          <input
-            type="time"
-            value={taskStartTime}
-            onChange={(e) => setTaskStartTime(e.target.value)}
-            style={{
-              width: "100%",
-              padding: "10px 12px",
-              borderRadius: "10px",
-              border: "1px solid rgba(111,175,111,0.3)",
-              fontSize: "14px",
-              outline: "none",
-              transition: "border-color 0.2s"
-            }}
-            onFocus={(e) => e.target.style.borderColor = "rgba(111,175,111,0.6)"}
-            onBlur={(e) => e.target.style.borderColor = "rgba(111,175,111,0.3)"}
-          />
         </label>
 
-        {/* Duration */}
+        {/* Start Time and Duration row */}
+        <div style={{ display: 'flex', gap: '12px', marginBottom: 16 }}>
+          <label style={{ flex: 1 }}>
+            <div style={{ fontSize: 13, fontWeight: 600, color: "#3B6E3B", marginBottom: 6 }}>
+              Start Time
+            </div>
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              height: '44px',
+              border: '1px solid rgba(111,175,111,0.3)',
+              borderRadius: '10px',
+              background: '#fff',
+              padding: '0 12px',
+              boxSizing: 'border-box'
+            }}>
+              <input
+                type="time"
+                value={taskStartTime}
+                onChange={(e) => setTaskStartTime(e.target.value)}
+                style={{
+                  fontSize: '16px',
+                  padding: 0,
+                  border: 'none',
+                  outline: 'none',
+                  flex: 1,
+                  background: 'transparent',
+                  width: '100%',
+                  height: '100%'
+                }}
+              />
+            </div>
+          </label>
+
+          <label style={{ flex: 1 }}>
+            <div style={{ fontSize: 13, fontWeight: 600, color: "#3B6E3B", marginBottom: 6 }}>
+              Duration
+            </div>
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              height: '44px',
+              border: '1px solid rgba(111,175,111,0.3)',
+              borderRadius: '10px',
+              background: '#fff',
+              padding: '0 12px',
+              boxSizing: 'border-box'
+            }}>
+              <input
+                type="number"
+                value={taskDuration}
+                onChange={(e) => setTaskDuration(e.target.value)}
+                placeholder="30"
+                min="1"
+                style={{
+                  fontSize: '16px',
+                  padding: 0,
+                  border: 'none',
+                  outline: 'none',
+                  flex: 1,
+                  background: 'transparent',
+                  textAlign: 'center',
+                  width: '100%',
+                  height: '100%'
+                }}
+              />
+              <span style={{ color: '#6B8E6B', fontSize: '12px', fontWeight: 500, marginLeft: '4px', flexShrink: 0 }}>min</span>
+            </div>
+          </label>
+        </div>
+
+        {/* Deadline */}
         <label style={{ display: "block", marginBottom: 24 }}>
           <div style={{ fontSize: 13, fontWeight: 600, color: "#3B6E3B", marginBottom: 6 }}>
-            Duration (minutes)
+            Deadline (optional)
           </div>
-          <input
-            type="number"
-            value={taskDuration}
-            onChange={(e) => setTaskDuration(e.target.value)}
-            placeholder="30"
-            min="1"
-            style={{
-              width: "100%",
-              padding: "10px 12px",
-              borderRadius: "10px",
-              border: "1px solid rgba(111,175,111,0.3)",
-              fontSize: "14px",
-              outline: "none",
-              transition: "border-color 0.2s"
-            }}
-            onFocus={(e) => e.target.style.borderColor = "rgba(111,175,111,0.6)"}
-            onBlur={(e) => e.target.style.borderColor = "rgba(111,175,111,0.3)"}
-          />
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            height: '44px',
+            border: '1px solid rgba(111,175,111,0.3)',
+            borderRadius: '10px',
+            background: '#fff',
+            padding: '0 12px',
+            boxSizing: 'border-box'
+          }}>
+            <input
+              type="date"
+              value={taskDeadline}
+              onChange={(e) => setTaskDeadline(e.target.value)}
+              style={{
+                fontSize: '16px',
+                padding: 0,
+                border: 'none',
+                outline: 'none',
+                flex: 1,
+                background: 'transparent',
+                width: '100%',
+                height: '100%'
+              }}
+            />
+          </div>
         </label>
 
         {/* Buttons */}
