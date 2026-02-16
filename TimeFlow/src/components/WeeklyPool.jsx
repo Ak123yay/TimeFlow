@@ -8,6 +8,8 @@ import {
 } from "../utils/storage";
 import { getDeadlineUrgency } from "../utils/scheduler";
 import MoveToTodayDialog from "./dialogs/MoveToTodayDialog";
+import MobileLayout from './mobile/MobileLayout';
+import { haptic } from "../utils/haptics";
 import "../App.css";
 
 function LeafIconLocal({ className = "", size = 18, fill = "#3B6E3B" }) {
@@ -44,11 +46,20 @@ export default function WeeklyPool({ onNavigateToToday }) {
   const [newTaskDeadline, setNewTaskDeadline] = useState("");
   const [showMoveDialog, setShowMoveDialog] = useState(false);
   const [taskToMove, setTaskToMove] = useState(null);
+  const [isMobile, setIsMobile] = useState(() => window.matchMedia('(max-width: 768px)').matches);
+
+  useState(() => {
+    const mq = window.matchMedia('(max-width: 768px)');
+    const handler = (e) => setIsMobile(e.matches);
+    mq.addEventListener('change', handler);
+    return () => mq.removeEventListener('change', handler);
+  });
 
   const addTaskToPool = (e) => {
     if (e && e.preventDefault) e.preventDefault();
     if (!newTaskName) return;
 
+    haptic.success();
     const task = addTaskToWeeklyPool({
       name: newTaskName,
       deadline: newTaskDeadline || null
@@ -60,16 +71,15 @@ export default function WeeklyPool({ onNavigateToToday }) {
   };
 
   const handleMoveToToday = (task) => {
+    haptic.light();
     setTaskToMove(task);
     setShowMoveDialog(true);
   };
 
   const confirmMoveToToday = (duration, startTime) => {
-    // Remove from pool
     removeTaskFromWeeklyPool(taskToMove.id);
     setPoolTasks(poolTasks.filter(t => t.id !== taskToMove.id));
 
-    // Add to today's tasks with user-specified duration
     const todayTasks = loadTasks();
     const newTask = {
       ...taskToMove,
@@ -92,59 +102,192 @@ export default function WeeklyPool({ onNavigateToToday }) {
 
     setShowMoveDialog(false);
     setTaskToMove(null);
-
-    // Navigate to Today view
     onNavigateToToday();
   };
 
   const deleteTask = (id) => {
+    haptic.heavy();
     removeTaskFromWeeklyPool(id);
     setPoolTasks(poolTasks.filter(t => t.id !== id));
   };
 
+  if (isMobile) {
+    return (
+      <MobileLayout showBottomNav={true} onNavigate={(tab) => {
+        haptic.light();
+        if (tab === 'today') onNavigateToToday();
+      }} activeTab="pool">
+
+        {/* Header */}
+        <div style={{ marginBottom: '12px' }}>
+          <h1 style={{ fontSize: '20px', fontWeight: 800, color: '#1A1A1A', margin: '0 0 2px', letterSpacing: '-0.3px' }}>
+            Weekly Pool 🌊
+          </h1>
+          <p style={{ fontSize: '12px', color: '#8E8E93', margin: 0 }}>
+            {poolTasks.length} tasks to work on this week
+          </p>
+        </div>
+
+        {/* Add Task Form */}
+        <div style={{
+          background: '#fff', borderRadius: '14px', padding: '14px',
+          marginBottom: '14px', boxShadow: '0 1px 6px rgba(0,0,0,0.04)'
+        }}>
+          <input
+            type="text"
+            value={newTaskName}
+            onChange={(e) => setNewTaskName(e.target.value)}
+            placeholder="What do you want to work on?"
+            style={{
+              width: '100%', boxSizing: 'border-box',
+              fontSize: '15px', padding: '12px 14px',
+              border: '1.5px solid #E5E5E5', borderRadius: '10px',
+              background: '#FAFAFA', outline: 'none', marginBottom: '10px'
+            }}
+            onFocus={(e) => e.target.style.borderColor = '#3B6E3B'}
+            onBlur={(e) => e.target.style.borderColor = '#E5E5E5'}
+          />
+
+          <div style={{ marginBottom: '10px' }}>
+            <label style={{ fontSize: '11px', fontWeight: 600, color: '#8E8E93', marginBottom: '3px', display: 'block' }}>
+              Deadline (optional)
+            </label>
+            <input
+              type="date"
+              value={newTaskDeadline}
+              onChange={(e) => setNewTaskDeadline(e.target.value)}
+              style={{
+                width: '100%', boxSizing: 'border-box',
+                fontSize: '14px', padding: '10px 12px',
+                border: '1.5px solid #E5E5E5', borderRadius: '10px',
+                background: '#FAFAFA', outline: 'none'
+              }}
+            />
+          </div>
+
+          <button
+            onClick={addTaskToPool}
+            style={{
+              width: '100%', padding: '12px',
+              borderRadius: '10px', background: '#3B6E3B',
+              color: '#fff', fontSize: '14px', fontWeight: 700,
+              border: 'none', cursor: 'pointer', touchAction: 'manipulation'
+            }}
+          >
+            + Add to Pool
+          </button>
+        </div>
+
+        {/* Pool Tasks List */}
+        {poolTasks.length === 0 ? (
+          <div style={{ textAlign: 'center', padding: '40px 20px' }}>
+            <div style={{ fontSize: '36px', marginBottom: '12px' }}>🌊</div>
+            <p style={{ fontSize: '15px', fontWeight: 600, color: '#1A1A1A', margin: '0 0 4px' }}>
+              Pool is empty
+            </p>
+            <p style={{ fontSize: '13px', color: '#8E8E93', margin: 0 }}>
+              Add tasks you want to work on this week
+            </p>
+          </div>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            {poolTasks.map(task => {
+              const urgency = task.deadline ? getDeadlineUrgency(task) : null;
+
+              return (
+                <div
+                  key={task.id}
+                  style={{
+                    background: '#fff', borderRadius: '12px',
+                    padding: '12px 14px', boxShadow: '0 1px 6px rgba(0,0,0,0.04)',
+                    display: 'flex', flexDirection: 'column', gap: '10px'
+                  }}
+                >
+                  <div>
+                    <div style={{ fontSize: '14px', fontWeight: 700, color: '#1A1A1A', marginBottom: '4px' }}>
+                      {task.name}
+                    </div>
+                    {urgency && (
+                      <span style={{
+                        fontSize: '10px', padding: '2px 8px',
+                        background: urgency.color + '22',
+                        color: urgency.color,
+                        borderRadius: '99px', fontWeight: 600,
+                        display: 'inline-block'
+                      }}>
+                        📅 {urgency.message}
+                      </span>
+                    )}
+                  </div>
+
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    <button
+                      onClick={() => handleMoveToToday(task)}
+                      style={{
+                        flex: 1, padding: '8px 12px', borderRadius: '8px',
+                        background: '#3B6E3B', color: '#fff',
+                        border: 'none', fontSize: '12px', fontWeight: 600,
+                        cursor: 'pointer', touchAction: 'manipulation'
+                      }}
+                    >
+                      Move to Today →
+                    </button>
+                    <button
+                      onClick={() => deleteTask(task.id)}
+                      style={{
+                        width: '36px', height: '36px', borderRadius: '8px',
+                        background: '#FEE2E2', color: '#DC2626',
+                        border: 'none', fontSize: '18px', fontWeight: 300,
+                        cursor: 'pointer', touchAction: 'manipulation',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center'
+                      }}
+                    >×</button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        {showMoveDialog && taskToMove && (
+          <MoveToTodayDialog
+            task={taskToMove}
+            onConfirm={confirmMoveToToday}
+            onCancel={() => {
+              setShowMoveDialog(false);
+              setTaskToMove(null);
+            }}
+          />
+        )}
+      </MobileLayout>
+    );
+  }
+
+  // Desktop render (unchanged)
   return (
     <div className="setup-fullscreen nat-bg">
       <div className="setup-inner nat-card">
-        {/* Header */}
         <div className="setup-header" style={{ marginBottom: "22px" }}>
           <div className="header-left">
-            <h1 className="title" style={{ fontSize: "24px" }}>Weekly Pool 🌊</h1>
+            <h1 className="title" style={{ fontSize: "24px" }}>Week ly Pool 🌊</h1>
             <p className="muted" style={{ display: "flex", alignItems: "center", gap: "6px" }}>
               <LeafIconLocal size={14} fill="#6B8E6B" />
               Tasks you want to work on this week ({poolTasks.length})
             </p>
           </div>
-          <button
-            onClick={onNavigateToToday}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "8px",
-              padding: "8px 16px",
-              borderRadius: "9999px",
-              border: "1px solid rgba(111,175,111,0.3)",
-              background: "linear-gradient(135deg, rgba(111,175,111,0.1), rgba(59,110,59,0.05))",
-              color: "#3B6E3B",
-              fontSize: "14px",
-              fontWeight: "600",
-              cursor: "pointer",
-              transition: "all 0.2s ease",
-              boxShadow: "0 2px 6px rgba(59,110,59,0.06)"
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.transform = "translateY(-2px)";
-              e.currentTarget.style.boxShadow = "0 4px 12px rgba(59,110,59,0.12)";
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.transform = "translateY(0)";
-              e.currentTarget.style.boxShadow = "0 2px 6px rgba(59,110,59,0.06)";
-            }}
-          >
+          <button onClick={onNavigateToToday} style={{
+            display: "flex", alignItems: "center", gap: "8px",
+            padding: "8px 16px", borderRadius: "9999px",
+            border: "1px solid rgba(111,175,111,0.3)",
+            background: "linear-gradient(135deg, rgba(111,175,111,0.1), rgba(59,110,59,0.05))",
+            color: "#3B6E3B", fontSize: "14px", fontWeight: "600",
+            cursor: "pointer", transition: "all 0.2s ease",
+            boxShadow: "0 2px 6px rgba(59,110,59,0.06)"
+          }}>
             ← Back to Today
           </button>
         </div>
 
-        {/* Add Task Form */}
         <div className="controls-row">
           <label className="control" style={{ flex: 1 }}>
             <div className="control-label">Task Name</div>
@@ -161,7 +304,6 @@ export default function WeeklyPool({ onNavigateToToday }) {
           </label>
         </div>
 
-        {/* Deadline Field */}
         <div className="controls-row" style={{ marginTop: "12px" }}>
           <label className="control">
             <div className="control-label">Deadline (optional)</div>
@@ -177,21 +319,13 @@ export default function WeeklyPool({ onNavigateToToday }) {
           </label>
         </div>
 
-        <button
-          onClick={addTaskToPool}
-          className="btn primary"
-          style={{
-            width: "100%",
-            marginBottom: "18px",
-            fontSize: "15px",
-            position: "relative",
-            overflow: "hidden"
-          }}
-        >
+        <button onClick={addTaskToPool} className="btn primary" style={{
+          width: "100%", marginBottom: "18px", fontSize: "15px",
+          position: "relative", overflow: "hidden"
+        }}>
           + Add to Pool
         </button>
 
-        {/* Pool Tasks List */}
         <div style={{ marginTop: 24 }}>
           {poolTasks.length === 0 ? (
             <div style={{ textAlign: "center", padding: "40px 20px", opacity: 0.6 }}>
@@ -214,12 +348,10 @@ export default function WeeklyPool({ onNavigateToToday }) {
                     {urgency && (
                       <div style={{ marginTop: "4px" }}>
                         <span style={{
-                          fontSize: "11px",
-                          padding: "3px 8px",
+                          fontSize: "11px", padding: "3px 8px",
                           background: urgency.color + "22",
                           color: urgency.color,
-                          borderRadius: "9999px",
-                          fontWeight: "600",
+                          borderRadius: "9999px", fontWeight: "600",
                           display: "inline-block"
                         }}>
                           📅 {urgency.message}
@@ -227,20 +359,12 @@ export default function WeeklyPool({ onNavigateToToday }) {
                       </div>
                     )}
                   </div>
-                  <button
-                    onClick={() => handleMoveToToday(task)}
-                    className="btn primary"
-                    style={{
-                      fontSize: 13,
-                      padding: "8px 16px"
-                    }}
-                  >
+                  <button onClick={() => handleMoveToToday(task)} className="btn primary" style={{
+                    fontSize: 13, padding: "8px 16px"
+                  }}>
                     Move to Today →
                   </button>
-                  <button
-                    className="delete-button"
-                    onClick={() => deleteTask(task.id)}
-                  >
+                  <button className="delete-button" onClick={() => deleteTask(task.id)}>
                     ×
                   </button>
                 </div>
@@ -250,7 +374,6 @@ export default function WeeklyPool({ onNavigateToToday }) {
           )}
         </div>
 
-        {/* Move to Today Dialog */}
         {showMoveDialog && taskToMove && (
           <MoveToTodayDialog
             task={taskToMove}

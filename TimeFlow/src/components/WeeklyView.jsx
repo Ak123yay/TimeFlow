@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import { getWeekData, getCurrentWeekStart, loadReflection } from "../utils/storage";
 import ReflectionViewer from "./dialogs/ReflectionViewer";
+import MobileLayout from './mobile/MobileLayout';
+import { haptic } from "../utils/haptics";
 import "../App.css";
 
 function LeafIcon({ size = 18, fill = "#3B6E3B" }) {
@@ -16,17 +18,17 @@ export default function WeeklyView({ onBackToToday }) {
   const [weekStart, setWeekStart] = useState(getCurrentWeekStart());
   const [weekData, setWeekData] = useState([]);
   const [selectedDay, setSelectedDay] = useState(null);
-  const [windowWidth, setWindowWidth] = useState(window.innerWidth);
+  const [isMobile, setIsMobile] = useState(() => window.matchMedia('(max-width: 768px)').matches);
 
   useEffect(() => {
-    const handleResize = () => setWindowWidth(window.innerWidth);
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
+    const mq = window.matchMedia('(max-width: 768px)');
+    const handler = (e) => setIsMobile(e.matches);
+    mq.addEventListener('change', handler);
+    return () => mq.removeEventListener('change', handler);
   }, []);
 
   useEffect(() => {
     const data = getWeekData(weekStart);
-    // Load reflections for each day
     const dataWithReflections = data.map(day => ({
       ...day,
       reflection: loadReflection(day.date)
@@ -35,28 +37,211 @@ export default function WeeklyView({ onBackToToday }) {
   }, [weekStart]);
 
   const goToPreviousWeek = () => {
+    haptic.light();
     const start = new Date(weekStart);
     start.setDate(start.getDate() - 7);
     setWeekStart(start.toISOString().slice(0, 10));
   };
 
   const goToNextWeek = () => {
+    haptic.light();
     const start = new Date(weekStart);
     start.setDate(start.getDate() + 7);
     setWeekStart(start.toISOString().slice(0, 10));
   };
 
   const goToCurrentWeek = () => {
+    haptic.light();
     setWeekStart(getCurrentWeekStart());
   };
 
   const isCurrentWeek = weekStart === getCurrentWeekStart();
 
+  if (isMobile) {
+    return (
+      <MobileLayout showBottomNav={true} onNavigate={(tab) => {
+        haptic.light();
+        if (tab === 'today') onBackToToday();
+      }} activeTab="week">
+
+        {/* Header */}
+        <div style={{ marginBottom: '12px' }}>
+          <h1 style={{ fontSize: '20px', fontWeight: 800, color: '#1A1A1A', margin: '0 0 2px', letterSpacing: '-0.3px' }}>
+            Weekly Overview
+          </h1>
+          <p style={{ fontSize: '12px', color: '#8E8E93', margin: 0 }}>Your week at a glance</p>
+        </div>
+
+        {/* Week Navigation */}
+        <div style={{
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          marginBottom: '14px', padding: '10px 14px',
+          background: '#fff', borderRadius: '12px', boxShadow: '0 1px 4px rgba(0,0,0,0.04)'
+        }}>
+          <button onClick={goToPreviousWeek} style={{
+            padding: '6px 10px', borderRadius: '8px', border: 'none',
+            background: '#F0F0F0', color: '#1A1A1A', fontSize: '12px', fontWeight: 600,
+            cursor: 'pointer', touchAction: 'manipulation'
+          }}>←</button>
+
+          <div style={{ flex: 1, textAlign: 'center' }}>
+            <div style={{ fontSize: '13px', fontWeight: 700, color: '#1A1A1A' }}>
+              {weekData[0]?.month} {weekData[0]?.dayOfMonth} - {weekData[6]?.month} {weekData[6]?.dayOfMonth}
+            </div>
+            {!isCurrentWeek && (
+              <button onClick={goToCurrentWeek} style={{
+                marginTop: '2px', padding: '2px 10px', borderRadius: '6px',
+                border: 'none', background: 'rgba(59,110,59,0.08)', color: '#3B6E3B',
+                fontSize: '10px', fontWeight: 600, cursor: 'pointer', touchAction: 'manipulation'
+              }}>Today</button>
+            )}
+          </div>
+
+          <button onClick={goToNextWeek} style={{
+            padding: '6px 10px', borderRadius: '8px', border: 'none',
+            background: '#F0F0F0', color: '#1A1A1A', fontSize: '12px', fontWeight: 600,
+            cursor: 'pointer', touchAction: 'manipulation'
+          }}>→</button>
+        </div>
+
+        {/* Day Cards */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '14px' }}>
+          {weekData.map((day) => {
+            const completionColor = day.completionRate === 100 ? '#10b981'
+              : day.completionRate >= 75 ? '#6FAF6F'
+              : day.completionRate >= 50 ? '#fbbf24'
+              : day.completionRate > 0 ? '#f59e0b' : '#cbd5e1';
+
+            return (
+              <div
+                key={day.date}
+                onClick={() => { if (day.reflection) { setSelectedDay(day); haptic.light(); } }}
+                style={{
+                  background: day.isToday ? 'rgba(59,110,59,0.04)' : '#fff',
+                  border: day.isToday ? '1.5px solid #3B6E3B' : '1px solid #E5E5E5',
+                  borderRadius: '12px', padding: '12px 14px',
+                  cursor: day.reflection ? 'pointer' : 'default',
+                  touchAction: 'manipulation'
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: day.hasTasks ? '10px' : 0 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <div>
+                      <div style={{ fontSize: '10px', fontWeight: 700, color: '#8E8E93', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                        {day.dayOfWeek}
+                      </div>
+                      <div style={{ fontSize: '16px', fontWeight: 800, color: '#1A1A1A' }}>
+                        {day.dayOfMonth}
+                      </div>
+                    </div>
+                    {day.isToday && (
+                      <div style={{
+                        padding: '3px 8px', background: 'rgba(59,110,59,0.1)',
+                        borderRadius: '6px', fontSize: '9px', fontWeight: 700, color: '#3B6E3B'
+                      }}>TODAY</div>
+                    )}
+                    {day.isFuture && !day.isToday && (
+                      <div style={{
+                        padding: '3px 8px', background: '#F0F0F0',
+                        borderRadius: '6px', fontSize: '9px', fontWeight: 600, color: '#8E8E93'
+                      }}>UPCOMING</div>
+                    )}
+                  </div>
+
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    {day.reflection && (
+                      <div style={{
+                        width: '20px', height: '20px', borderRadius: '50%',
+                        background: 'linear-gradient(135deg, #A7D3A7, #6FAF6F)',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        fontSize: '10px', border: '1.5px solid #fff'
+                      }}>📝</div>
+                    )}
+                    {day.hasTasks && (
+                      <span style={{ fontSize: '13px', fontWeight: 700, color: '#3B6E3B' }}>
+                        {day.completedCount}/{day.taskCount}
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                {day.hasTasks && (
+                  <>
+                    <div style={{
+                      height: '4px', background: '#F0F0F0', borderRadius: '99px',
+                      overflow: 'hidden', marginBottom: '6px'
+                    }}>
+                      <div style={{
+                        height: '100%', width: `${day.completionRate}%`,
+                        background: completionColor, transition: 'width 0.3s ease'
+                      }} />
+                    </div>
+
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                      <span style={{ fontSize: '11px', color: '#8E8E93' }}>
+                        {day.completionRate}% complete
+                      </span>
+                      {day.carriedOverCount > 0 && (
+                        <span style={{ fontSize: '10px', fontWeight: 600, color: '#D97706' }}>
+                          🍂 {day.carriedOverCount} carried
+                        </span>
+                      )}
+                    </div>
+                  </>
+                )}
+
+                {!day.hasTasks && (
+                  <div style={{ padding: '8px 0', textAlign: 'center', color: '#D1D5DB', fontSize: '11px' }}>
+                    No tasks
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Summary Stats */}
+        <div style={{
+          background: '#fff', borderRadius: '14px', padding: '14px',
+          boxShadow: '0 1px 6px rgba(0,0,0,0.04)'
+        }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px' }}>
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ fontSize: '18px', fontWeight: 800, color: '#3B6E3B' }}>
+                {weekData.reduce((sum, day) => sum + day.completedCount, 0)}/{weekData.reduce((sum, day) => sum + day.taskCount, 0)}
+              </div>
+              <div style={{ fontSize: '10px', color: '#8E8E93', marginTop: '2px' }}>Tasks</div>
+            </div>
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ fontSize: '18px', fontWeight: 800, color: '#3B6E3B' }}>
+                {weekData.filter(d => d.hasTasks).length}/7
+              </div>
+              <div style={{ fontSize: '10px', color: '#8E8E93', marginTop: '2px' }}>Active</div>
+            </div>
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ fontSize: '18px', fontWeight: 800, color: '#3B6E3B' }}>
+                {weekData.reduce((sum, day) => sum + day.carriedOverCount, 0)}
+              </div>
+              <div style={{ fontSize: '10px', color: '#8E8E93', marginTop: '2px' }}>Carried</div>
+            </div>
+          </div>
+        </div>
+
+        {selectedDay && selectedDay.reflection && (
+          <ReflectionViewer
+            date={selectedDay.date}
+            reflection={selectedDay.reflection}
+            onClose={() => setSelectedDay(null)}
+          />
+        )}
+      </MobileLayout>
+    );
+  }
+
+  // Desktop render (unchanged)
   return (
     <div className="setup-fullscreen nat-bg">
       <div className="setup-inner nat-card" style={{ maxWidth: "1200px", animation: "fadeInUp 0.3s ease-out" }}>
-
-        {/* Header */}
         <div className="setup-header" style={{ marginBottom: "24px" }}>
           <div className="header-left">
             <h1 className="title" style={{ fontSize: "24px" }}>Weekly Overview</h1>
@@ -66,148 +251,71 @@ export default function WeeklyView({ onBackToToday }) {
             </p>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-            <button
-              onClick={onBackToToday}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "8px",
-                padding: "8px 16px",
-                borderRadius: "9999px",
-                border: "1px solid rgba(111,175,111,0.3)",
-                background: "linear-gradient(135deg, rgba(111,175,111,0.1), rgba(59,110,59,0.05))",
-                color: "#3B6E3B",
-                fontSize: "14px",
-                fontWeight: "600",
-                cursor: "pointer",
-                transition: "all 0.2s ease",
-                boxShadow: "0 2px 6px rgba(59,110,59,0.06)"
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.transform = "translateY(-2px)";
-                e.currentTarget.style.boxShadow = "0 4px 12px rgba(59,110,59,0.12)";
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.transform = "translateY(0)";
-                e.currentTarget.style.boxShadow = "0 2px 6px rgba(59,110,59,0.06)";
-              }}
-            >
-              <span>←</span>
-              <span>Back to Today</span>
+            <button onClick={onBackToToday} style={{
+              display: "flex", alignItems: "center", gap: "8px",
+              padding: "8px 16px", borderRadius: "9999px",
+              border: "1px solid rgba(111,175,111,0.3)",
+              background: "linear-gradient(135deg, rgba(111,175,111,0.1), rgba(59,110,59,0.05))",
+              color: "#3B6E3B", fontSize: "14px", fontWeight: "600",
+              cursor: "pointer", transition: "all 0.2s ease",
+              boxShadow: "0 2px 6px rgba(59,110,59,0.06)"
+            }}>
+              <span>←</span><span>Back to Today</span>
             </button>
-            <div className="header-decor" aria-hidden>
-              <LeafIcon size={40} fill="#3B6E3B" />
-            </div>
+            <div className="header-decor"><LeafIcon size={40} fill="#3B6E3B" /></div>
           </div>
         </div>
 
-        {/* Week Navigation */}
         <div style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          marginBottom: "20px",
-          padding: "12px 16px",
+          display: "flex", alignItems: "center", justifyContent: "space-between",
+          marginBottom: "20px", padding: "12px 16px",
           background: "linear-gradient(135deg, rgba(167,211,167,0.1), rgba(111,175,111,0.05))",
-          borderRadius: "12px",
-          border: "1px solid rgba(111,175,111,0.15)"
+          borderRadius: "12px", border: "1px solid rgba(111,175,111,0.15)"
         }}>
-          <button
-            onClick={goToPreviousWeek}
-            className="btn ghost"
-            style={{ padding: "8px 16px", fontSize: "14px" }}
-          >
+          <button onClick={goToPreviousWeek} className="btn ghost" style={{ padding: "8px 16px", fontSize: "14px" }}>
             ← Previous Week
           </button>
-
           <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
             <span style={{ fontSize: "16px", fontWeight: "700", color: "#3B6E3B" }}>
               {weekData[0]?.month} {weekData[0]?.dayOfMonth} - {weekData[6]?.month} {weekData[6]?.dayOfMonth}
             </span>
             {!isCurrentWeek && (
-              <button
-                onClick={goToCurrentWeek}
-                className="btn ghost"
-                style={{ padding: "6px 12px", fontSize: "13px" }}
-              >
+              <button onClick={goToCurrentWeek} className="btn ghost" style={{ padding: "6px 12px", fontSize: "13px" }}>
                 Today
               </button>
             )}
           </div>
-
-          <button
-            onClick={goToNextWeek}
-            className="btn ghost"
-            style={{ padding: "8px 16px", fontSize: "14px" }}
-          >
+          <button onClick={goToNextWeek} className="btn ghost" style={{ padding: "8px 16px", fontSize: "14px" }}>
             Next Week →
           </button>
         </div>
 
-        {/* Week Grid */}
         <div style={{
           display: "grid",
-          gridTemplateColumns: windowWidth < 640
-            ? "1fr"
-            : windowWidth < 1024
-            ? "repeat(3, 1fr)"
-            : "repeat(7, 1fr)",
+          gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
           gap: "16px",
           marginBottom: "24px"
         }}>
           {weekData.map((day) => {
             const cardBackground = day.isToday
               ? "linear-gradient(135deg, rgba(167,211,167,0.2), rgba(111,175,111,0.1))"
-              : day.isPast
-              ? "linear-gradient(135deg, rgba(200,200,200,0.08), rgba(180,180,180,0.04))"
+              : day.isPast ? "linear-gradient(135deg, rgba(200,200,200,0.08), rgba(180,180,180,0.04))"
               : "linear-gradient(135deg, rgba(220,240,220,0.12), rgba(200,230,200,0.06))";
-
-            const borderColor = day.isToday
-              ? "rgba(111,175,111,0.4)"
-              : day.isPast
-              ? "rgba(150,150,150,0.15)"
-              : "rgba(111,175,111,0.2)";
-
-            const completionColor = day.completionRate === 100
-              ? "#10b981"
-              : day.completionRate >= 75
-              ? "#6FAF6F"
-              : day.completionRate >= 50
-              ? "#fbbf24"
-              : day.completionRate > 0
-              ? "#f59e0b"
-              : "#cbd5e1";
+            const borderColor = day.isToday ? "rgba(111,175,111,0.4)"
+              : day.isPast ? "rgba(150,150,150,0.15)" : "rgba(111,175,111,0.2)";
+            const completionColor = day.completionRate === 100 ? "#10b981"
+              : day.completionRate >= 75 ? "#6FAF6F"
+              : day.completionRate >= 50 ? "#fbbf24"
+              : day.completionRate > 0 ? "#f59e0b" : "#cbd5e1";
 
             return (
-              <div
-                key={day.date}
-                onClick={() => setSelectedDay(day)}
-                style={{
-                  background: cardBackground,
-                  border: `2px solid ${borderColor}`,
-                  borderRadius: "14px",
-                  padding: "16px",
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: "12px",
-                  position: "relative",
-                  overflow: "hidden",
-                  transition: "all 0.2s ease",
-                  cursor: "pointer",
-                  boxShadow: day.isToday ? "0 4px 16px rgba(111,175,111,0.15)" : "0 2px 8px rgba(0,0,0,0.04)"
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.transform = day.reflection ? "translateY(-6px)" : "translateY(-4px)";
-                  e.currentTarget.style.boxShadow = day.reflection
-                    ? "0 8px 24px rgba(59,110,59,0.2)"
-                    : "0 6px 20px rgba(59,110,59,0.15)";
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.transform = "translateY(0)";
-                  e.currentTarget.style.boxShadow = day.isToday ? "0 4px 16px rgba(111,175,111,0.15)" : "0 2px 8px rgba(0,0,0,0.04)";
-                }}
-              >
-                {/* Day header */}
+              <div key={day.date} onClick={() => setSelectedDay(day)} style={{
+                background: cardBackground, border: `2px solid ${borderColor}`,
+                borderRadius: "14px", padding: "16px", display: "flex", flexDirection: "column",
+                gap: "12px", position: "relative", overflow: "hidden",
+                transition: "all 0.2s ease", cursor: "pointer",
+                boxShadow: day.isToday ? "0 4px 16px rgba(111,175,111,0.15)" : "0 2px 8px rgba(0,0,0,0.04)"
+              }}>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                   <div>
                     <div style={{ fontSize: "13px", fontWeight: "600", color: "#6B8E6B", textTransform: "uppercase", letterSpacing: "0.5px" }}>
@@ -218,53 +326,28 @@ export default function WeeklyView({ onBackToToday }) {
                     </div>
                   </div>
                   {day.isToday && (
-                    <div style={{
-                      padding: "4px 8px",
-                      background: "rgba(111,175,111,0.2)",
-                      borderRadius: "8px",
-                      fontSize: "11px",
-                      fontWeight: "700",
-                      color: "#3B6E3B"
-                    }}>
+                    <div style={{ padding: "4px 8px", background: "rgba(111,175,111,0.2)", borderRadius: "8px", fontSize: "11px", fontWeight: "700", color: "#3B6E3B" }}>
                       TODAY
                     </div>
                   )}
                   {day.isFuture && (
-                    <div style={{
-                      padding: "4px 8px",
-                      background: "rgba(167,211,167,0.15)",
-                      borderRadius: "8px",
-                      fontSize: "11px",
-                      fontWeight: "600",
-                      color: "#6B8E6B"
-                    }}>
+                    <div style={{ padding: "4px 8px", background: "rgba(167,211,167,0.15)", borderRadius: "8px", fontSize: "11px", fontWeight: "600", color: "#6B8E6B" }}>
                       UPCOMING
                     </div>
                   )}
                 </div>
 
-                {/* Reflection indicator badge */}
                 {day.reflection && (
                   <div style={{
-                    position: "absolute",
-                    top: "12px",
-                    right: "12px",
-                    width: "24px",
-                    height: "24px",
-                    borderRadius: "50%",
+                    position: "absolute", top: "12px", right: "12px",
+                    width: "24px", height: "24px", borderRadius: "50%",
                     background: "linear-gradient(135deg, #A7D3A7, #6FAF6F)",
-                    border: "2px solid #fff",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    fontSize: "12px",
+                    border: "2px solid #fff", display: "flex",
+                    alignItems: "center", justifyContent: "center", fontSize: "12px",
                     boxShadow: "0 2px 6px rgba(59,110,59,0.2)"
-                  }}>
-                    📝
-                  </div>
+                  }}>📝</div>
                 )}
 
-                {/* Stats */}
                 {day.hasTasks ? (
                   <>
                     <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
@@ -274,66 +357,29 @@ export default function WeeklyView({ onBackToToday }) {
                           {day.completedCount}/{day.taskCount}
                         </span>
                       </div>
-
-                      {/* Progress bar */}
-                      <div style={{
-                        height: "6px",
-                        background: "rgba(200,200,200,0.2)",
-                        borderRadius: "9999px",
-                        overflow: "hidden"
-                      }}>
-                        <div style={{
-                          height: "100%",
-                          width: `${day.completionRate}%`,
-                          background: completionColor,
-                          transition: "width 0.3s ease"
-                        }} />
+                      <div style={{ height: "6px", background: "rgba(200,200,200,0.2)", borderRadius: "9999px", overflow: "hidden" }}>
+                        <div style={{ height: "100%", width: `${day.completionRate}%`, background: completionColor, transition: "width 0.3s ease" }} />
                       </div>
-
-                      <div style={{ fontSize: "13px", color: "#6B8E6B" }}>
-                        {day.completionRate}% complete
-                      </div>
+                      <div style={{ fontSize: "13px", color: "#6B8E6B" }}>{day.completionRate}% complete</div>
                     </div>
-
-                    {/* Carried over badge */}
                     {day.carriedOverCount > 0 && (
                       <div style={{
-                        padding: "4px 8px",
-                        background: "rgba(255,165,0,0.1)",
-                        border: "1px solid rgba(255,165,0,0.2)",
-                        borderRadius: "6px",
-                        fontSize: "11px",
-                        fontWeight: "600",
-                        color: "#d97706",
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "4px"
+                        padding: "4px 8px", background: "rgba(255,165,0,0.1)",
+                        border: "1px solid rgba(255,165,0,0.2)", borderRadius: "6px",
+                        fontSize: "11px", fontWeight: "600", color: "#d97706",
+                        display: "flex", alignItems: "center", gap: "4px"
                       }}>
-                        <span>🍂</span>
-                        <span>{day.carriedOverCount} carried</span>
+                        <span>🍂</span><span>{day.carriedOverCount} carried</span>
                       </div>
                     )}
                   </>
                 ) : (
-                  <div style={{
-                    padding: "16px 0",
-                    textAlign: "center",
-                    color: "#9CA3AF",
-                    fontSize: "13px"
-                  }}>
+                  <div style={{ padding: "16px 0", textAlign: "center", color: "#9CA3AF", fontSize: "13px" }}>
                     No tasks
                   </div>
                 )}
-
-                {/* Click hint for reflections */}
                 {day.reflection && (
-                  <div style={{
-                    fontSize: 11,
-                    color: "#6B8E6B",
-                    textAlign: "center",
-                    marginTop: 4,
-                    opacity: 0.7
-                  }}>
+                  <div style={{ fontSize: 11, color: "#6B8E6B", textAlign: "center", marginTop: 4, opacity: 0.7 }}>
                     Click to view reflection
                   </div>
                 )}
@@ -342,12 +388,9 @@ export default function WeeklyView({ onBackToToday }) {
           })}
         </div>
 
-        {/* Summary Stats */}
         <div style={{
           background: "linear-gradient(135deg, rgba(167,211,167,0.15), rgba(111,175,111,0.08))",
-          borderRadius: "16px",
-          padding: "20px",
-          border: "1px solid rgba(111,175,111,0.2)"
+          borderRadius: "16px", padding: "20px", border: "1px solid rgba(111,175,111,0.2)"
         }}>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: "16px" }}>
             <div style={{ textAlign: "center" }}>
@@ -371,7 +414,6 @@ export default function WeeklyView({ onBackToToday }) {
           </div>
         </div>
 
-        {/* Reflection Viewer Modal */}
         {selectedDay && selectedDay.reflection && (
           <ReflectionViewer
             date={selectedDay.date}

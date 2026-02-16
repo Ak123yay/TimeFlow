@@ -1,5 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { loadTasksForDate, saveTasksForDate, saveReflection } from "../utils/storage";
+import MobileLayout from './mobile/MobileLayout';
+import { haptic } from "../utils/haptics";
 import "../App.css";
 
 function LeafIcon({ className = "", size = 18, fill = "#3B6E3B" }) {
@@ -23,6 +25,14 @@ export default function DayReflection({ todayDate, onComplete }) {
   const [mood, setMood] = useState(null);
   const [unfinishedActions, setUnfinishedActions] = useState({});
   const [showCelebration, setShowCelebration] = useState(completedTasks.length === tasks.length && tasks.length > 0);
+  const [isMobile, setIsMobile] = useState(() => window.matchMedia('(max-width: 768px)').matches);
+
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 768px)');
+    const handler = (e) => setIsMobile(e.matches);
+    mq.addEventListener('change', handler);
+    return () => mq.removeEventListener('change', handler);
+  }, []);
 
   const handleSave = () => {
     // Process unfinished tasks based on user actions
@@ -68,6 +78,225 @@ export default function DayReflection({ todayDate, onComplete }) {
     { value: 'rough', emoji: '😔', label: 'Rough', color: '#f59e0b' }
   ];
 
+  if (isMobile) {
+    return (
+      <MobileLayout showBottomNav={false}>
+        {/* Header */}
+        <div style={{ marginBottom: '16px', textAlign: 'center' }}>
+          <h1 style={{ fontSize: '20px', fontWeight: 800, color: '#1A1A1A', margin: '0 0 4px', letterSpacing: '-0.3px' }}>
+            Day Complete ✨
+          </h1>
+          <p style={{ fontSize: '12px', color: '#8E8E93', margin: 0 }}>
+            {todayDate} • Reflect on your progress
+          </p>
+        </div>
+
+        {/* Celebration */}
+        {showCelebration && (
+          <div style={{
+            position: "fixed", top: 0, left: 0, right: 0, bottom: 0,
+            pointerEvents: "none", zIndex: 1, overflow: "hidden"
+          }}>
+            {[...Array(8)].map((_, i) => (
+              <div key={i} style={{
+                position: "absolute", top: "-50px", left: `${Math.random() * 100}%`,
+                width: "20px", height: "20px",
+                animation: `fallingLeaf ${3 + Math.random() * 2}s linear ${Math.random() * 0.5}s infinite`,
+                opacity: 0.6
+              }}>
+                <LeafIcon size={20} fill="#6FAF6F" />
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Stats Summary */}
+        <div style={{
+          background: '#fff', borderRadius: '14px', padding: '16px',
+          marginBottom: '14px', boxShadow: '0 1px 6px rgba(0,0,0,0.04)'
+        }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px' }}>
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ fontSize: '18px', fontWeight: 800, color: '#3B6E3B' }}>
+                {completedTasks.length}/{tasks.length}
+              </div>
+              <div style={{ fontSize: '10px', color: '#8E8E93', marginTop: '2px' }}>Tasks</div>
+            </div>
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ fontSize: '18px', fontWeight: 800, color: '#3B6E3B' }}>
+                {Math.floor(completedTime/60)}h {completedTime%60}m
+              </div>
+              <div style={{ fontSize: '10px', color: '#8E8E93', marginTop: '2px' }}>Time</div>
+            </div>
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ fontSize: '18px', fontWeight: 800, color: '#3B6E3B' }}>
+                {tasks.length > 0 ? Math.round((completedTasks.length / tasks.length) * 100) : 0}%
+              </div>
+              <div style={{ fontSize: '10px', color: '#8E8E93', marginTop: '2px' }}>Done</div>
+            </div>
+          </div>
+        </div>
+
+        {/* Mood Selection */}
+        <div style={{ marginBottom: '14px' }}>
+          <label style={{ display: 'block', marginBottom: '10px', fontSize: '13px', fontWeight: 700, color: '#1A1A1A' }}>
+            How was your day?
+          </label>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '8px' }}>
+            {moodOptions.map(option => (
+              <button
+                key={option.value}
+                onClick={() => { setMood(option.value); haptic.light(); }}
+                style={{
+                  padding: '12px 10px',
+                  borderRadius: '12px',
+                  border: mood === option.value ? `2px solid ${option.color}` : '1.5px solid #E5E5E5',
+                  background: mood === option.value ? `${option.color}15` : '#fff',
+                  cursor: 'pointer',
+                  touchAction: 'manipulation',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  gap: '4px'
+                }}
+              >
+                <span style={{ fontSize: '28px' }}>{option.emoji}</span>
+                <span style={{ fontSize: '11px', fontWeight: 600, color: option.color }}>{option.label}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Unfinished Tasks */}
+        {unfinishedTasks.length > 0 && (
+          <div style={{ marginBottom: '14px' }}>
+            <label style={{ display: 'block', marginBottom: '10px', fontSize: '13px', fontWeight: 700, color: '#1A1A1A' }}>
+              Unfinished tasks ({unfinishedTasks.length})
+            </label>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              {unfinishedTasks.map(task => {
+                const action = unfinishedActions[task.id];
+                return (
+                  <div key={task.id} style={{
+                    background: '#fff', borderRadius: '12px', padding: '10px 12px',
+                    boxShadow: '0 1px 6px rgba(0,0,0,0.04)',
+                    display: 'flex', flexDirection: 'column', gap: '8px'
+                  }}>
+                    <div>
+                      <div style={{ fontSize: '13px', fontWeight: 700, color: '#1A1A1A' }}>{task.name}</div>
+                      <div style={{ fontSize: '11px', color: '#8E8E93' }}>{task.duration} min</div>
+                    </div>
+                    <div style={{ display: 'flex', gap: '6px' }}>
+                      <button
+                        onClick={() => { handleUnfinishedAction(task.id, 'completed'); haptic.light(); }}
+                        style={{
+                          flex: 1, padding: '6px 10px', fontSize: '11px', borderRadius: '8px',
+                          border: action === 'completed' ? '2px solid #10b981' : '1.5px solid #E5E5E5',
+                          background: action === 'completed' ? 'rgba(16,185,129,0.1)' : '#fff',
+                          cursor: 'pointer', touchAction: 'manipulation', fontWeight: 600,
+                          color: action === 'completed' ? '#10b981' : '#8E8E93'
+                        }}
+                      >
+                        ✓ Done
+                      </button>
+                      <button
+                        onClick={() => { handleUnfinishedAction(task.id, 'carry'); haptic.light(); }}
+                        style={{
+                          flex: 1, padding: '6px 10px', fontSize: '11px', borderRadius: '8px',
+                          border: action === 'carry' || !action ? '2px solid #3B6E3B' : '1.5px solid #E5E5E5',
+                          background: action === 'carry' || !action ? 'rgba(59,110,59,0.1)' : '#fff',
+                          cursor: 'pointer', touchAction: 'manipulation', fontWeight: 600,
+                          color: action === 'carry' || !action ? '#3B6E3B' : '#8E8E93'
+                        }}
+                      >
+                        📅 Carry
+                      </button>
+                      <button
+                        onClick={() => { handleUnfinishedAction(task.id, 'delete'); haptic.heavy(); }}
+                        style={{
+                          width: '36px', height: '36px', borderRadius: '8px',
+                          border: action === 'delete' ? '2px solid #DC2626' : '1.5px solid #E5E5E5',
+                          background: action === 'delete' ? 'rgba(220,38,38,0.1)' : '#fff',
+                          cursor: 'pointer', touchAction: 'manipulation', fontSize: '16px',
+                          color: action === 'delete' ? '#DC2626' : '#8E8E93',
+                          display: 'flex', alignItems: 'center', justifyContent: 'center'
+                        }}
+                      >
+                        🗑️
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* Reflection */}
+        <div style={{ marginBottom: '14px' }}>
+          <label style={{ display: 'block', marginBottom: '10px', fontSize: '13px', fontWeight: 700, color: '#1A1A1A' }}>
+            What went well today? (Optional)
+          </label>
+          <textarea
+            value={reflection}
+            onChange={(e) => setReflection(e.target.value)}
+            placeholder="Reflect on your day, celebrate wins, or note what you learned..."
+            style={{
+              width: '100%', boxSizing: 'border-box', minHeight: '80px',
+              padding: '12px 14px', borderRadius: '12px', border: '1.5px solid #E5E5E5',
+              fontSize: '13px', lineHeight: '1.5', fontFamily: 'inherit',
+              resize: 'vertical', background: '#FAFAFA', outline: 'none'
+            }}
+          />
+        </div>
+
+        {/* Actions */}
+        <div style={{ display: 'flex', gap: '10px' }}>
+          <button
+            onClick={() => { haptic.light(); onComplete(); }}
+            style={{
+              flex: 1, padding: '12px', borderRadius: '10px', border: '1.5px solid #E5E5E5',
+              background: '#fff', color: '#1A1A1A', fontSize: '13px', fontWeight: 600,
+              cursor: 'pointer', touchAction: 'manipulation'
+            }}
+          >
+            Skip
+          </button>
+          <button
+            onClick={() => { haptic.success(); handleSave(); }}
+            style={{
+              flex: 2, padding: '12px', borderRadius: '10px', border: 'none',
+              background: '#3B6E3B', color: '#fff', fontSize: '13px', fontWeight: 700,
+              cursor: 'pointer', touchAction: 'manipulation'
+            }}
+          >
+            Save & Continue →
+          </button>
+        </div>
+
+        <style>{`
+          @keyframes fallingLeaf {
+            0% {
+              transform: translate(0, -50px) rotate(0deg);
+              opacity: 0;
+            }
+            10% {
+              opacity: 0.6;
+            }
+            90% {
+              opacity: 0.4;
+            }
+            100% {
+              transform: translate(0, 100vh) rotate(360deg);
+              opacity: 0;
+            }
+          }
+        `}</style>
+      </MobileLayout>
+    );
+  }
+
+  // Desktop render (unchanged)
   return (
     <div className="setup-fullscreen nat-bg">
       <div className="setup-inner nat-card" style={{ maxWidth: "700px", animation: "fadeInUp 0.5s ease-out" }}>

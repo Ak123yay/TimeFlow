@@ -252,6 +252,24 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
   // Mobile add-task bottom sheet state
   const [showAddSheet, setShowAddSheet] = useState(false);
 
+  // Lock body scroll when add sheet opens (iOS fix)
+  useEffect(() => {
+    if (showAddSheet && isMobile) {
+      // Lock scroll
+      const scrollY = window.scrollY;
+      document.body.style.position = 'fixed';
+      document.body.style.top = `-${scrollY}px`;
+      document.body.style.width = '100%';
+    } else {
+      // Unlock scroll
+      const scrollY = document.body.style.top;
+      document.body.style.position = '';
+      document.body.style.top = '';
+      document.body.style.width = '';
+      window.scrollTo(0, parseInt(scrollY || '0') * -1);
+    }
+  }, [showAddSheet, isMobile]);
+
   // Focus mode state
   const [focusModeEnabled, setFocusModeEnabled] = useState(() => {
     try {
@@ -1244,7 +1262,7 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
                 type="text" value={taskName} onChange={(e) => setTaskName(e.target.value)}
                 placeholder="What needs to be done?" autoFocus
                 style={{
-                  width: '100%', boxSizing: 'border-box', fontSize: '15px', padding: '12px 14px',
+                  width: '100%', boxSizing: 'border-box', fontSize: '16px', padding: '12px 14px',
                   border: '1.5px solid #E5E5E5', borderRadius: '10px', background: '#FAFAFA',
                   outline: 'none', marginBottom: '10px'
                 }}
@@ -1257,7 +1275,7 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
                 <div style={{ flex: 1 }}>
                   <label style={{ fontSize: '11px', fontWeight: 600, color: '#8E8E93', marginBottom: '3px', display: 'block' }}>Start</label>
                   <input type="time" value={taskStartTime} onChange={(e) => setTaskStartTime(e.target.value)}
-                    style={{ width: '100%', boxSizing: 'border-box', fontSize: '14px', padding: '10px 12px', border: '1.5px solid #E5E5E5', borderRadius: '10px', background: '#FAFAFA', outline: 'none' }}
+                    style={{ width: '100%', boxSizing: 'border-box', fontSize: '16px', padding: '10px 12px', border: '1.5px solid #E5E5E5', borderRadius: '10px', background: '#FAFAFA', outline: 'none' }}
                   />
                 </div>
                 <div style={{ flex: 1 }}>
@@ -1265,7 +1283,7 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
                   <div style={{ display: 'flex', alignItems: 'center', border: '1.5px solid #E5E5E5', borderRadius: '10px', background: '#FAFAFA', padding: '0 12px' }}>
                     <input type="number" value={taskDuration} onChange={(e) => setTaskDuration(e.target.value)}
                       placeholder="30" min="1"
-                      style={{ fontSize: '14px', padding: '10px 0', border: 'none', outline: 'none', flex: 1, background: 'transparent', textAlign: 'center', width: '100%' }}
+                      style={{ fontSize: '16px', padding: '10px 0', border: 'none', outline: 'none', flex: 1, background: 'transparent', textAlign: 'center', width: '100%' }}
                     />
                     <span style={{ color: '#8E8E93', fontSize: '12px', fontWeight: 500 }}>min</span>
                   </div>
