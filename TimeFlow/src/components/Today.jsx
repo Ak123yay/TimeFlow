@@ -156,7 +156,11 @@ function SortableTaskItem({ task, children, onClick, style: customStyle, classNa
 
         {/* Task Content - Apply custom props here */}
         <div
-          style={{ paddingLeft: sectionHasMultipleItems ? '20px' : '0px', ...customStyle }}
+          style={{
+            paddingLeft: sectionHasMultipleItems ? '20px' : '0px',
+            pointerEvents: 'auto',  // Ensure clicks work even when sortable is disabled
+            ...customStyle
+          }}
           className={className}
           onClick={onClick}
           onMouseEnter={onMouseEnter}
@@ -1431,7 +1435,6 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
                               key={task.id}
                               sectionHasMultipleItems={hasMultiple}
                               className={isActiveTask ? 'task-focused' : ''}
-                              onClick={() => handleEditTask(task)}
                             style={{
                               background: "linear-gradient(90deg, rgba(255,200,150,0.12), rgba(255,210,160,0.08))",
                               border: `2px solid ${health.color}`,
@@ -1445,7 +1448,6 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
                               opacity: shouldDim ? 0.4 : (task.completed ? 0.6 : 1),
                               transition: "all 0.3s ease",
                               animation: "slideInFromLeft 0.4s ease-out",
-                              cursor: "pointer",
                               boxShadow: hasConflict(task.id)
                                 ? "0 2px 12px rgba(245,158,11,0.15)"
                                 : isActiveTask
@@ -1676,7 +1678,6 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
                       key={task.id}
                       sectionHasMultipleItems={hasMultiple}
                       className={isActiveTask ? 'task-focused' : ''}
-                      onClick={() => handleEditTask(task)}
                     style={{
                       background: "linear-gradient(90deg, rgba(167,211,167,0.12), rgba(111,175,111,0.08))",
                       border: `2px solid ${health.color}`,
@@ -1690,7 +1691,6 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
                       opacity: shouldDim ? 0.4 : (task.completed ? 0.6 : 1),
                       transition: "all 0.3s ease",
                       animation: "slideInFromLeft 0.4s ease-out",
-                      cursor: "pointer",
                       boxShadow: hasConflict(task.id)
                         ? "0 2px 12px rgba(245,158,11,0.15)"
                         : isActiveTask
