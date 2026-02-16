@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { findNextFreeSlot } from "../../utils/scheduler";
+import { findNextFreeSlot, getDeadlineUrgency } from "../../utils/scheduler";
 import { getRescheduleOptionFrequencies } from "../../utils/analytics";
 import "../../App.css";
 
@@ -31,18 +31,48 @@ export default function RescheduleModal({
     }
   }, [task, availability, existingTasks]);
 
-  // ANALYTICS: Calculate smart recommendation based on user patterns
+  // ANALYTICS: Calculate smart recommendation based on user patterns + deadlines
   useEffect(() => {
     if (!task) return;
 
     const frequencies = getRescheduleOptionFrequencies();
     const attempts = task.attempts || 0;
+    const urgency = getDeadlineUrgency(task);
 
     // Priority-based recommendation logic
     let recommendation = null;
 
+    // CRITICAL: Overdue or due today - strong warning
+    if (urgency && (urgency.level === 'overdue' || urgency.level === 'today')) {
+      recommendation = {
+        option: 'complete',
+        reason: urgency.level === 'overdue'
+          ? '🚨 This task is OVERDUE! Completing it now prevents further delays.'
+          : '⏰ This task is due TODAY! Best to finish it now.',
+        confidence: 'high',
+        icon: '🔴'
+      };
+    }
+    // HIGH: Due tomorrow - discourage rescheduling to tomorrow
+    else if (urgency && urgency.level === 'tomorrow') {
+      if (suggestedSlot) {
+        recommendation = {
+          option: 'later_today',
+          reason: `📅 Due tomorrow! Free time available at ${suggestedSlot.startTime} - finish it today.`,
+          confidence: 'high',
+          icon: '⚠️'
+        };
+      } else {
+        recommendation = {
+          option: 'complete',
+          reason: '📅 Due tomorrow! Best to complete it now to avoid rushing.',
+          confidence: 'moderate',
+          icon: '⚠️'
+        };
+      }
+    }
     // High-attempt tasks (>= 3): Strongly suggest breaking
-    if (attempts >= 3) {
+    else if (attempts >= 3) {
       recommendation = {
         option: 'break',
         reason: 'This task has been rescheduled multiple times. Breaking it into smaller pieces might help.',
@@ -85,6 +115,7 @@ export default function RescheduleModal({
 
   const attempts = task.attempts || 0;
   const remaining = task.remaining || task.duration;
+  const urgency = getDeadlineUrgency(task);
 
   return (
     <div style={{
@@ -114,6 +145,34 @@ export default function RescheduleModal({
         <p style={{ fontSize: 16, fontWeight: 600, color: "#3B6E3B", marginBottom: 12 }}>
           "{task.name}"
         </p>
+
+        {/* Deadline Urgency Warning - PRIORITY BANNER */}
+        {urgency && (urgency.level === 'overdue' || urgency.level === 'today' || urgency.level === 'tomorrow') && (
+          <div style={{
+            background: urgency.level === 'overdue'
+              ? "linear-gradient(135deg, rgba(220,38,38,0.15), rgba(185,28,28,0.08))"
+              : urgency.level === 'today'
+              ? "linear-gradient(135deg, rgba(234,88,12,0.15), rgba(234,88,12,0.08))"
+              : "linear-gradient(135deg, rgba(245,158,11,0.15), rgba(245,158,11,0.08))",
+            border: `2px solid ${urgency.color}`,
+            borderRadius: 12,
+            padding: "12px 14px",
+            marginBottom: 16,
+            fontSize: 14,
+            fontWeight: 700,
+            color: urgency.color,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: 8,
+            animation: urgency.level === 'overdue' || urgency.level === 'today'
+              ? "focusPulse 2s ease-in-out infinite"
+              : "fadeIn 0.3s ease-out"
+          }}>
+            {urgency.level === 'overdue' ? '🚨' : urgency.level === 'today' ? '⏰' : '📅'}
+            <span>{urgency.message}</span>
+          </div>
+        )}
 
         {/* Smart Recommendation Banner */}
         {smartRecommendation && (
@@ -238,12 +297,23 @@ export default function RescheduleModal({
           <button
             onClick={onTomorrow}
             className="btn ghost"
+            title={urgency && (urgency.level === 'overdue' || urgency.level === 'today')
+              ? `⚠️ Warning: This task is ${urgency.message}. Consider completing it today.`
+              : "Move to tomorrow morning"}
             style={{
-              fontSize: 14
+              fontSize: 14,
+              ...(urgency && (urgency.level === 'overdue' || urgency.level === 'today') && {
+                border: '1px solid rgba(245,158,11,0.5)',
+                background: 'linear-gradient(135deg, rgba(245,158,11,0.08), rgba(245,158,11,0.04))'
+              })
             }}
           >
             📅 Tomorrow
-            <div style={{ fontSize: 11, opacity: 0.7 }}>morning</div>
+            {urgency && (urgency.level === 'overdue' || urgency.level === 'today') ? (
+              <div style={{ fontSize: 11, opacity: 0.8, color: '#d97706' }}>⚠️ not ideal</div>
+            ) : (
+              <div style={{ fontSize: 11, opacity: 0.7 }}>morning</div>
+            )}
           </button>
 
           <button

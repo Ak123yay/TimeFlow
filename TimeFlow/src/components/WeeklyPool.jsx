@@ -6,6 +6,7 @@ import {
   loadTasksForDate,
   saveTasksForDate
 } from "../utils/storage";
+import { getDeadlineUrgency } from "../utils/scheduler";
 import MoveToTodayDialog from "./dialogs/MoveToTodayDialog";
 import "../App.css";
 
@@ -40,6 +41,7 @@ const saveTasks = (tasks) => {
 export default function WeeklyPool({ onNavigateToToday }) {
   const [poolTasks, setPoolTasks] = useState(() => loadWeeklyPool());
   const [newTaskName, setNewTaskName] = useState("");
+  const [newTaskDeadline, setNewTaskDeadline] = useState("");
   const [showMoveDialog, setShowMoveDialog] = useState(false);
   const [taskToMove, setTaskToMove] = useState(null);
 
@@ -48,11 +50,13 @@ export default function WeeklyPool({ onNavigateToToday }) {
     if (!newTaskName) return;
 
     const task = addTaskToWeeklyPool({
-      name: newTaskName
+      name: newTaskName,
+      deadline: newTaskDeadline || null
     });
 
     setPoolTasks([...poolTasks, task]);
     setNewTaskName("");
+    setNewTaskDeadline("");
   };
 
   const handleMoveToToday = (task) => {
@@ -157,6 +161,22 @@ export default function WeeklyPool({ onNavigateToToday }) {
           </label>
         </div>
 
+        {/* Deadline Field */}
+        <div className="controls-row" style={{ marginTop: "12px" }}>
+          <label className="control">
+            <div className="control-label">Deadline (optional)</div>
+            <div className="time-input">
+              <span style={{ fontSize: "16px" }}>📅</span>
+              <input
+                type="date"
+                value={newTaskDeadline}
+                onChange={(e) => setNewTaskDeadline(e.target.value)}
+                style={{ border: "none", outline: "none", flex: 1, background: "transparent", fontSize: "14px" }}
+              />
+            </div>
+          </label>
+        </div>
+
         <button
           onClick={addTaskToPool}
           className="btn primary"
@@ -182,12 +202,30 @@ export default function WeeklyPool({ onNavigateToToday }) {
             </div>
           ) : (
             <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-              {poolTasks.map(task => (
+              {poolTasks.map(task => {
+                const urgency = task.deadline ? getDeadlineUrgency(task) : null;
+
+                return (
                 <div key={task.id} className="pool-task-card">
                   <div style={{ flex: 1 }}>
                     <div style={{ fontSize: 15, fontWeight: 700, color: "#3B6E3B" }}>
                       {task.name}
                     </div>
+                    {urgency && (
+                      <div style={{ marginTop: "4px" }}>
+                        <span style={{
+                          fontSize: "11px",
+                          padding: "3px 8px",
+                          background: urgency.color + "22",
+                          color: urgency.color,
+                          borderRadius: "9999px",
+                          fontWeight: "600",
+                          display: "inline-block"
+                        }}>
+                          📅 {urgency.message}
+                        </span>
+                      </div>
+                    )}
                   </div>
                   <button
                     onClick={() => handleMoveToToday(task)}
@@ -206,7 +244,8 @@ export default function WeeklyPool({ onNavigateToToday }) {
                     ×
                   </button>
                 </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>

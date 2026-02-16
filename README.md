@@ -16,6 +16,7 @@ TimeFlow transforms traditional task management by combining time-blocking, inte
 - 🔄 **Handle delays gracefully** - 7 rescheduling options when tasks run long
 - 📊 **Learn from patterns** - Tracks what takes longer than planned
 - 🧘 **Reduce guilt** - "Back to Pool" instead of "Delete"
+- 🌿 **Gentle streaks** - Growing plant rewards consistency without punishment
 
 **Perfect for:** People who make ambitious to-do lists but only finish half, underestimate how long tasks take, or keep pushing the same task to "tomorrow."
 
@@ -880,6 +881,192 @@ const startTask = (taskId) => {
 - Actual duration calculated on completion
 - Remaining time updated on pause/continue
 - All time data stored for analytics
+
+### 15. Gentle Streaks & Mindful Gamification 🌿
+
+**Plain English:** TimeFlow tracks your consistency with a growing plant that rewards showing up without being toxic. Miss a day? No problem - you get 1 grace day per week. Miss 2 days? Your streak pauses (not lost!) giving you one more chance. It's like Duolingo streaks, but actually kind and supportive.
+
+**What it does:**
+- Tracks daily engagement streak
+- Visual plant growth as streak increases
+- Non-punitive grace period system
+- Supportive messages instead of guilt
+
+**How Streaks Work:**
+
+**What Counts as a "Meaningful Action":**
+- Completing any task
+- Starting a timer on any task
+- Activating Focus Mode
+
+**Streak Levels (Plant Growth):**
+```
+Day 1:      🌰 Seed       "Every season starts with a seed"
+Days 2-3:   🌱 Seedling   "Your habit is taking root"
+Days 4-7:   🌿 Sprout     "Growing steadily"
+Days 8-14:  🪴 Plant      "Strong roots, steady growth"
+Days 15-30: 🌿🌿 Vine      "Your practice is flourishing"
+Day 31+:    🌸 Flower     "Beautiful growth"
+```
+
+**Grace Period System (Non-Toxic):**
+
+1. **Grace Token Available:**
+   - Everyone gets 1 grace day per week (resets Monday)
+   - Miss a day → Grace used → Streak continues
+   - Visual indicator: "🛟 1 grace day available"
+
+2. **Grace Already Used:**
+   - Miss 1 day → Streak **pauses** (not lost yet!)
+   - Message: "Your plant is resting today 🌙 Pick it up when you're ready"
+   - Miss 2+ days → Gentle reset: "Every season starts with a seed 🌱"
+
+3. **No Punishment:**
+   - No "YOU LOST YOUR STREAK!" alerts
+   - No shaming language
+   - Progress is never deleted, just restarted
+   - Your longest streak is always remembered
+
+**Visual Design:**
+
+Compact mode (header):
+```
+┌─────────────────────────────────┐
+│ 🌿 7 days    [+1 grace]         │
+└─────────────────────────────────┘
+```
+
+Full mode (expandable):
+```
+┌─────────────────────────────────────────┐
+│  🪴  7 days                              │
+│      Strong roots, steady growth        │
+│                                          │
+│  ▓▓▓▓▓▓▓░░░░░░░░░░░░░   23%             │
+│                                          │
+│  🏆 Best: 14  📅 Total: 42  🛟 Grace OK │
+└─────────────────────────────────────────┘
+```
+
+**Implementation:**
+
+Storage:
+```javascript
+'timeflow-streak': {
+  current: 7,                    // Current streak
+  longest: 14,                   // Best streak ever
+  lastActiveDate: '2026-02-15',  // Last day active
+  graceAvailable: true,          // Grace token status
+  paused: false,                 // Is streak paused?
+  totalActiveDays: 42,           // All-time active days
+  plantStage: 'plant',           // Current growth stage
+  lastGraceReset: '2026-02-10'   // Last Monday
+}
+
+'timeflow-daily-actions': {
+  '2026-02-15': true,  // Had activity today
+  '2026-02-14': true,
+  '2026-02-13': false  // Missed this day
+}
+```
+
+Streak Update Logic:
+```javascript
+export const updateStreak = () => {
+  const streak = loadStreak();
+  const today = getTodayString();
+  const yesterday = getYesterdayString();
+
+  // Already processed today
+  if (streak.lastActiveDate === today) return streak;
+
+  // Check if user did something meaningful today
+  const actionToday = hadMeaningfulAction(today);
+  if (!actionToday) return streak;  // No action yet
+
+  // User did something meaningful today
+  streak.totalActiveDays += 1;
+
+  // Check streak continuity
+  if (streak.lastActiveDate === yesterday) {
+    // Continuing from yesterday
+    streak.current += 1;
+    streak.lastActiveDate = today;
+    streak.paused = false;
+  } else {
+    // Missed at least one day
+    const daysMissed = daysBetween(streak.lastActiveDate, today) - 1;
+
+    if (daysMissed === 1 && streak.graceAvailable) {
+      // Use grace token
+      streak.current += 1;
+      streak.lastActiveDate = today;
+      streak.graceAvailable = false;
+      streak.paused = false;
+    } else if (daysMissed === 1 && !streak.graceAvailable) {
+      // Pause streak (one more chance)
+      streak.paused = true;
+      streak.lastActiveDate = today;
+    } else {
+      // Reset after 2+ days
+      streak.current = 1;
+      streak.lastActiveDate = today;
+      streak.paused = false;
+    }
+  }
+
+  // Update plant stage
+  streak.plantStage = getPlantStage(streak.current);
+
+  // Reset grace token weekly (Monday)
+  const today = new Date();
+  const lastReset = new Date(streak.lastGraceReset);
+  const daysSinceReset = daysBetween(lastReset, today);
+  if (daysSinceReset >= 7) {
+    streak.graceAvailable = true;
+    streak.lastGraceReset = getTodayString();
+  }
+
+  saveStreak(streak);
+  return streak;
+};
+```
+
+**Milestone Messages:**
+```javascript
+export const getMilestoneMessage = (streakDays) => {
+  const milestones = {
+    1: "🌱 First day! You showed up.",
+    3: "🌿 Three days of growth!",
+    7: "🪴 One week! Your habit is rooting.",
+    14: "🌿 Two weeks! Steady progress.",
+    30: "🌸 One month! Your practice blooms.",
+    60: "🌳 Two months! Strong and thriving.",
+    100: "🌳✨ 100 days! Incredible dedication."
+  };
+  return milestones[streakDays] || null;
+};
+```
+
+**Why This Works Better Than Duolingo:**
+
+Traditional streak systems:
+- ❌ Punitive: Lose everything if you miss one day
+- ❌ Stressful: Creates anxiety about maintaining streak
+- ❌ All-or-nothing: No room for life happening
+
+TimeFlow's Gentle Streaks:
+- ✅ Grace period: 1 free miss per week
+- ✅ Pause buffer: Second miss pauses, not resets
+- ✅ Supportive language: "resting" not "failed"
+- ✅ Progress preserved: Longest streak always visible
+- ✅ Total days tracked: Even after resets
+- ✅ Natural metaphor: Plants grow, rest, and regrow
+
+**Key files:**
+- `src/utils/streaks.js` - Streak calculation logic
+- `src/components/StreakDisplay.jsx` - Visual component
+- `Today.jsx` - Integration with task completion
 
 ---
 
@@ -2186,6 +2373,7 @@ npm run lint     # Run ESLint
 - ✅ Reflection viewing
 - ✅ Analytics tracking
 - ✅ Smart suggestions
+- ✅ Gentle Streaks & Gamification
 - ✅ Mobile responsive
 
 ### Planned Features 🚧

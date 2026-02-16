@@ -10,10 +10,12 @@ import {
   trackAttemptByHour,
   suggestDuration
 } from "../utils/analytics";
+import { updateStreak, markMeaningfulAction, loadStreak } from "../utils/streaks";
 import DetailedTimeline from "./DetailedTimeline";
 import Celebration from "./Celebration";
 import RescheduleModal from "./dialogs/RescheduleModal";
 import EditTaskDialog from "./dialogs/EditTaskDialog";
+import StreakDisplay from "./StreakDisplay";
 import {
   DndContext,
   closestCenter,
@@ -73,7 +75,7 @@ const saveTasks = (tasks) => {
 };
 
 // Sortable Task Item Component
-function SortableTaskItem({ task, children }) {
+function SortableTaskItem({ task, children, onClick, style: customStyle, className, onMouseEnter, onMouseLeave, sectionHasMultipleItems = true, ...otherProps }) {
   const {
     attributes,
     listeners,
@@ -81,18 +83,89 @@ function SortableTaskItem({ task, children }) {
     transform,
     transition,
     isDragging
-  } = useSortable({ id: task.id });
+  } = useSortable({ id: task.id, disabled: !sectionHasMultipleItems });
 
   const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-    opacity: isDragging ? 0.5 : 1,
-    cursor: isDragging ? 'grabbing' : 'grab'
+    transform: isDragging
+      ? `${CSS.Transform.toString(transform)} scale(1.02)`
+      : CSS.Transform.toString(transform),
+    transition: transition || 'transform 200ms cubic-bezier(0.25, 1, 0.5, 1)',
+    opacity: isDragging ? 0.6 : 1,
+    position: 'relative',
+    zIndex: isDragging ? 1000 : 'auto',
+    boxShadow: isDragging
+      ? '0 10px 40px rgba(59, 110, 59, 0.25), 0 0 0 1px rgba(111, 175, 111, 0.4)'
+      : undefined,
   };
 
   return (
-    <div ref={setNodeRef} style={style} {...attributes} {...listeners}>
-      {children}
+    <div ref={setNodeRef} style={style}>
+      <div style={{ position: 'relative' }}>
+        {/* Drag Handle - only show if section has multiple items */}
+        {sectionHasMultipleItems && (
+          <div
+            {...attributes}
+            {...listeners}
+            style={{
+              position: 'absolute',
+              left: '-8px',
+              top: '50%',
+              transform: 'translateY(-50%)',
+              cursor: isDragging ? 'grabbing' : 'grab',
+              padding: '8px',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '2px',
+              opacity: 0.4,
+              transition: 'opacity 0.2s ease, transform 0.2s ease',
+              zIndex: 10,
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.opacity = '0.8';
+              e.currentTarget.style.transform = 'translateY(-50%) scale(1.1)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.opacity = '0.4';
+              e.currentTarget.style.transform = 'translateY(-50%) scale(1)';
+            }}
+          >
+            {[...Array(3)].map((_, i) => (
+              <div
+                key={i}
+                style={{
+                  width: '3px',
+                  height: '3px',
+                  borderRadius: '50%',
+                  background: '#6FAF6F',
+                }}
+              />
+            ))}
+            {[...Array(3)].map((_, i) => (
+              <div
+                key={i}
+                style={{
+                  width: '3px',
+                  height: '3px',
+                  borderRadius: '50%',
+                  background: '#6FAF6F',
+                }}
+              />
+            ))}
+          </div>
+        )}
+
+        {/* Task Content - Apply custom props here */}
+        <div
+          style={{ paddingLeft: sectionHasMultipleItems ? '20px' : '0px', ...customStyle }}
+          className={className}
+          onClick={onClick}
+          onMouseEnter={onMouseEnter}
+          onMouseLeave={onMouseLeave}
+          {...otherProps}
+        >
+          {children}
+        </div>
+      </div>
     </div>
   );
 }
@@ -109,11 +182,15 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
     }
   });
 
+  // Streak state
+  const [streak, setStreak] = useState(() => loadStreak());
+
   // --- keep original UI state names ---
   const [tasks, setTasks] = useState(() => loadTasks());
   const [taskName, setTaskName] = useState("");
   const [taskDuration, setTaskDuration] = useState("");
   const [taskStartTime, setTaskStartTime] = useState("");
+  const [taskDeadline, setTaskDeadline] = useState("");
   const [durationSuggestion, setDurationSuggestion] = useState(null);
   const [hasLoadedCarryOver, setHasLoadedCarryOver] = useState(false);
 
@@ -147,6 +224,13 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
       localStorage.setItem('focusModeEnabled', newValue.toString());
     } catch (e) {
       console.error('Failed to save focus mode preference', e);
+    }
+
+    // STREAK: Mark meaningful action when activating focus mode
+    if (newValue) {
+      markMeaningfulAction();
+      const updatedStreak = updateStreak();
+      setStreak(updatedStreak);
     }
 
     // Show toast notification
@@ -258,6 +342,21 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
     }
   }, [tasks]);
 
+  // STREAK: Update streak on mount and refresh periodically
+  useEffect(() => {
+    const refreshStreak = () => {
+      const updatedStreak = updateStreak();
+      setStreak(updatedStreak);
+    };
+
+    // Update on mount
+    refreshStreak();
+
+    // Refresh every hour to check for day changes
+    const interval = setInterval(refreshStreak, 60 * 60 * 1000);
+    return () => clearInterval(interval);
+  }, []);
+
   const addTask = (e) => {
     if (e && e.preventDefault) e.preventDefault();
     if (!taskName || !taskDuration) return;
@@ -284,7 +383,7 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
       startedAt: null,                               // When timer starts
       completedAt: null,                             // When task completes
       // DEADLINE: Escalation tracking fields
-      deadline: null,                                // ISO date string
+      deadline: taskDeadline || null,                // ISO date string
       deadlineWarnings: [],                          // History of warnings shown
       escalatedPriority: false,                      // Auto-increased priority?
       originalPriority: 3                            // Priority before escalation (default: 3)
@@ -311,6 +410,7 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
     setTaskName("");
     setTaskDuration("");
     setTaskStartTime("");
+    setTaskDeadline("");
   };
 
   const deleteTask = (id) => {
@@ -390,6 +490,11 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
     ));
     trackAttemptByHour(new Date().toISOString());
 
+    // STREAK: Mark meaningful action when starting a task
+    markMeaningfulAction();
+    const updatedStreak = updateStreak();
+    setStreak(updatedStreak);
+
     // ensure any previous interval is cleared — effect below will set a new one
     clearInterval(timerRef.current);
   };
@@ -463,6 +568,11 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
     saveTaskToHistory(taskToSave);
     trackCompletionByHour(taskToSave);
     trackRescheduleOption('complete');
+
+    // STREAK: Mark meaningful action when completing a task
+    markMeaningfulAction();
+    const updatedStreak = updateStreak();
+    setStreak(updatedStreak);
 
     clearInterval(timerRef.current);
     setActiveTaskId(null);
@@ -630,6 +740,7 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
     // Split into 2 tasks of half duration
     const halfDuration = Math.ceil((task.remaining || task.duration) / 2);
 
+    // Part 1: Keeps the original time slot
     const part1 = {
       ...task,
       id: Date.now(),
@@ -640,6 +751,7 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
       splitFrom: task.id
     };
 
+    // Part 2: Unscheduled (no time assigned to avoid conflict)
     const part2 = {
       ...task,
       id: Date.now() + 1,
@@ -647,7 +759,12 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
       duration: halfDuration,
       remaining: halfDuration,
       attempts: 0,
-      splitFrom: task.id
+      splitFrom: task.id,
+      // Clear timing info so it doesn't conflict with part1
+      startTime: null,
+      start: null,
+      end: null,
+      scheduledFor: null
     };
 
     // Remove original task and add two new ones
@@ -871,6 +988,13 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
           </div>
         </div>
 
+        {/* Streak Display (compact mode in header) */}
+        {streak && streak.current > 0 && (
+          <div style={{ marginBottom: "20px", display: "flex", justifyContent: "center" }}>
+            <StreakDisplay streak={streak} compact={true} />
+          </div>
+        )}
+
         {/* Conditionally hide stats, form, and presets in full focus mode */}
         {!(focusModeEnabled && activeTaskId) && (
           <>
@@ -1089,6 +1213,22 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
               </label>
             </div>
 
+            {/* Deadline Field */}
+            <div className="controls-row" style={{ marginTop: "12px" }}>
+              <label className="control">
+                <div className="control-label">Deadline (optional)</div>
+                <div className="time-input">
+                  <span style={{ fontSize: "16px" }}>📅</span>
+                  <input
+                    type="date"
+                    value={taskDeadline}
+                    onChange={(e) => setTaskDeadline(e.target.value)}
+                    style={{ border: "none", outline: "none", flex: 1, background: "transparent", fontSize: "14px" }}
+                  />
+                </div>
+              </label>
+            </div>
+
             <button
               onClick={addTask}
               className="btn primary"
@@ -1231,7 +1371,7 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
               <DetailedTimeline tasks={taskBlocks} availability={availability} />
             </div>
           ) : (
-          <div className="timeline-bar" style={{ height: "auto", minHeight: "120px", padding: "16px 12px", maxHeight: "400px", overflowY: "auto" }}>
+          <div className="timeline-bar" style={{ height: "auto", minHeight: "120px", padding: "16px 12px" }}>
             {tasks.length === 0 ? (
               <div style={{ textAlign: "center", padding: "30px 20px", opacity: 0.6 }}>
                 <LeafIcon size={36} fill="#C5D9C5" />
@@ -1267,26 +1407,31 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
                       strategy={verticalListSortingStrategy}
                     >
                       <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
-                      {taskBlocks.filter(task => task.carriedOver).filter(task => {
-                        if (focusModeEnabled && activeTaskId) {
-                          if (task.id === activeTaskId) return true;
-                          if (task.completed) return false;
-                          const activeIndex = taskBlocks.findIndex(t => t.id === activeTaskId);
-                          const currentIndex = taskBlocks.findIndex(t => t.id === task.id);
-                          return currentIndex <= activeIndex;
-                        }
-                        return true;
-                      }).map((task, i) => {
-                        const isActiveTask = activeTaskId === task.id;
-                        const shouldDim = activeTaskId && !isActiveTask;
-                        const health = getTaskHealth(task, tasks, availability);
+                      {(() => {
+                        const carriedTasks = taskBlocks.filter(task => task.carriedOver).filter(task => {
+                          if (focusModeEnabled && activeTaskId) {
+                            if (task.id === activeTaskId) return true;
+                            if (task.completed) return false;
+                            const activeIndex = taskBlocks.findIndex(t => t.id === activeTaskId);
+                            const currentIndex = taskBlocks.findIndex(t => t.id === task.id);
+                            return currentIndex <= activeIndex;
+                          }
+                          return true;
+                        });
+                        const hasMultiple = carriedTasks.length > 1;
 
-                        return (
-                          <SortableTaskItem
-                            task={task}
-                            key={task.id}
-                            className={isActiveTask ? 'task-focused' : ''}
-                            onClick={() => handleEditTask(task)}
+                        return carriedTasks.map((task, i) => {
+                          const isActiveTask = activeTaskId === task.id;
+                          const shouldDim = activeTaskId && !isActiveTask;
+                          const health = getTaskHealth(task, tasks, availability);
+
+                          return (
+                            <SortableTaskItem
+                              task={task}
+                              key={task.id}
+                              sectionHasMultipleItems={hasMultiple}
+                              className={isActiveTask ? 'task-focused' : ''}
+                              onClick={() => handleEditTask(task)}
                             style={{
                               background: "linear-gradient(90deg, rgba(255,200,150,0.12), rgba(255,210,160,0.08))",
                               border: `2px solid ${health.color}`,
@@ -1345,6 +1490,26 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
                             <div style={{ flex: 1 }}>
                               <div style={{ fontSize: "15px", fontWeight: "700", color: "#c2410c", marginBottom: "4px", display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap" }}>
                                 <span>{task.name}{task.completed ? " (done)" : ""}</span>
+                                <button
+                                  className="delete-button"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    deleteTask(task.id);
+                                  }}
+                                  style={{
+                                    width: "18px",
+                                    height: "18px",
+                                    borderRadius: "50%",
+                                    display: "inline-flex",
+                                    alignItems: "center",
+                                    justifyContent: "center",
+                                    fontSize: "14px",
+                                    padding: 0,
+                                    marginLeft: "4px"
+                                  }}
+                                >
+                                  ×
+                                </button>
                                 {task.attempts > 0 && (
                                   <span style={{
                                     fontSize: "11px",
@@ -1420,18 +1585,43 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
                               )}
                             </div>
 
-                            <button
-                              className="delete-button"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                deleteTask(task.id);
-                              }}
-                            >
-                              ×
-                            </button>
+                            {!task.completed && activeTaskId !== task.id && (
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  startTask(task);
+                                }}
+                                style={{
+                                  padding: "8px 16px",
+                                  borderRadius: "8px",
+                                  border: "1px solid rgba(245,158,11,0.3)",
+                                  background: "linear-gradient(135deg, rgba(245,158,11,0.15), rgba(217,119,6,0.1))",
+                                  color: "#c2410c",
+                                  fontSize: "13px",
+                                  fontWeight: "600",
+                                  cursor: "pointer",
+                                  transition: "all 0.2s ease",
+                                  boxShadow: "0 2px 4px rgba(245,158,11,0.1)",
+                                  flexShrink: 0
+                                }}
+                                onMouseEnter={(e) => {
+                                  e.currentTarget.style.background = "linear-gradient(135deg, rgba(245,158,11,0.25), rgba(217,119,6,0.2))";
+                                  e.currentTarget.style.transform = "translateY(-2px)";
+                                  e.currentTarget.style.boxShadow = "0 4px 8px rgba(245,158,11,0.2)";
+                                }}
+                                onMouseLeave={(e) => {
+                                  e.currentTarget.style.background = "linear-gradient(135deg, rgba(245,158,11,0.15), rgba(217,119,6,0.1))";
+                                  e.currentTarget.style.transform = "translateY(0)";
+                                  e.currentTarget.style.boxShadow = "0 2px 4px rgba(245,158,11,0.1)";
+                                }}
+                              >
+                                Start →
+                              </button>
+                            )}
                           </SortableTaskItem>
                         );
-                      })}
+                      });
+                    })()}
                     </div>
                     </SortableContext>
                   </div>
@@ -1460,28 +1650,33 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
                       strategy={verticalListSortingStrategy}
                     >
                     <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
-                {taskBlocks.filter(task => !task.carriedOver).filter(task => {
-                  // In focus mode, hide completed tasks and future tasks (but show active task)
-                  if (focusModeEnabled && activeTaskId) {
-                    if (task.id === activeTaskId) return true;
-                    if (task.completed) return false;
-                    // Hide tasks after the active task
-                    const activeIndex = taskBlocks.findIndex(t => t.id === activeTaskId);
-                    const currentIndex = taskBlocks.findIndex(t => t.id === task.id);
-                    return currentIndex <= activeIndex;
-                  }
-                  return true;
-                }).map((task, i) => {
-                  const isActiveTask = activeTaskId === task.id;
-                  const shouldDim = activeTaskId && !isActiveTask;
-                  const health = getTaskHealth(task, tasks, availability);
+                {(() => {
+                  const todayTasks = taskBlocks.filter(task => !task.carriedOver).filter(task => {
+                    // In focus mode, hide completed tasks and future tasks (but show active task)
+                    if (focusModeEnabled && activeTaskId) {
+                      if (task.id === activeTaskId) return true;
+                      if (task.completed) return false;
+                      // Hide tasks after the active task
+                      const activeIndex = taskBlocks.findIndex(t => t.id === activeTaskId);
+                      const currentIndex = taskBlocks.findIndex(t => t.id === task.id);
+                      return currentIndex <= activeIndex;
+                    }
+                    return true;
+                  });
+                  const hasMultiple = todayTasks.length > 1;
 
-                  return (
-                  <SortableTaskItem
-                    task={task}
-                    key={task.id}
-                    className={isActiveTask ? 'task-focused' : ''}
-                    onClick={() => handleEditTask(task)}
+                  return todayTasks.map((task, i) => {
+                    const isActiveTask = activeTaskId === task.id;
+                    const shouldDim = activeTaskId && !isActiveTask;
+                    const health = getTaskHealth(task, tasks, availability);
+
+                    return (
+                    <SortableTaskItem
+                      task={task}
+                      key={task.id}
+                      sectionHasMultipleItems={hasMultiple}
+                      className={isActiveTask ? 'task-focused' : ''}
+                      onClick={() => handleEditTask(task)}
                     style={{
                       background: "linear-gradient(90deg, rgba(167,211,167,0.12), rgba(111,175,111,0.08))",
                       border: `2px solid ${health.color}`,
@@ -1540,6 +1735,26 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
                     <div style={{ flex: 1 }}>
                       <div style={{ fontSize: "15px", fontWeight: "700", color: "#3B6E3B", marginBottom: "4px", display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap" }}>
                         <span>{task.name}{task.completed ? " (done)" : ""}</span>
+                        <button
+                          className="delete-button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            deleteTask(task.id);
+                          }}
+                          style={{
+                            width: "18px",
+                            height: "18px",
+                            borderRadius: "50%",
+                            display: "inline-flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            fontSize: "14px",
+                            padding: 0,
+                            marginLeft: "4px"
+                          }}
+                        >
+                          ×
+                        </button>
                         {task.attempts > 0 && (
                           <span style={{
                             fontSize: "11px",
@@ -1615,18 +1830,43 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
                       )}
                     </div>
 
-                    <button
-                      className="delete-button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        deleteTask(task.id);
-                      }}
-                    >
-                      ×
-                    </button>
+                    {!task.completed && activeTaskId !== task.id && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          startTask(task);
+                        }}
+                        style={{
+                          padding: "8px 16px",
+                          borderRadius: "8px",
+                          border: "1px solid rgba(111,175,111,0.3)",
+                          background: "linear-gradient(135deg, rgba(111,175,111,0.15), rgba(59,110,59,0.1))",
+                          color: "#3B6E3B",
+                          fontSize: "13px",
+                          fontWeight: "600",
+                          cursor: "pointer",
+                          transition: "all 0.2s ease",
+                          boxShadow: "0 2px 4px rgba(111,175,111,0.1)",
+                          flexShrink: 0
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.background = "linear-gradient(135deg, rgba(111,175,111,0.25), rgba(59,110,59,0.2))";
+                          e.currentTarget.style.transform = "translateY(-2px)";
+                          e.currentTarget.style.boxShadow = "0 4px 8px rgba(111,175,111,0.2)";
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.background = "linear-gradient(135deg, rgba(111,175,111,0.15), rgba(59,110,59,0.1))";
+                          e.currentTarget.style.transform = "translateY(0)";
+                          e.currentTarget.style.boxShadow = "0 2px 4px rgba(111,175,111,0.1)";
+                        }}
+                      >
+                        Start →
+                      </button>
+                    )}
                   </SortableTaskItem>
                   );
-                })}
+                });
+              })()}
                     </div>
                     </SortableContext>
                   </div>
@@ -1638,13 +1878,6 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
           )}
         </div>
 
-        {tasks.length > 0 && (
-          <div className="actions-row">
-            <button className="btn primary" onClick={startFirstTask}>
-              Start First Task →
-            </button>
-          </div>
-        )}
           </>
         )}
 

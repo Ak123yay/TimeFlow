@@ -321,6 +321,42 @@ export default function Setup({ onDone }) {
                 </div>
               </div>
             </div>
+
+            <div style={{ display: "flex", gap: "10px" }}>
+              <span style={{ fontSize: "18px", flexShrink: 0 }}>🌱</span>
+              <div>
+                <div style={{ fontSize: "13px", fontWeight: "600", color: "#3B6E3B", marginBottom: "4px" }}>
+                  Gentle Streaks
+                </div>
+                <div style={{ fontSize: "12px", color: "#6B8E6B", lineHeight: "1.4" }}>
+                  Growing plant rewards consistency with grace periods - no toxic pressure
+                </div>
+              </div>
+            </div>
+
+            <div style={{ display: "flex", gap: "10px" }}>
+              <span style={{ fontSize: "18px", flexShrink: 0 }}>⚠️</span>
+              <div>
+                <div style={{ fontSize: "13px", fontWeight: "600", color: "#3B6E3B", marginBottom: "4px" }}>
+                  Task Health Check
+                </div>
+                <div style={{ fontSize: "12px", color: "#6B8E6B", lineHeight: "1.4" }}>
+                  Color-coded warnings for tasks you've been avoiding or are approaching deadlines
+                </div>
+              </div>
+            </div>
+
+            <div style={{ display: "flex", gap: "10px" }}>
+              <span style={{ fontSize: "18px", flexShrink: 0 }}>📅</span>
+              <div>
+                <div style={{ fontSize: "13px", fontWeight: "600", color: "#3B6E3B", marginBottom: "4px" }}>
+                  Deadline Tracking
+                </div>
+                <div style={{ fontSize: "12px", color: "#6B8E6B", lineHeight: "1.4" }}>
+                  Set deadlines and get auto-escalating urgency as dates approach
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 

@@ -331,7 +331,17 @@ export const findNextFreeSlot = (taskDuration, existingTasks, availability, only
 export const getDeadlineUrgency = (task) => {
   if (!task.deadline) return null;
 
-  const daysUntil = Math.ceil((new Date(task.deadline) - new Date()) / (1000 * 60 * 60 * 24));
+  // Parse deadline as local date (not UTC) to avoid timezone issues
+  // task.deadline format: "YYYY-MM-DD"
+  const [year, month, day] = task.deadline.split('-').map(Number);
+  const deadline = new Date(year, month - 1, day); // month is 0-indexed
+  deadline.setHours(0, 0, 0, 0);
+
+  // Get today at midnight
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const daysUntil = Math.round((deadline - today) / (1000 * 60 * 60 * 24));
 
   if (daysUntil < 0) {
     return { level: 'overdue', message: 'OVERDUE', color: '#dc2626', shouldBlock: true };
