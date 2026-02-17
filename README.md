@@ -1,4 +1,4 @@
-# TimeFlow Overview
+# TimeFlow
 
 **A nature-themed intelligent task scheduler that helps you flow through your day with calm productivity.**
 
