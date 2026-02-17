@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import { loadTasksForDate, saveTasksForDate, saveReflection } from "../utils/storage";
 import MobileLayout from './mobile/MobileLayout';
+import FirstTimeTooltip from './FirstTimeTooltip';
+import { hasSeenTooltip, markTooltipSeen, TOOLTIP_CONTENT } from "../utils/firstTimeTooltips";
 import { haptic } from "../utils/haptics";
 import "../App.css";
 
@@ -26,6 +28,7 @@ export default function DayReflection({ todayDate, onComplete }) {
   const [unfinishedActions, setUnfinishedActions] = useState({});
   const [showCelebration, setShowCelebration] = useState(completedTasks.length === tasks.length && tasks.length > 0);
   const [isMobile, setIsMobile] = useState(() => window.matchMedia('(max-width: 768px)').matches);
+  const [showTooltip, setShowTooltip] = useState(() => !hasSeenTooltip('stats'));
 
   useEffect(() => {
     const mq = window.matchMedia('(max-width: 768px)');
@@ -96,6 +99,19 @@ export default function DayReflection({ todayDate, onComplete }) {
             {todayDate} • Reflect on your progress
           </p>
         </div>
+
+        {/* First-Time Tooltip */}
+        {showTooltip && (
+          <FirstTimeTooltip
+            title={TOOLTIP_CONTENT.stats.title}
+            description={TOOLTIP_CONTENT.stats.description}
+            icon={TOOLTIP_CONTENT.stats.icon}
+            onDismiss={() => {
+              setShowTooltip(false);
+              markTooltipSeen('stats');
+            }}
+          />
+        )}
 
         {/* Celebration */}
         {showCelebration && (

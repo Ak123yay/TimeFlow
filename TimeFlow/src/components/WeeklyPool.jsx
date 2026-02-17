@@ -9,6 +9,8 @@ import {
 import { getDeadlineUrgency } from "../utils/scheduler";
 import MoveToTodayDialog from "./dialogs/MoveToTodayDialog";
 import MobileLayout from './mobile/MobileLayout';
+import FirstTimeTooltip from './FirstTimeTooltip';
+import { hasSeenTooltip, markTooltipSeen, TOOLTIP_CONTENT } from "../utils/firstTimeTooltips";
 import { haptic } from "../utils/haptics";
 import "../App.css";
 
@@ -47,6 +49,7 @@ export default function WeeklyPool({ onNavigateToToday }) {
   const [showMoveDialog, setShowMoveDialog] = useState(false);
   const [taskToMove, setTaskToMove] = useState(null);
   const [isMobile, setIsMobile] = useState(() => window.matchMedia('(max-width: 768px)').matches);
+  const [showTooltip, setShowTooltip] = useState(() => !hasSeenTooltip('pool'));
 
   useState(() => {
     const mq = window.matchMedia('(max-width: 768px)');
@@ -130,6 +133,19 @@ export default function WeeklyPool({ onNavigateToToday }) {
             {poolTasks.length} tasks to work on this week
           </p>
         </div>
+
+        {/* First-Time Tooltip */}
+        {showTooltip && (
+          <FirstTimeTooltip
+            title={TOOLTIP_CONTENT.pool.title}
+            description={TOOLTIP_CONTENT.pool.description}
+            icon={TOOLTIP_CONTENT.pool.icon}
+            onDismiss={() => {
+              setShowTooltip(false);
+              markTooltipSeen('pool');
+            }}
+          />
+        )}
 
         {/* Add Task Form */}
         <div style={{

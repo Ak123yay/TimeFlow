@@ -3,6 +3,8 @@ import { getWeekData, getCurrentWeekStart, loadReflection } from "../utils/stora
 import ReflectionViewer from "./dialogs/ReflectionViewer";
 import MobileLayout from './mobile/MobileLayout';
 import CalendarView from './CalendarView';
+import FirstTimeTooltip from './FirstTimeTooltip';
+import { hasSeenTooltip, markTooltipSeen, TOOLTIP_CONTENT } from "../utils/firstTimeTooltips";
 import { haptic } from "../utils/haptics";
 import "../App.css";
 
@@ -21,6 +23,7 @@ export default function WeeklyView({ onBackToToday }) {
   const [selectedDay, setSelectedDay] = useState(null);
   const [viewMode, setViewMode] = useState('week'); // 'week' or 'month'
   const [isMobile, setIsMobile] = useState(() => window.matchMedia('(max-width: 768px)').matches);
+  const [showTooltip, setShowTooltip] = useState(() => !hasSeenTooltip('week'));
 
   useEffect(() => {
     const mq = window.matchMedia('(max-width: 768px)');
@@ -76,6 +79,19 @@ export default function WeeklyView({ onBackToToday }) {
           </h1>
           <p style={{ fontSize: '12px', color: '#8E8E93', margin: 0 }}>Your week at a glance</p>
         </div>
+
+        {/* First-Time Tooltip */}
+        {showTooltip && (
+          <FirstTimeTooltip
+            title={TOOLTIP_CONTENT.week.title}
+            description={TOOLTIP_CONTENT.week.description}
+            icon={TOOLTIP_CONTENT.week.icon}
+            onDismiss={() => {
+              setShowTooltip(false);
+              markTooltipSeen('week');
+            }}
+          />
+        )}
 
         {/* View Mode Toggle */}
         <div style={{

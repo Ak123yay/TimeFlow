@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
 import MobileLayout from './mobile/MobileLayout';
+import FirstTimeTooltip from './FirstTimeTooltip';
+import { hasSeenTooltip, markTooltipSeen, TOOLTIP_CONTENT } from "../utils/firstTimeTooltips";
 import { getReflectionHistory } from '../utils/storage';
 import { loadStreak } from '../utils/streaks';
 import { haptic } from '../utils/haptics';
@@ -17,6 +19,7 @@ export default function Streak({ onNavigate }) {
   const [isMobile, setIsMobile] = useState(() => window.matchMedia('(max-width: 768px)').matches);
   const [streak, setStreak] = useState({ current: 0, longest: 0, lastActive: null });
   const [reflections, setReflections] = useState([]);
+  const [showTooltip, setShowTooltip] = useState(() => !hasSeenTooltip('streak'));
 
   useEffect(() => {
     const mq = window.matchMedia('(max-width: 768px)');
@@ -72,6 +75,19 @@ export default function Streak({ onNavigate }) {
             Track your daily progress
           </p>
         </div>
+
+        {/* First-Time Tooltip */}
+        {showTooltip && (
+          <FirstTimeTooltip
+            title={TOOLTIP_CONTENT.streak.title}
+            description={TOOLTIP_CONTENT.streak.description}
+            icon={TOOLTIP_CONTENT.streak.icon}
+            onDismiss={() => {
+              setShowTooltip(false);
+              markTooltipSeen('streak');
+            }}
+          />
+        )}
 
         {/* Current Streak Card */}
         <div style={{
