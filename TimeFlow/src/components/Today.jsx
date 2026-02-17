@@ -1105,6 +1105,20 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
               </div>
               <div style={{ display: 'flex', gap: '6px' }}>
                 <button
+                  onClick={toggleView}
+                  style={{
+                    width: '34px', height: '34px', borderRadius: '10px',
+                    border: 'none',
+                    background: viewMode === 'calendar' ? '#3B6E3B' : '#F0F0F0',
+                    color: viewMode === 'calendar' ? '#fff' : '#8E8E93',
+                    fontSize: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    cursor: 'pointer', touchAction: 'manipulation',
+                    boxShadow: viewMode === 'calendar' ? '0 2px 8px rgba(59,110,59,0.25)' : 'none',
+                    transition: 'all 0.2s ease'
+                  }}
+                  aria-label="Toggle view"
+                >{viewMode === 'calendar' ? '📅' : '📋'}</button>
+                <button
                   onClick={toggleFocusMode}
                   style={{
                     width: '34px', height: '34px', borderRadius: '10px',
@@ -1223,8 +1237,16 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
           </div>
         )}
 
-        {/* ---- Task List ---- */}
-        {tasks.length === 0 ? (
+        {/* ---- Task List / Calendar View ---- */}
+        {viewMode === 'calendar' ? (
+          <CalendarView
+            selectedDate={getTodayString()}
+            onDaySelect={(dateStr) => {
+              console.log('Selected date:', dateStr);
+            }}
+          />
+        ) : (
+        tasks.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '40px 20px' }}>
             <div style={{ fontSize: '36px', marginBottom: '12px' }}>🌱</div>
             <p style={{ fontSize: '15px', fontWeight: 600, color: '#1A1A1A', margin: '0 0 4px' }}>Start your day</p>
@@ -1325,6 +1347,7 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
               </div>
             )}
           </div>
+        )
         )}
 
         {/* ---- FAB ---- */}

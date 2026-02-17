@@ -136,4 +136,4 @@ TimeFlow embraces **calm productivity** over hustle culture:
 
 **Made with calm productivity in mind. Flow through your day. 🌿**
 
-*For full documentation, see [README.md](README.md)*
+*For full documentation, see [DOCUMENTATION.md](DOCUMENTATION.md)*
