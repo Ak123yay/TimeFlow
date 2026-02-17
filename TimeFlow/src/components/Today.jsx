@@ -23,6 +23,7 @@ import {
   setNotificationPreference
 } from "../utils/notifications";
 import DetailedTimeline from "./DetailedTimeline";
+import CalendarView from "./CalendarView";
 import Celebration from "./Celebration";
 // OPTIMIZED: Lazy load dialog components - deferred until user opens them (-25 KB initial bundle)
 const RescheduleModal = lazy(() => import("./dialogs/RescheduleModal"));
@@ -214,6 +215,9 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
     mq.addEventListener('change', handler);
     return () => mq.removeEventListener('change', handler);
   }, []);
+
+  // View mode for calendar/list toggle
+  const [viewMode, setViewMode] = useState('list'); // 'list' or 'calendar'
 
   // Streak state
   const [streak, setStreak] = useState(() => loadStreak());
@@ -599,7 +603,7 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
     if (taskToDelete && taskToDelete.carriedOver && taskToDelete.originalDate) {
       const originalTasks = loadTasksForDate(taskToDelete.originalDate);
       const updatedOriginalTasks = originalTasks.map(t =>
-        t.name === taskToDelete.name ? { ...t, completed: true } : t
+        t.name === taskToDelete.name ? { ...t, completed: true, remaining: 0 } : t
       );
       saveTasksForDate(taskToDelete.originalDate, updatedOriginalTasks);
     }
@@ -773,6 +777,16 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
         : t
     ));
     haptic.success(); // Haptic feedback on task completion
+
+    // FIXED: If completing a carried task, mark it as completed in original date
+    // so it doesn't keep getting carried over
+    if (completedTask.carriedOver && completedTask.originalDate) {
+      const originalTasks = loadTasksForDate(completedTask.originalDate);
+      const updatedOriginalTasks = originalTasks.map(t =>
+        t.name === completedTask.name ? { ...t, completed: true, remaining: 0 } : t
+      );
+      saveTasksForDate(completedTask.originalDate, updatedOriginalTasks);
+    }
 
     // ANALYTICS: Save to history for future duration predictions
     const taskToSave = {
@@ -1086,6 +1100,20 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
               </div>
               <div style={{ display: 'flex', gap: '6px' }}>
                 <button
+                  onClick={() => setViewMode(viewMode === 'list' ? 'calendar' : 'list')}
+                  style={{
+                    width: '34px', height: '34px', borderRadius: '10px',
+                    border: 'none',
+                    background: viewMode === 'calendar' ? '#3B6E3B' : '#F0F0F0',
+                    color: viewMode === 'calendar' ? '#fff' : '#8E8E93',
+                    fontSize: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    cursor: 'pointer', touchAction: 'manipulation',
+                    boxShadow: viewMode === 'calendar' ? '0 2px 8px rgba(59,110,59,0.25)' : 'none',
+                    transition: 'all 0.2s ease'
+                  }}
+                  aria-label="Toggle calendar"
+                >📅</button>
+                <button
                   onClick={toggleFocusMode}
                   style={{
                     width: '34px', height: '34px', borderRadius: '10px',
@@ -1205,7 +1233,17 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
         )}
 
         {/* ---- Task List / Calendar View ---- */}
-        {tasks.length === 0 ? (
+        {viewMode === 'calendar' ? (
+          <CalendarView
+            selectedDate={getTodayString()}
+            onDaySelect={(dateStr) => {
+              // When selecting a date, switch to list view and potentially navigate to that date
+              console.log('Selected date:', dateStr);
+              setViewMode('list');
+              // Future: could navigate to that specific date
+            }}
+          />
+        ) : tasks.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '40px 20px' }}>
             <div style={{ fontSize: '36px', marginBottom: '12px' }}>🌱</div>
             <p style={{ fontSize: '15px', fontWeight: 600, color: '#1A1A1A', margin: '0 0 4px' }}>Start your day</p>
@@ -1238,9 +1276,20 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
                       onStart={() => startTask(task)}
                       onComplete={() => {
                         haptic.success();
+                        const completedTask = task;
                         setTasks(prev => prev.map(t =>
                           t.id === task.id ? { ...t, completed: true, remaining: 0, completedAt: new Date().toISOString() } : t
                         ));
+
+                        // FIXED: If completing a carried task, mark it as completed in original date
+                        if (completedTask.carriedOver && completedTask.originalDate) {
+                          const originalTasks = loadTasksForDate(completedTask.originalDate);
+                          const updatedOriginalTasks = originalTasks.map(t =>
+                            t.name === completedTask.name ? { ...t, completed: true, remaining: 0 } : t
+                          );
+                          saveTasksForDate(completedTask.originalDate, updatedOriginalTasks);
+                        }
+
                         setShowCelebration('task');
                         setTimeout(() => setShowCelebration(null), 3000);
                       }}
@@ -1278,9 +1327,20 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
                       onStart={() => startTask(task)}
                       onComplete={() => {
                         haptic.success();
+                        const completedTask = task;
                         setTasks(prev => prev.map(t =>
                           t.id === task.id ? { ...t, completed: true, remaining: 0, completedAt: new Date().toISOString() } : t
                         ));
+
+                        // FIXED: If completing a carried task, mark it as completed in original date
+                        if (completedTask.carriedOver && completedTask.originalDate) {
+                          const originalTasks = loadTasksForDate(completedTask.originalDate);
+                          const updatedOriginalTasks = originalTasks.map(t =>
+                            t.name === completedTask.name ? { ...t, completed: true, remaining: 0 } : t
+                          );
+                          saveTasksForDate(completedTask.originalDate, updatedOriginalTasks);
+                        }
+
                         setShowCelebration('task');
                         setTimeout(() => setShowCelebration(null), 3000);
                       }}
