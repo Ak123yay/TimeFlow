@@ -229,9 +229,27 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
 
   // --- keep original UI state names ---
   const [tasks, setTasks] = useState(() => loadTasks());
+  // Helper function to get next available time (rounded to next 15 minutes)
+  const getNextAvailableTime = () => {
+    const now = new Date();
+    const minutes = now.getMinutes();
+    const roundedMinutes = Math.ceil(minutes / 15) * 15;
+
+    if (roundedMinutes >= 60) {
+      now.setHours(now.getHours() + 1);
+      now.setMinutes(0);
+    } else {
+      now.setMinutes(roundedMinutes);
+    }
+
+    const hours = String(now.getHours()).padStart(2, '0');
+    const mins = String(now.getMinutes()).padStart(2, '0');
+    return `${hours}:${mins}`;
+  };
+
   const [taskName, setTaskName] = useState("");
   const [taskDuration, setTaskDuration] = useState("");
-  const [taskStartTime, setTaskStartTime] = useState("");
+  const [taskStartTime, setTaskStartTime] = useState(() => getNextAvailableTime());
   const [taskDeadline, setTaskDeadline] = useState("");
   const [durationSuggestion, setDurationSuggestion] = useState(null);
   // REMOVED: hasLoadedCarryOver state - we'll check localStorage instead
@@ -571,7 +589,7 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
     haptic.light(); // Haptic feedback on successful task addition
     setTaskName("");
     setTaskDuration("");
-    setTaskStartTime("");
+    setTaskStartTime(getNextAvailableTime()); // Reset to next available time
     setTaskDeadline("");
   };
 
