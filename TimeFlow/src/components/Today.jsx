@@ -25,6 +25,8 @@ import {
 import DetailedTimeline from "./DetailedTimeline";
 import CalendarView from "./CalendarView";
 import Celebration from "./Celebration";
+import FirstTimeTooltip from "./FirstTimeTooltip";
+import { hasSeenTooltip, markTooltipSeen, TOOLTIP_CONTENT } from "../utils/firstTimeTooltips";
 // OPTIMIZED: Lazy load dialog components - deferred until user opens them (-25 KB initial bundle)
 const RescheduleModal = lazy(() => import("./dialogs/RescheduleModal"));
 const EditTaskDialog = lazy(() => import("./dialogs/EditTaskDialog"));
@@ -221,6 +223,9 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
 
   // Streak state
   const [streak, setStreak] = useState(() => loadStreak());
+
+  // First-time tooltip
+  const [showTooltip, setShowTooltip] = useState(() => !hasSeenTooltip('today'));
 
   // --- keep original UI state names ---
   const [tasks, setTasks] = useState(() => loadTasks());
@@ -1184,6 +1189,19 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
               isPaused={isPaused}
             />
           </div>
+        )}
+
+        {/* ---- First-Time Tooltip ---- */}
+        {showTooltip && (
+          <FirstTimeTooltip
+            title={TOOLTIP_CONTENT.today.title}
+            description={TOOLTIP_CONTENT.today.description}
+            icon={TOOLTIP_CONTENT.today.icon}
+            onDismiss={() => {
+              setShowTooltip(false);
+              markTooltipSeen('today');
+            }}
+          />
         )}
 
         {/* ---- Stat Pills ---- */}

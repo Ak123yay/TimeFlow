@@ -1,6 +1,8 @@
 // src/components/Setup.jsx
 import { useLayoutEffect, useRef, useState, useEffect } from "react";
 import { saveAvailability, loadAvailability } from "../utils/storage";
+import MobileLayout from './mobile/MobileLayout';
+import { haptic } from "../utils/haptics";
 import "../App.css";
 
 /* Presets */
@@ -55,6 +57,14 @@ export default function Setup({ onDone }) {
   const [end, setEnd] = useState(saved?.end ?? "17:00");
   const [error, setError] = useState("");
   const [windowWidth, setWindowWidth] = useState(typeof window !== 'undefined' ? window.innerWidth : 1024);
+  const [isMobile, setIsMobile] = useState(() => window.matchMedia('(max-width: 768px)').matches);
+
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 768px)');
+    const handler = (e) => setIsMobile(e.matches);
+    mq.addEventListener('change', handler);
+    return () => mq.removeEventListener('change', handler);
+  }, []);
 
   useEffect(() => {
     const handleResize = () => setWindowWidth(window.innerWidth);
