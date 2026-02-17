@@ -80,8 +80,14 @@ export default function DayReflection({ todayDate, onComplete }) {
 
   if (isMobile) {
     return (
-      <MobileLayout showBottomNav={false}>
-        {/* Header */}
+      <MobileLayout showBottomNav={true} onNavigate={(tab) => {
+        haptic.light();
+        if (tab === 'today') onComplete();
+        else if (tab === 'week') window.location.hash = '#/week';
+        else if (tab === 'pool') window.location.hash = '#/pool';
+        else if (tab === 'stats') window.location.hash = '#/reflection';
+        else if (tab === 'streak') window.location.hash = '#/streak';
+      }} activeTab="stats">{/* Header */}
         <div style={{ marginBottom: '16px', textAlign: 'center' }}>
           <h1 style={{ fontSize: '20px', fontWeight: 800, color: '#1A1A1A', margin: '0 0 4px', letterSpacing: '-0.3px' }}>
             Day Complete ✨
