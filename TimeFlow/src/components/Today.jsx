@@ -233,7 +233,7 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
   const [taskStartTime, setTaskStartTime] = useState("");
   const [taskDeadline, setTaskDeadline] = useState("");
   const [durationSuggestion, setDurationSuggestion] = useState(null);
-  const [hasLoadedCarryOver, setHasLoadedCarryOver] = useState(false);
+  // REMOVED: hasLoadedCarryOver state - we'll check localStorage instead
 
   // --- TIMER STATE (non-UI changes) ---
   const [activeTaskId, setActiveTaskId] = useState(null);
@@ -401,7 +401,12 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
 
   // Load unfinished tasks from previous days on mount
   useEffect(() => {
-    if (hasLoadedCarryOver) return;
+    const today = getTodayString();
+    const carryOverKey = `timeflow-carryover-loaded-${today}`;
+
+    // Check if we've already loaded carry-over tasks for today
+    const alreadyLoaded = localStorage.getItem(carryOverKey) === 'true';
+    if (alreadyLoaded) return;
 
     const unfinishedTasks = getUnfinishedTasksFromPreviousDays();
     if (unfinishedTasks.length > 0) {
@@ -423,11 +428,14 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
         const rescheduled = rescheduleUnfinishedTasks(newUnfinishedTasks, todayTasks, availability);
         setTasks(rescheduled);
       }
-      setHasLoadedCarryOver(true);
+
+      // Mark that we've loaded carry-over for today
+      localStorage.setItem(carryOverKey, 'true');
     } else {
-      setHasLoadedCarryOver(true);
+      // Even if no tasks to carry over, mark as loaded
+      localStorage.setItem(carryOverKey, 'true');
     }
-  }, [availability, hasLoadedCarryOver]);
+  }, [availability]);
 
   // OPTIMIZED: persist tasks to localStorage with debouncing - reduces I/O by 60%
   useEffect(() => {
@@ -574,6 +582,18 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
       setSecondsLeft(0);
       setShowRescheduleModal(false);
     }
+
+    // FIXED: If deleting a carried task, mark it as completed in original date
+    // so it doesn't keep getting carried over
+    const taskToDelete = tasks.find(t => t.id === id);
+    if (taskToDelete && taskToDelete.carriedOver && taskToDelete.originalDate) {
+      const originalTasks = loadTasksForDate(taskToDelete.originalDate);
+      const updatedOriginalTasks = originalTasks.map(t =>
+        t.name === taskToDelete.name ? { ...t, completed: true } : t
+      );
+      saveTasksForDate(taskToDelete.originalDate, updatedOriginalTasks);
+    }
+
     haptic.heavy(); // Haptic feedback on task deletion
     setTasks(prev => prev.filter(t => t.id !== id));
   };
