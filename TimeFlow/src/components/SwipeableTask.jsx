@@ -20,6 +20,7 @@ export default function SwipeableTask({ task, onComplete, onDelete, children }) 
   const startY = useRef(0);
   const isVerticalScroll = useRef(false);
   const hasTriggeredHaptic = useRef(false);
+  const wasClosing = useRef(false); // Track if user was swiping to close
 
   const handleTouchStart = (e) => {
     startX.current = e.touches[0].clientX;
@@ -27,6 +28,7 @@ export default function SwipeableTask({ task, onComplete, onDelete, children }) 
     setIsSwiping(true);
     isVerticalScroll.current = false;
     hasTriggeredHaptic.current = false; // Reset haptic trigger
+    wasClosing.current = false; // Reset closing flag
   };
 
   const handleTouchMove = (e) => {
@@ -45,16 +47,25 @@ export default function SwipeableTask({ task, onComplete, onDelete, children }) 
     // Ignore vertical scrolls
     if (isVerticalScroll.current) return;
 
-    // Left swipe only (diffX < 0), max -150px
-    if (diffX < 0 && diffX > -150) {
-      setSwipeOffset(diffX);
-      e.preventDefault();  // Prevent scroll during horizontal swipe
+    // FIXED: Allow both left swipe (diffX < 0) and right swipe back (diffX > 0)
+    // Left swipe: min -150px, Right swipe back: max 0px
+    if (diffX < 0) {
+      // Swiping left to reveal
+      const newOffset = Math.max(-150, diffX);
+      setSwipeOffset(newOffset);
+      e.preventDefault();
 
       // Trigger haptic feedback at -80px threshold (once)
       if (diffX < -80 && !hasTriggeredHaptic.current) {
         haptic.selection();
         hasTriggeredHaptic.current = true;
       }
+    } else if (actionsRevealed && diffX > 0) {
+      // Swiping right to close when actions are revealed
+      const newOffset = Math.max(-150, -150 + diffX);
+      setSwipeOffset(newOffset);
+      wasClosing.current = true; // Mark that we're closing
+      e.preventDefault();
     }
   };
 
@@ -64,13 +75,26 @@ export default function SwipeableTask({ task, onComplete, onDelete, children }) 
       return;
     }
 
-    // If swipe > 80px, snap to reveal actions
-    if (swipeOffset < -80) {
-      setSwipeOffset(-150);  // Snap to full reveal
-      setActionsRevealed(true);
+    // FIXED: Different thresholds for opening vs closing
+    if (wasClosing.current) {
+      // If user was swiping right to close, use different threshold
+      // Close if they swiped more than 40px right (offset > -110)
+      if (swipeOffset > -110) {
+        setSwipeOffset(0);  // Close
+        setActionsRevealed(false);
+      } else {
+        setSwipeOffset(-150);  // Snap back open
+        setActionsRevealed(true);
+      }
     } else {
-      setSwipeOffset(0);  // Reset
-      setActionsRevealed(false);
+      // Normal opening behavior: snap open if swiped > 80px left
+      if (swipeOffset < -80) {
+        setSwipeOffset(-150);  // Snap to full reveal
+        setActionsRevealed(true);
+      } else {
+        setSwipeOffset(0);  // Reset to closed
+        setActionsRevealed(false);
+      }
     }
     setIsSwiping(false);
   };
@@ -89,6 +113,15 @@ export default function SwipeableTask({ task, onComplete, onDelete, children }) 
     setSwipeOffset(0);
     setActionsRevealed(false);
     setTimeout(() => actionFn(), 200);  // Small delay for animation
+  };
+
+  // ADDED: Close actions when tapping outside
+  const handleBackdropClick = () => {
+    if (actionsRevealed) {
+      setSwipeOffset(0);
+      setActionsRevealed(false);
+      haptic.light();
+    }
   };
 
   return (

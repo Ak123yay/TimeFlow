@@ -238,6 +238,7 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
   // --- TIMER STATE (non-UI changes) ---
   const [activeTaskId, setActiveTaskId] = useState(null);
   const [secondsLeft, setSecondsLeft] = useState(0);
+  const [isPaused, setIsPaused] = useState(false); // NEW: Pause state
   const timerRef = useRef(null);
   // store the initial seconds at start to calculate remaining if user says "not finished"
   const activeInitialSecRef = useRef(0);
@@ -482,6 +483,19 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
   const addTask = (e) => {
     if (e && e.preventDefault) e.preventDefault();
     if (!taskName || !taskDuration) return;
+
+    // VALIDATION: Prevent scheduling tasks at times that have already passed
+    if (taskStartTime) {
+      const now = new Date();
+      const selectedTime = new Date(`${getTodayString()}T${taskStartTime}`);
+
+      if (selectedTime < now) {
+        haptic.warning();
+        alert('Cannot schedule task at a time that has already passed. Please select a future time.');
+        return;
+      }
+    }
+
     const startTime = taskStartTime || null;
     const newTask = {
       id: Date.now(),
@@ -646,11 +660,29 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
     clearInterval(timerRef.current);
   }, [tasks, setTasks, setStreak]);
 
+  // NEW: Pause/Resume handler
+  const handlePauseResume = () => {
+    setIsPaused(prev => !prev);
+    haptic.light();
+  };
+
+  // NEW: Cancel task handler
+  const handleCancelTask = () => {
+    if (!activeTaskId) return;
+
+    // Just stop the timer and reset
+    clearInterval(timerRef.current);
+    setActiveTaskId(null);
+    setSecondsLeft(0);
+    setIsPaused(false);
+    haptic.medium();
+  };
+
   // effect: ticking (creates interval when activeTaskId is set)
   useEffect(() => {
     clearInterval(timerRef.current);
 
-    if (!activeTaskId) {
+    if (!activeTaskId || isPaused) {
       return;
     }
     // if secondsLeft already <= 0, show prompt immediately
@@ -665,7 +697,7 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
 
     return () => clearInterval(timerRef.current);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeTaskId]);
+  }, [activeTaskId, isPaused]);
 
   // effect: watch secondsLeft and trigger completion when reaches 0
   useEffect(() => {
@@ -1026,7 +1058,9 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
                     background: focusModeEnabled ? '#3B6E3B' : '#F0F0F0',
                     color: focusModeEnabled ? '#fff' : '#8E8E93',
                     fontSize: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    cursor: 'pointer', touchAction: 'manipulation'
+                    cursor: 'pointer', touchAction: 'manipulation',
+                    boxShadow: focusModeEnabled ? '0 2px 8px rgba(59,110,59,0.25)' : 'none',
+                    transition: 'all 0.2s ease'
                   }}
                   aria-label="Focus mode"
                 >{focusModeEnabled ? '🎯' : '👁️'}</button>
@@ -1038,9 +1072,11 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
                     background: notificationsEnabled ? '#3B6E3B' : '#F0F0F0',
                     color: notificationsEnabled ? '#fff' : '#8E8E93',
                     fontSize: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    cursor: 'pointer', touchAction: 'manipulation'
+                    cursor: 'pointer', touchAction: 'manipulation',
+                    boxShadow: notificationsEnabled ? '0 2px 8px rgba(59,110,59,0.25)' : 'none',
+                    transition: 'all 0.2s ease'
                   }}
-                  aria-label="Notifications"
+                  aria-label="Task notifications"
                 >{notificationsEnabled ? '🔔' : '🔕'}</button>
               </div>
             </div>
@@ -1075,11 +1111,14 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
             background: '#fff', borderRadius: '16px', padding: '16px',
             marginBottom: '12px', boxShadow: '0 1px 8px rgba(0,0,0,0.05)'
           }}>
-            <TaskTimerComponent
+          <TaskTimerComponent
               activeTask={activeTask}
               secondsLeft={secondsLeft}
               totalSeconds={activeInitialSecRef.current}
               onFinishEarly={openFinishPrompt}
+              onPauseResume={handlePauseResume}
+              onCancel={handleCancelTask}
+              isPaused={isPaused}
             />
           </div>
         )}
@@ -1218,12 +1257,26 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
                 </div>
               </div>
             )}
+
+            {/* All tasks hidden/complete message */}
+            {filterForFocus(carriedTasks).length === 0 && filterForFocus(todayTasks).length === 0 && (
+              <div style={{ textAlign: 'center', padding: '40px 20px' }}>
+                <div style={{ fontSize: '36px', marginBottom: '12px' }}>✨</div>
+                <p style={{ fontSize: '15px', fontWeight: 600, color: '#1A1A1A', margin: '0 0 4px' }}>
+                  All complete!
+                </p>
+                <p style={{ fontSize: '13px', color: '#8E8E93', margin: 0 }}>
+                  {focusModeEnabled ? 'Toggle focus mode off to see completed tasks' : 'Great job finishing your tasks'}
+                </p>
+              </div>
+            )}
           </div>
         )}
 
         {/* ---- FAB ---- */}
         {!activeTask && !(focusModeEnabled && activeTaskId) && (
           <button
+            type="button"
             onClick={() => { setShowAddSheet(true); haptic.medium(); }}
             style={{
               position: 'fixed', bottom: '72px', right: '18px',
@@ -1346,7 +1399,8 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
                   borderRadius: '10px',
                   background: '#FAFAFA',
                   padding: '0 12px',
-                  boxSizing: 'border-box'
+                  boxSizing: 'border-box',
+                  gap: '8px'
                 }}>
                   <input type="date" value={taskDeadline} onChange={(e) => setTaskDeadline(e.target.value)}
                     style={{
@@ -1360,6 +1414,28 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
                       height: '100%'
                     }}
                   />
+                  {taskDeadline && (
+                    <button
+                      onClick={() => setTaskDeadline('')}
+                      style={{
+                        width: '20px',
+                        height: '20px',
+                        borderRadius: '50%',
+                        background: '#D1D5DB',
+                        color: '#fff',
+                        border: 'none',
+                        fontSize: '12px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        cursor: 'pointer',
+                        flexShrink: 0,
+                        padding: 0,
+                        lineHeight: 1
+                      }}
+                      aria-label="Clear deadline"
+                    >×</button>
+                  )}
                 </div>
               </div>
 
@@ -1380,7 +1456,7 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
               {/* Presets */}
               <div style={{ display: 'flex', gap: '6px', marginBottom: '12px', flexWrap: 'wrap' }}>
                 {[{n:"Break",d:15},{n:"Meeting",d:30},{n:"Deep Work",d:90},{n:"Email",d:20}].map(p => (
-                  <button key={p.n} onClick={() => { setTaskName(p.n); setTaskDuration(p.d.toString()); haptic.light(); }}
+                  <button type="button" key={p.n} onClick={() => { setTaskName(p.n); setTaskDuration(p.d.toString()); haptic.light(); }}
                     style={{ padding: '6px 12px', borderRadius: '99px', border: '1px solid #E5E5E5', background: '#fff', color: '#1A1A1A', fontSize: '12px', fontWeight: 500, cursor: 'pointer', touchAction: 'manipulation' }}>
                     {p.n} · {p.d}m
                   </button>
@@ -1388,7 +1464,7 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
               </div>
 
               {/* Add Button */}
-              <button onClick={() => { addTask(); setShowAddSheet(false); }}
+              <button type="button" onClick={() => { addTask(); setShowAddSheet(false); }}
                 style={{ width: '100%', padding: '14px', borderRadius: '12px', background: '#3B6E3B', color: '#fff', fontSize: '15px', fontWeight: 700, border: 'none', cursor: 'pointer', touchAction: 'manipulation' }}>
                 Add Task
               </button>
@@ -1888,6 +1964,7 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
             </div>
 
             <button
+              type="button"
               onClick={addTask}
               className="btn primary"
               style={{
@@ -1905,6 +1982,7 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
             <div className="presets horizontal-scroll" role="list">
               {[{n:"Break",d:15},{n:"Meeting",d:30},{n:"Deep Work",d:90},{n:"Email",d:20}].map(p => (
                 <button
+                  type="button"
                   key={p.n}
                   onClick={() => { setTaskName(p.n); setTaskDuration(p.d.toString()); }}
                   className="preset-pill"

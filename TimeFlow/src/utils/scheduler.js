@@ -47,6 +47,9 @@ export const detectConflicts = (tasks) => {
       // Skip if either task doesn't have timing info
       if (!t1.start || !t1.end || !t2.start || !t2.end) continue;
 
+      // FIXED: Skip if either task is completed
+      if (t1.completed || t2.completed) continue;
+
       // Check for overlap: t1 starts before t2 ends AND t1 ends after t2 starts
       const overlaps = t1.start < t2.end && t1.end > t2.start;
 

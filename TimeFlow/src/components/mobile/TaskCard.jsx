@@ -79,7 +79,11 @@ export default function TaskCard({
           color: task.completed
             ? '#fff'
             : isActive ? 'rgba(255,255,255,0.7)' : '#9CA3AF',
-          cursor: 'pointer'
+          cursor: 'pointer',
+          WebkitTapHighlightColor: 'transparent',
+          touchAction: 'manipulation',
+          transition: 'all 0.15s ease',
+          userSelect: 'none'
         }}
       >
         {task.completed ? '✓' : (task.position || '')}

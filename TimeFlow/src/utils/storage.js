@@ -215,31 +215,7 @@ export const getWeekData = (startDate) => {
   const weekData = [];
   const today = new Date().toISOString().slice(0, 10);
 
-  // OPTIMIZATION: Pre-calculate cumulative carry-over counts in single pass
-  const carryOverCounts = new Array(7).fill(0);
-  let cumulativeCarryOver = 0;
-
-  // Single pass to count carry-overs (O(n) instead of O(n²))
-  for (let i = 0; i < 7; i++) {
-    const date = new Date(start);
-    date.setDate(start.getDate() + i);
-    const dateString = date.toISOString().slice(0, 10);
-    const tasks = loadTasksForDate(dateString);
-
-    // Count unfinished tasks that will carry forward
-    const unfinishedCount = tasks.filter(t =>
-      !t.completed && !t.carriedOver && (t.remaining > 0 || t.duration > 0)
-    ).length;
-
-    // Add previous cumulative to current day
-    carryOverCounts[i] = cumulativeCarryOver +
-      tasks.filter(t => t.carriedOver && !t.completed).length;
-
-    // Accumulate for next days
-    cumulativeCarryOver += unfinishedCount;
-  }
-
-  // Build week data array with pre-calculated carry-overs
+  // Build week data array
   for (let i = 0; i < 7; i++) {
     const date = new Date(start);
     date.setDate(start.getDate() + i);
@@ -249,6 +225,9 @@ export const getWeekData = (startDate) => {
     const completed = tasks.filter(t => t.completed);
     const unfinished = tasks.filter(t => !t.completed);
 
+    // FIXED: Count only tasks that were carried TO this specific day
+    const carriedToThisDay = tasks.filter(t => t.carriedOver && !t.completed).length;
+
     weekData.push({
       date: dateString,
       dayOfWeek: date.toLocaleDateString('en-US', { weekday: 'short' }),
@@ -257,12 +236,12 @@ export const getWeekData = (startDate) => {
       taskCount: tasks.length,
       completedCount: completed.length,
       completionRate: tasks.length > 0 ? Math.round((completed.length / tasks.length) * 100) : 0,
-      carriedOverCount: carryOverCounts[i],
+      carriedOverCount: carriedToThisDay,
       unfinishedCount: unfinished.length,
       isToday: dateString === today,
       isPast: dateString < today,
       isFuture: dateString > today,
-      hasTasks: tasks.length > 0 || carryOverCounts[i] > 0
+      hasTasks: tasks.length > 0 || carriedToThisDay > 0
     });
   }
 

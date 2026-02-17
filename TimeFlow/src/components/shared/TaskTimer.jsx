@@ -8,6 +8,9 @@ export default function TaskTimer({
   secondsLeft,
   totalSeconds,
   onFinishEarly,
+  onPauseResume,
+  onCancel,
+  isPaused = false
 }) {
   if (!activeTask) return null;
 
@@ -35,9 +38,12 @@ export default function TaskTimer({
         color: '#8E8E93',
         textTransform: 'uppercase',
         letterSpacing: '0.5px',
-        marginBottom: '8px'
+        marginBottom: '8px',
+        display: 'flex',
+        alignItems: 'center',
+        gap: '6px'
       }}>
-        Now Working On
+        Now Working On {isPaused && <span style={{ color: '#D97706' }}>⏸ Paused</span>}
       </div>
 
       {/* Task Name */}
@@ -60,7 +66,7 @@ export default function TaskTimer({
           fontSize: '28px',
           fontWeight: 800,
           fontVariantNumeric: 'tabular-nums',
-          color: timerColor,
+          color: isPaused ? '#8E8E93' : timerColor,
           lineHeight: 1,
           flexShrink: 0
         }}>
@@ -78,9 +84,9 @@ export default function TaskTimer({
             <div style={{
               height: '100%',
               width: `${progressPct}%`,
-              background: timerColor,
+              background: isPaused ? '#8E8E93' : timerColor,
               borderRadius: '99px',
-              transition: 'width 1s linear'
+              transition: isPaused ? 'none' : 'width 1s linear'
             }} />
           </div>
           <div style={{
@@ -94,24 +100,72 @@ export default function TaskTimer({
         </div>
       </div>
 
-      {/* Finish Early button */}
-      <button
-        onClick={onFinishEarly}
-        style={{
-          width: '100%',
-          padding: '10px',
-          borderRadius: '10px',
-          border: '1.5px solid #E5E5E5',
-          background: '#fff',
-          color: '#1A1A1A',
-          fontSize: '13px',
-          fontWeight: 600,
-          cursor: 'pointer',
-          touchAction: 'manipulation'
-        }}
-      >
-        Finish Early
-      </button>
+      {/* Action buttons */}
+      <div style={{ display: 'flex', gap: '8px' }}>
+        {/* Pause/Resume button */}
+        <button
+          onClick={onPauseResume}
+          style={{
+            flex: 1,
+            padding: '10px',
+            borderRadius: '10px',
+            border: '1.5px solid #E5E5E5',
+            background: '#fff',
+            color: '#1A1A1A',
+            fontSize: '13px',
+            fontWeight: 600,
+            cursor: 'pointer',
+            touchAction: 'manipulation',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '6px'
+          }}
+        >
+          {isPaused ? '▶️ Resume' : '⏸ Pause'}
+        </button>
+
+        {/* Finish Early button */}
+        <button
+          onClick={onFinishEarly}
+          style={{
+            flex: 1,
+            padding: '10px',
+            borderRadius: '10px',
+            border: '1.5px solid #3B6E3B',
+            background: '#fff',
+            color: '#3B6E3B',
+            fontSize: '13px',
+            fontWeight: 600,
+            cursor: 'pointer',
+            touchAction: 'manipulation'
+          }}
+        >
+          Finish
+        </button>
+
+        {/* Cancel button */}
+        <button
+          onClick={onCancel}
+          style={{
+            width: '40px',
+            height: '40px',
+            borderRadius: '10px',
+            border: '1.5px solid #DC2626',
+            background: '#fff',
+            color: '#DC2626',
+            fontSize: '16px',
+            cursor: 'pointer',
+            touchAction: 'manipulation',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            flexShrink: 0
+          }}
+        >
+          ✕
+        </button>
+      </div>
     </div>
   );
 }

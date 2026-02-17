@@ -1,5 +1,6 @@
 import { useState } from "react";
 import "../../App.css";
+import { haptic } from "../../utils/haptics";
 
 export default function EditTaskDialog({ task, onSave, onClose }) {
   const [taskName, setTaskName] = useState(task?.name || "");
@@ -11,6 +12,19 @@ export default function EditTaskDialog({ task, onSave, onClose }) {
 
   const handleSave = () => {
     if (!taskName || !taskDuration) return;
+
+    // VALIDATION: Prevent scheduling tasks at times that have already passed
+    if (taskStartTime) {
+      const now = new Date();
+      const today = new Date().toISOString().slice(0, 10);
+      const selectedTime = new Date(`${today}T${taskStartTime}`);
+
+      if (selectedTime < now) {
+        haptic.warning();
+        alert('Cannot schedule task at a time that has already passed. Please select a future time.');
+        return;
+      }
+    }
 
     const updatedTask = {
       ...task,
@@ -170,7 +184,8 @@ export default function EditTaskDialog({ task, onSave, onClose }) {
             borderRadius: '10px',
             background: '#fff',
             padding: '0 12px',
-            boxSizing: 'border-box'
+            boxSizing: 'border-box',
+            gap: '8px'
           }}>
             <input
               type="date"
@@ -187,6 +202,28 @@ export default function EditTaskDialog({ task, onSave, onClose }) {
                 height: '100%'
               }}
             />
+            {taskDeadline && (
+              <button
+                onClick={() => setTaskDeadline('')}
+                style={{
+                  width: '20px',
+                  height: '20px',
+                  borderRadius: '50%',
+                  background: '#D1D5DB',
+                  color: '#fff',
+                  border: 'none',
+                  fontSize: '14px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  cursor: 'pointer',
+                  flexShrink: 0,
+                  padding: 0,
+                  lineHeight: 1
+                }}
+                aria-label="Clear deadline"
+              >×</button>
+            )}
           </div>
         </label>
 
