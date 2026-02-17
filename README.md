@@ -80,7 +80,7 @@ TimeFlow prevents common mistakes:
 ## Technology
 
 - **100% Offline** - Uses browser localStorage, no server needed
-- **React 18** - Modern, responsive UI
+- **React 19.2** - Modern, responsive UI
 - **Mobile-Optimized** - Touch gestures, haptic feedback, responsive design
 - **No Dependencies** - Minimal, fast, no external state management
 
