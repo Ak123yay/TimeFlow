@@ -23,6 +23,7 @@ import {
   setNotificationPreference
 } from "../utils/notifications";
 import DetailedTimeline from "./DetailedTimeline";
+import CalendarView from "./CalendarView";
 import Celebration from "./Celebration";
 import RescheduleModal from "./dialogs/RescheduleModal";
 import EditTaskDialog from "./dialogs/EditTaskDialog";
@@ -2132,15 +2133,13 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
               </div>
 
           {viewMode === 'calendar' ? (
-            <div style={{
-              borderRadius: "14px",
-              border: "1px solid rgba(111,175,111,0.15)",
-              overflow: "hidden",
-              background: "#fff",
-              animation: "fadeIn 0.3s ease-out"
-            }}>
-              <DetailedTimeline tasks={taskBlocks} availability={availability} />
-            </div>
+            <CalendarView
+              selectedDate={getTodayString()}
+              onDaySelect={(dateStr) => {
+                // TODO: Navigate to selected day or show tasks for that day
+                console.log('Selected date:', dateStr);
+              }}
+            />
           ) : (
           <div className="timeline-bar" style={{ height: "auto", minHeight: "120px", padding: "16px 12px" }}>
             {tasks.length === 0 ? (
