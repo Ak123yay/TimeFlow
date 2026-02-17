@@ -402,12 +402,27 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
   // Load unfinished tasks from previous days on mount
   useEffect(() => {
     if (hasLoadedCarryOver) return;
-    
+
     const unfinishedTasks = getUnfinishedTasksFromPreviousDays();
     if (unfinishedTasks.length > 0) {
       const todayTasks = loadTasks();
-      const rescheduled = rescheduleUnfinishedTasks(unfinishedTasks, todayTasks, availability);
-      setTasks(rescheduled);
+
+      // FIXED: Filter out carried tasks that already exist in today's tasks
+      // Check by originalDate + task name to prevent duplicates
+      const existingCarriedIds = new Set(
+        todayTasks
+          .filter(t => t.carriedOver)
+          .map(t => `${t.originalDate}-${t.name}`)
+      );
+
+      const newUnfinishedTasks = unfinishedTasks.filter(t =>
+        !existingCarriedIds.has(`${t.originalDate}-${t.name}`)
+      );
+
+      if (newUnfinishedTasks.length > 0) {
+        const rescheduled = rescheduleUnfinishedTasks(newUnfinishedTasks, todayTasks, availability);
+        setTasks(rescheduled);
+      }
       setHasLoadedCarryOver(true);
     } else {
       setHasLoadedCarryOver(true);
