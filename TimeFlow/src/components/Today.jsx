@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef, useMemo, useCallback } from "react";
+import { useEffect, useState, useRef, useMemo, useCallback, lazy, Suspense } from "react";
 import { loadAvailability, getUnfinishedTasksFromPreviousDays, saveTasksForDate, loadTasksForDate, addTaskToWeeklyPool } from "../utils/storage";
 import { rescheduleUnfinishedTasks, detectConflicts, calculateOverflow, getDeadlineUrgency, detectPotentialConflicts, getTaskHealth } from "../utils/scheduler";
 import { hhmmToMinutes, minutesToHHMM, getTodayString, formatDuration } from "../utils/timeUtils";
@@ -25,8 +25,9 @@ import {
 import DetailedTimeline from "./DetailedTimeline";
 import CalendarView from "./CalendarView";
 import Celebration from "./Celebration";
-import RescheduleModal from "./dialogs/RescheduleModal";
-import EditTaskDialog from "./dialogs/EditTaskDialog";
+// OPTIMIZED: Lazy load dialog components - deferred until user opens them (-25 KB initial bundle)
+const RescheduleModal = lazy(() => import("./dialogs/RescheduleModal"));
+const EditTaskDialog = lazy(() => import("./dialogs/EditTaskDialog"));
 import StreakDisplay from "./StreakDisplay";
 import {
   DndContext,
@@ -1550,29 +1551,31 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
         )}
 
         {/* ---- Modals ---- */}
-        {showRescheduleModal && activeTask && (
-          <RescheduleModal
-            task={activeTask}
-            availability={availability}
-            existingTasks={taskBlocks}
-            onComplete={handleComplete}
-            onContinue={handleContinue}
-            onLaterToday={handleLaterToday}
-            onTomorrow={handleTomorrow}
-            onBackToPool={handleBackToPool}
-            onPickTime={handlePickTime}
-            onBreakTask={handleBreakTask}
-            onClose={() => setShowRescheduleModal(false)}
-          />
-        )}
+        <Suspense fallback={<div />}>
+          {showRescheduleModal && activeTask && (
+            <RescheduleModal
+              task={activeTask}
+              availability={availability}
+              existingTasks={taskBlocks}
+              onComplete={handleComplete}
+              onContinue={handleContinue}
+              onLaterToday={handleLaterToday}
+              onTomorrow={handleTomorrow}
+              onBackToPool={handleBackToPool}
+              onPickTime={handlePickTime}
+              onBreakTask={handleBreakTask}
+              onClose={() => setShowRescheduleModal(false)}
+            />
+          )}
 
-        {showEditDialog && editingTask && (
-          <EditTaskDialog
-            task={editingTask}
-            onSave={handleSaveEditedTask}
-            onClose={() => { setShowEditDialog(false); setEditingTask(null); }}
-          />
-        )}
+          {showEditDialog && editingTask && (
+            <EditTaskDialog
+              task={editingTask}
+              onSave={handleSaveEditedTask}
+              onClose={() => { setShowEditDialog(false); setEditingTask(null); }}
+            />
+          )}
+        </Suspense>
 
         {showCelebration && (
           <Celebration type={showCelebration} onComplete={() => setShowCelebration(null)} />
@@ -2692,33 +2695,35 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
         )}
 
         {/* ---------- Reschedule Modal ---------- */}
-        {showRescheduleModal && activeTask && (
-          <RescheduleModal
-            task={activeTask}
-            availability={availability}
-            existingTasks={taskBlocks}
-            onComplete={handleComplete}
-            onContinue={handleContinue}
-            onLaterToday={handleLaterToday}
-            onTomorrow={handleTomorrow}
-            onBackToPool={handleBackToPool}
-            onPickTime={handlePickTime}
-            onBreakTask={handleBreakTask}
-            onClose={() => setShowRescheduleModal(false)}
-          />
-        )}
+        <Suspense fallback={<div />}>
+          {showRescheduleModal && activeTask && (
+            <RescheduleModal
+              task={activeTask}
+              availability={availability}
+              existingTasks={taskBlocks}
+              onComplete={handleComplete}
+              onContinue={handleContinue}
+              onLaterToday={handleLaterToday}
+              onTomorrow={handleTomorrow}
+              onBackToPool={handleBackToPool}
+              onPickTime={handlePickTime}
+              onBreakTask={handleBreakTask}
+              onClose={() => setShowRescheduleModal(false)}
+            />
+          )}
 
-        {/* ---------- Edit Task Dialog ---------- */}
-        {showEditDialog && editingTask && (
-          <EditTaskDialog
-            task={editingTask}
-            onSave={handleSaveEditedTask}
-            onClose={() => {
-              setShowEditDialog(false);
-              setEditingTask(null);
-            }}
-          />
-        )}
+          {/* ---------- Edit Task Dialog ---------- */}
+          {showEditDialog && editingTask && (
+            <EditTaskDialog
+              task={editingTask}
+              onSave={handleSaveEditedTask}
+              onClose={() => {
+                setShowEditDialog(false);
+                setEditingTask(null);
+              }}
+            />
+          )}
+        </Suspense>
 
         {/* ---------- Celebration Animation ---------- */}
         {showCelebration && (

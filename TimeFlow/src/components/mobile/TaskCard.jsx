@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import SwipeableTask from '../SwipeableTask';
 
 /**
@@ -14,8 +14,8 @@ export default function TaskCard({
   onEdit,
   showSwipeActions = true
 }) {
-  // Deadline urgency helper
-  const getDeadlineInfo = () => {
+  // OPTIMIZED: Memoize deadline calculation - only recalculates when deadline changes
+  const deadlineInfo = useMemo(() => {
     if (!task.deadline) return null;
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -27,9 +27,7 @@ export default function TaskCard({
     if (diffDays === 1) return { text: 'Due tomorrow', color: '#D97706' };
     if (diffDays <= 3) return { text: `${diffDays}d left`, color: '#D97706' };
     return { text: `${diffDays}d left`, color: '#8E8E93' };
-  };
-
-  const deadlineInfo = getDeadlineInfo();
+  }, [task.deadline]);
 
   const content = (
     <div
