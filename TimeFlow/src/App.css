@@ -103,6 +103,15 @@ html {
   }
 }
 
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 /* decorative vine corners */
 
 /* ---------- working corner vine art ---------- */

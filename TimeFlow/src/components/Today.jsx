@@ -23,7 +23,6 @@ import {
   setNotificationPreference
 } from "../utils/notifications";
 import DetailedTimeline from "./DetailedTimeline";
-import CalendarView from "./CalendarView";
 import Celebration from "./Celebration";
 // OPTIMIZED: Lazy load dialog components - deferred until user opens them (-25 KB initial bundle)
 const RescheduleModal = lazy(() => import("./dialogs/RescheduleModal"));
@@ -215,15 +214,6 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
     mq.addEventListener('change', handler);
     return () => mq.removeEventListener('change', handler);
   }, []);
-
-  // View mode state
-  const [viewMode, setViewMode] = useState(() => {
-    try {
-      return localStorage.getItem('preferredView') || 'list';
-    } catch {
-      return 'list';
-    }
-  });
 
   // Streak state
   const [streak, setStreak] = useState(() => loadStreak());
@@ -616,16 +606,6 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
 
     haptic.heavy(); // Haptic feedback on task deletion
     setTasks(prev => prev.filter(t => t.id !== id));
-  };
-
-  const toggleView = () => {
-    const newView = viewMode === 'list' ? 'calendar' : 'list';
-    setViewMode(newView);
-    try {
-      localStorage.setItem('preferredView', newView);
-    } catch (e) {
-      console.error('Failed to save view preference', e);
-    }
   };
 
   // ========== OPTIMIZED CALCULATIONS WITH MEMOIZATION ==========
@@ -1106,20 +1086,6 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
               </div>
               <div style={{ display: 'flex', gap: '6px' }}>
                 <button
-                  onClick={toggleView}
-                  style={{
-                    width: '34px', height: '34px', borderRadius: '10px',
-                    border: 'none',
-                    background: viewMode === 'calendar' ? '#3B6E3B' : '#F0F0F0',
-                    color: viewMode === 'calendar' ? '#fff' : '#8E8E93',
-                    fontSize: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    cursor: 'pointer', touchAction: 'manipulation',
-                    boxShadow: viewMode === 'calendar' ? '0 2px 8px rgba(59,110,59,0.25)' : 'none',
-                    transition: 'all 0.2s ease'
-                  }}
-                  aria-label="Toggle view"
-                >{viewMode === 'calendar' ? '📅' : '📋'}</button>
-                <button
                   onClick={toggleFocusMode}
                   style={{
                     width: '34px', height: '34px', borderRadius: '10px',
@@ -1239,15 +1205,7 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
         )}
 
         {/* ---- Task List / Calendar View ---- */}
-        {viewMode === 'calendar' ? (
-          <CalendarView
-            selectedDate={getTodayString()}
-            onDaySelect={(dateStr) => {
-              console.log('Selected date:', dateStr);
-            }}
-          />
-        ) : (
-        tasks.length === 0 ? (
+        {tasks.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '40px 20px' }}>
             <div style={{ fontSize: '36px', marginBottom: '12px' }}>🌱</div>
             <p style={{ fontSize: '15px', fontWeight: 600, color: '#1A1A1A', margin: '0 0 4px' }}>Start your day</p>
@@ -1348,7 +1306,6 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
               </div>
             )}
           </div>
-        )
         )}
 
         {/* ---- FAB ---- */}
@@ -1767,35 +1724,6 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
               <span>{notificationsEnabled ? "Alerts On" : "Alerts"}</span>
             </button>
 
-            <button
-              onClick={toggleView}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "8px",
-                padding: "8px 16px",
-                borderRadius: "9999px",
-                border: "1px solid rgba(111,175,111,0.3)",
-                background: "linear-gradient(135deg, rgba(167,211,167,0.1), rgba(111,175,111,0.05))",
-                color: "#3B6E3B",
-                fontSize: "14px",
-                fontWeight: "600",
-                cursor: "pointer",
-                transition: "all 0.2s ease",
-                boxShadow: "0 2px 6px rgba(59,110,59,0.06)"
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.transform = "translateY(-2px)";
-                e.currentTarget.style.boxShadow = "0 4px 12px rgba(59,110,59,0.12)";
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.transform = "translateY(0)";
-                e.currentTarget.style.boxShadow = "0 2px 6px rgba(59,110,59,0.06)";
-              }}
-            >
-              <span>{viewMode === 'list' ? '📋' : '📅'}</span>
-              <span>{viewMode === 'list' ? 'List' : 'Calendar'}</span>
-            </button>
             <div className="header-decor" aria-hidden>
               <LeafIcon size={40} fill="#3B6E3B" />
             </div>
@@ -2172,19 +2100,10 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
             <div className="timeline-wrap">
               <div className="timeline-scale">
                 <span>{availability?.start || "09:00"}</span>
-                <span>{viewMode === 'list' ? 'Your Timeline' : 'Calendar View'}</span>
+                <span>Your Timeline</span>
                 <span>{availability?.end || "17:00"}</span>
               </div>
 
-          {viewMode === 'calendar' ? (
-            <CalendarView
-              selectedDate={getTodayString()}
-              onDaySelect={(dateStr) => {
-                // TODO: Navigate to selected day or show tasks for that day
-                console.log('Selected date:', dateStr);
-              }}
-            />
-          ) : (
           <div className="timeline-bar" style={{ height: "auto", minHeight: "120px", padding: "16px 12px" }}>
             {tasks.length === 0 ? (
               <div style={{ textAlign: "center", padding: "30px 20px", opacity: 0.6 }}>
@@ -2688,7 +2607,6 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
               </DndContext>
             )}
           </div>
-          )}
         </div>
 
           </>

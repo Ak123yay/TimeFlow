@@ -13,12 +13,49 @@ import "./App.css";
 
 // Loading fallback component for lazy-loaded routes
 function LoadingFallback() {
+  // Get current time period for matching background
+  const period = getTimePeriod();
+  const periodClass = period === 'evening' || period === 'night'
+    ? 'app-night'
+    : period === 'dawn'
+    ? 'app-dawn'
+    : period === 'dusk'
+    ? 'app-dusk'
+    : '';
+
   return (
-    <div className="setup-fullscreen">
-      <div className="setup-inner" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '200px' }}>
-        <div style={{ textAlign: 'center' }}>
-          <div style={{ fontSize: '24px', marginBottom: '12px' }}>🌿</div>
-          <div style={{ color: '#3B6E3B', fontWeight: 600 }}>Loading...</div>
+    <div className={periodClass} style={{
+      minHeight: '100dvh',
+      width: '100%',
+      display: 'flex',
+      justifyContent: 'center',
+      alignItems: 'center',
+      background: period === 'evening' || period === 'night'
+        ? 'linear-gradient(135deg, #E8F4F8, #E0F0E8)'
+        : period === 'dawn'
+        ? 'linear-gradient(135deg, #FFF5F5, #F0F8F2)'
+        : period === 'dusk'
+        ? 'linear-gradient(135deg, #F5F0FF, #F0F8F2)'
+        : '#F0F8F2',
+      transition: 'background 0.3s ease'
+    }}>
+      <div style={{ textAlign: 'center' }}>
+        <div style={{
+          width: '48px',
+          height: '48px',
+          borderRadius: '50%',
+          border: '3px solid rgba(59,110,59,0.2)',
+          borderTopColor: '#3B6E3B',
+          animation: 'spin 0.8s linear infinite',
+          margin: '0 auto 16px'
+        }} />
+        <div style={{
+          color: '#3B6E3B',
+          fontWeight: 600,
+          fontSize: '15px',
+          fontFamily: 'Inter, system-ui, -apple-system, "Segoe UI", Roboto, Arial'
+        }}>
+          Loading...
         </div>
       </div>
     </div>

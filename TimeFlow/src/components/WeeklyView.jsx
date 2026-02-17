@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { getWeekData, getCurrentWeekStart, loadReflection } from "../utils/storage";
 import ReflectionViewer from "./dialogs/ReflectionViewer";
 import MobileLayout from './mobile/MobileLayout';
+import CalendarView from './CalendarView';
 import { haptic } from "../utils/haptics";
 import "../App.css";
 
@@ -18,6 +19,7 @@ export default function WeeklyView({ onBackToToday }) {
   const [weekStart, setWeekStart] = useState(getCurrentWeekStart());
   const [weekData, setWeekData] = useState([]);
   const [selectedDay, setSelectedDay] = useState(null);
+  const [viewMode, setViewMode] = useState('week'); // 'week' or 'month'
   const [isMobile, setIsMobile] = useState(() => window.matchMedia('(max-width: 768px)').matches);
 
   useEffect(() => {
@@ -75,6 +77,62 @@ export default function WeeklyView({ onBackToToday }) {
           <p style={{ fontSize: '12px', color: '#8E8E93', margin: 0 }}>Your week at a glance</p>
         </div>
 
+        {/* View Mode Toggle */}
+        <div style={{
+          display: 'flex', gap: '8px', marginBottom: '14px',
+          background: '#F0F0F0', padding: '4px', borderRadius: '10px'
+        }}>
+          <button
+            onClick={() => { haptic.light(); setViewMode('week'); }}
+            style={{
+              flex: 1, padding: '8px 14px', borderRadius: '8px',
+              border: 'none', background: viewMode === 'week' ? '#fff' : 'transparent',
+              color: viewMode === 'week' ? '#1A1A1A' : '#8E8E93',
+              fontSize: '13px', fontWeight: 700,
+              cursor: 'pointer', touchAction: 'manipulation',
+              boxShadow: viewMode === 'week' ? '0 1px 4px rgba(0,0,0,0.06)' : 'none',
+              transition: 'all 0.2s ease'
+            }}
+          >
+            Week
+          </button>
+          <button
+            onClick={() => { haptic.light(); setViewMode('month'); }}
+            style={{
+              flex: 1, padding: '8px 14px', borderRadius: '8px',
+              border: 'none', background: viewMode === 'month' ? '#fff' : 'transparent',
+              color: viewMode === 'month' ? '#1A1A1A' : '#8E8E93',
+              fontSize: '13px', fontWeight: 700,
+              cursor: 'pointer', touchAction: 'manipulation',
+              boxShadow: viewMode === 'month' ? '0 1px 4px rgba(0,0,0,0.06)' : 'none',
+              transition: 'all 0.2s ease'
+            }}
+          >
+            Month
+          </button>
+        </div>
+
+        {/* Month View - Calendar */}
+        {viewMode === 'month' && (
+          <CalendarView
+            selectedDate={selectedDay?.date}
+            onDaySelect={(date) => {
+              // Navigate to that date in today view or show reflection if available
+              const reflection = loadReflection(date);
+              if (reflection) {
+                const dayData = {
+                  date,
+                  reflection
+                };
+                setSelectedDay(dayData);
+              }
+            }}
+          />
+        )}
+
+        {/* Week View */}
+        {viewMode === 'week' && (
+          <>
         {/* Week Navigation */}
         <div style={{
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
@@ -229,6 +287,8 @@ export default function WeeklyView({ onBackToToday }) {
             </div>
           </div>
         </div>
+        </>
+        )}
 
         {selectedDay && selectedDay.reflection && (
           <ReflectionViewer

@@ -119,10 +119,12 @@ export default function TaskCard({
               <span>{task.startTime}</span>
             </>
           )}
-          {task.carriedOver && (
+          {task.carriedOver && task.originalDate && (
             <>
               <span style={{ opacity: 0.4 }}>·</span>
-              <span style={{ color: isActive ? 'rgba(255,255,255,0.7)' : '#D97706' }}>carried</span>
+              <span style={{ color: isActive ? 'rgba(255,255,255,0.7)' : '#D97706' }}>
+                from {new Date(task.originalDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+              </span>
             </>
           )}
           {task.rescheduleAttempts > 0 && (
