@@ -97,17 +97,17 @@ export default function WeeklyView({ onBackToToday }) {
         {/* View Mode Toggle */}
         <div style={{
           display: 'flex', gap: '8px', marginBottom: '14px',
-          background: '#F0F0F0', padding: '4px', borderRadius: '10px'
+          background: isDark ? '#1A1F1A' : '#F0F0F0', padding: '4px', borderRadius: '10px'
         }}>
           <button
             onClick={() => { haptic.light(); setViewMode('week'); }}
             style={{
               flex: 1, padding: '8px 14px', borderRadius: '8px',
-              border: 'none', background: viewMode === 'week' ? '#fff' : 'transparent',
-              color: viewMode === 'week' ? '#1A1A1A' : '#8E8E93',
+              border: 'none', background: viewMode === 'week' ? (isDark ? '#242B24' : '#fff') : 'transparent',
+              color: viewMode === 'week' ? (isDark ? '#E8F0E8' : '#1A1A1A') : (isDark ? '#9CA59C' : '#8E8E93'),
               fontSize: '13px', fontWeight: 700,
               cursor: 'pointer', touchAction: 'manipulation',
-              boxShadow: viewMode === 'week' ? '0 1px 4px rgba(0,0,0,0.06)' : 'none',
+              boxShadow: viewMode === 'week' ? (isDark ? '0 1px 4px rgba(0,0,0,0.3)' : '0 1px 4px rgba(0,0,0,0.06)') : 'none',
               transition: 'all 0.2s ease'
             }}
           >
@@ -117,11 +117,11 @@ export default function WeeklyView({ onBackToToday }) {
             onClick={() => { haptic.light(); setViewMode('month'); }}
             style={{
               flex: 1, padding: '8px 14px', borderRadius: '8px',
-              border: 'none', background: viewMode === 'month' ? '#fff' : 'transparent',
-              color: viewMode === 'month' ? '#1A1A1A' : '#8E8E93',
+              border: 'none', background: viewMode === 'month' ? (isDark ? '#242B24' : '#fff') : 'transparent',
+              color: viewMode === 'month' ? (isDark ? '#E8F0E8' : '#1A1A1A') : (isDark ? '#9CA59C' : '#8E8E93'),
               fontSize: '13px', fontWeight: 700,
               cursor: 'pointer', touchAction: 'manipulation',
-              boxShadow: viewMode === 'month' ? '0 1px 4px rgba(0,0,0,0.06)' : 'none',
+              boxShadow: viewMode === 'month' ? (isDark ? '0 1px 4px rgba(0,0,0,0.3)' : '0 1px 4px rgba(0,0,0,0.06)') : 'none',
               transition: 'all 0.2s ease'
             }}
           >
