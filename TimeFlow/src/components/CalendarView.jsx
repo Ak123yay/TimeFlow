@@ -8,6 +8,9 @@ import { haptic } from '../utils/haptics';
 export default function CalendarView({ onDaySelect, selectedDate }) {
   const [currentDate, setCurrentDate] = useState(() => new Date());
 
+  // Detect system color scheme
+  const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+
   // Get first day of month and total days
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth();
@@ -72,10 +75,10 @@ export default function CalendarView({ onDaySelect, selectedDate }) {
 
   return (
     <div style={{
-      background: '#fff',
+      background: isDark ? '#242B24' : '#fff',
       borderRadius: '16px',
       padding: '16px',
-      boxShadow: '0 2px 12px rgba(0,0,0,0.06)'
+      boxShadow: isDark ? '0 2px 12px rgba(0,0,0,0.3)' : '0 2px 12px rgba(0,0,0,0.06)'
     }}>
       {/* Header with navigation */}
       <div style={{
@@ -91,9 +94,9 @@ export default function CalendarView({ onDaySelect, selectedDate }) {
             width: '36px',
             height: '36px',
             borderRadius: '8px',
-            border: '1.5px solid #E5E5E5',
-            background: '#fff',
-            color: '#1A1A1A',
+            border: isDark ? '1.5px solid #6B7B6B' : '1.5px solid #E5E5E5',
+            background: isDark ? '#1A1F1A' : '#fff',
+            color: isDark ? '#E8F0E8' : '#1A1A1A',
             fontSize: '18px',
             cursor: 'pointer',
             display: 'flex',
@@ -109,7 +112,7 @@ export default function CalendarView({ onDaySelect, selectedDate }) {
           <div style={{
             fontSize: '18px',
             fontWeight: 700,
-            color: '#1A1A1A',
+            color: isDark ? '#E8F0E8' : '#1A1A1A',
             marginBottom: '2px'
           }}>
             {monthNames[month]} {year}
@@ -138,9 +141,9 @@ export default function CalendarView({ onDaySelect, selectedDate }) {
             width: '36px',
             height: '36px',
             borderRadius: '8px',
-            border: '1.5px solid #E5E5E5',
-            background: '#fff',
-            color: '#1A1A1A',
+            border: isDark ? '1.5px solid #6B7B6B' : '1.5px solid #E5E5E5',
+            background: isDark ? '#1A1F1A' : '#fff',
+            color: isDark ? '#E8F0E8' : '#1A1A1A',
             fontSize: '18px',
             cursor: 'pointer',
             display: 'flex',
@@ -275,7 +278,7 @@ export default function CalendarView({ onDaySelect, selectedDate }) {
         gap: '12px',
         marginTop: '16px',
         padding: '12px',
-        background: '#FAFAFA',
+        background: isDark ? '#1A1F1A' : '#FAFAFA',
         borderRadius: '8px',
         fontSize: '11px',
         flexWrap: 'wrap'
@@ -287,7 +290,7 @@ export default function CalendarView({ onDaySelect, selectedDate }) {
             borderRadius: '50%',
             background: '#3B6E3B'
           }} />
-          <span style={{ color: '#6B7280' }}>Complete</span>
+          <span style={{ color: isDark ? '#9CA59C' : '#6B7280' }}>Complete</span>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
           <div style={{
@@ -296,7 +299,7 @@ export default function CalendarView({ onDaySelect, selectedDate }) {
             borderRadius: '50%',
             background: '#D97706'
           }} />
-          <span style={{ color: '#6B7280' }}>In Progress</span>
+          <span style={{ color: isDark ? '#9CA59C' : '#6B7280' }}>In Progress</span>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
           <div style={{
@@ -305,7 +308,7 @@ export default function CalendarView({ onDaySelect, selectedDate }) {
             borderRadius: '50%',
             background: '#9CA3AF'
           }} />
-          <span style={{ color: '#6B7280' }}>Incomplete</span>
+          <span style={{ color: isDark ? '#9CA59C' : '#6B7280' }}>Incomplete</span>
         </div>
       </div>
     </div>

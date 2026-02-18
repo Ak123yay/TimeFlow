@@ -304,9 +304,10 @@ Task Finished?
 
 1. **Calm Productivity**: Warm, encouraging language with no guilt-inducing messages
 2. **Nature-Themed**: Forest greens, leaf icons, vine decorations create a peaceful aesthetic
-3. **Intelligent Assistance**: Learn from behavior, predict problems, suggest solutions
-4. **Progressive Disclosure**: Show complexity only when needed
-5. **Offline-First**: 100% local storage, no server dependency
+3. **Adaptive Interface**: Automatic light/dark theme based on system preferences for comfort in any lighting
+4. **Intelligent Assistance**: Learn from behavior, predict problems, suggest solutions
+5. **Progressive Disclosure**: Show complexity only when needed
+6. **Offline-First**: 100% local storage, no server dependency
 
 ### User Mental Model
 
@@ -537,7 +538,75 @@ Complete or Back to Pool
 )}
 ```
 
-### 6. Conflict Detection
+### 6. Adaptive Theming (Light/Dark Mode)
+
+**Plain English:** TimeFlow automatically matches your computer or phone's light/dark mode preference. Using dark mode at night? TimeFlow turns dark too with deep forest greens and light text. Switch to light mode? TimeFlow becomes bright and clean. No manual toggle needed - it just works.
+
+**What it does:**
+- Detects system color scheme preference automatically
+- Switches between light and dark color palettes seamlessly
+- Maintains nature-themed aesthetic in both modes
+- All components adapt instantly
+
+**Color Palettes:**
+
+**Light Mode:**
+- Background: `#F8F8F8` (light gray)
+- Cards: `#FFFFFF` (white)
+- Text: `#1A1A1A` (dark)
+- Primary: `#3B6E3B` (forest green)
+- Secondary: `#8E8E93` (gray)
+
+**Dark Mode:**
+- Background: `#1A1F1A` (deep forest night)
+- Cards: `#242B24` (dark moss)
+- Text: `#E8F0E8` (light)
+- Primary: `#6FAF6F` (lighter green for contrast)
+- Secondary: `#9CA59C` (muted gray)
+
+**Implementation:**
+```jsx
+// Detect system preference
+const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+
+// Conditional styling
+<div style={{
+  background: isDark ? '#242B24' : '#fff',
+  color: isDark ? '#E8F0E8' : '#1A1A1A'
+}}>
+```
+
+**CSS Variables Approach:**
+```css
+:root {
+  --bg: #F0F8F2;
+  --text-primary: #1A1A1A;
+  --primary: #3B6E3B;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #1A1F1A;
+    --text-primary: #E8F0E8;
+    --primary: #6FAF6F;
+  }
+}
+```
+
+**Affected Components:**
+- Mobile layout and bottom navigation
+- All cards (hero, stat pills, task cards)
+- Calendar views (daily and monthly)
+- Form inputs and bottom sheets
+- Task cards and timers
+
+**Benefits:**
+- Reduces eye strain in low-light environments
+- Respects user's system-wide preference
+- No manual switching required
+- Consistent experience across all devices
+
+### 7. Conflict Detection
 
 **Plain English:** TimeFlow won't let you schedule two things at the same time. Try to add "Meeting" from 2-3 PM when "Write report" is already 2-3 PM? It blocks you with an error. Even warns if tasks are back-to-back with no breathing room ("You have no break between these two tasks - add 5-10 minutes?").
 
@@ -588,7 +657,7 @@ export const detectPotentialConflicts = (newTask, existingTasks) => {
 - **Warnings:** Shows confirm dialog, allows override
 - **Visual:** Amber border on conflicting tasks
 
-### 7. Overflow Detection
+### 8. Overflow Detection
 
 **Plain English:** If you try to fit 10 hours of tasks into an 8-hour workday, TimeFlow calls you out. It shows a big warning banner: "You're 2 hours over capacity." This forces you to be realistic - either remove tasks, shorten them, or admit you won't finish everything today.
 
@@ -627,7 +696,7 @@ const calculateTimeBalance = () => {
 - **Critical (120+ min over):** 🚨 Red banner
 - Shows exact overflow amount: "2h 15min over capacity"
 
-### 8. Deadline Management
+### 9. Deadline Management
 
 **Plain English:** Set a deadline on a task (like "File taxes by April 15") and TimeFlow automatically makes it more urgent as the date approaches. Task due today gets bumped to highest priority. Overdue tasks show a red "OVERDUE" badge so you can't ignore them.
 
@@ -684,7 +753,7 @@ useEffect(() => {
 }, [tasks]);
 ```
 
-### 9. Carry-Over System
+### 10. Carry-Over System
 
 **Plain English:** Didn't finish a task today? It automatically appears in tomorrow's list with an orange background and a "from Feb 14" badge. This keeps unfinished tasks visible without you manually copying them. The attempt counter goes up so TimeFlow can warn you if you're chronically avoiding something.
 
@@ -722,7 +791,7 @@ saveTasksForDate(tomorrowDate, carriedOverTasks);
 - Separate section header: "🍂 Carried from previous days"
 - Higher visibility to encourage completion
 
-### 10. End-of-Day Reflection
+### 11. End-of-Day Reflection
 
 **What it does:**
 - Review day's completion stats
@@ -753,7 +822,7 @@ saveTasksForDate(tomorrowDate, carriedOverTasks);
 - Click day card to view full reflection
 - Modal displays stats, mood, and reflection text
 
-### 11. Weekly Calendar View
+### 12. Weekly Calendar View
 
 **What it does:**
 - 7-day overview of current week
@@ -774,7 +843,7 @@ saveTasksForDate(tomorrowDate, carriedOverTasks);
 }
 ```
 
-### 12. Analytics & Learning
+### 13. Analytics & Learning
 
 **What it does:**
 - Tracks task completion patterns
@@ -806,7 +875,7 @@ const completeTask = (taskId) => {
 - "You complete 85% of tasks scheduled before noon"
 - "You prefer 'Tomorrow' 70% of the time - suggesting it first"
 
-### 13. Drag-and-Drop Reordering
+### 14. Drag-and-Drop Reordering
 
 **What it does:**
 - Reorder tasks by dragging
@@ -848,7 +917,7 @@ const handleDragEnd = (event) => {
 };
 ```
 
-### 14. Timer & Tracking
+### 15. Timer & Tracking
 
 **What it does:**
 - Countdown timer for active task
@@ -916,7 +985,7 @@ const cancelTask = () => {
 - All time data stored for analytics
 - Cancel allows abandoning tasks without penalty
 
-### 15. Mobile Swipe Gestures
+### 16. Mobile Swipe Gestures
 
 **Plain English:** On mobile, swipe left on any task to reveal action buttons (Complete ✓ and Delete 🗑️). Swipe further to snap them open, or swipe right to close them. It's like iOS Mail's swipe-to-delete, but for task actions.
 
@@ -967,7 +1036,7 @@ const handleTouchMove = (e) => {
 - `src/components/SwipeableTask.jsx` - Swipe gesture wrapper
 - Integrated with mobile task cards in `Today.jsx`
 
-### 16. Monthly Calendar View
+### 17. Monthly Calendar View
 
 **Plain English:** See your entire month at a glance with a clean calendar grid. Each day shows colored dots indicating task completion status (green = all done, orange = in progress, gray = incomplete). Navigate between months, jump to today, and tap any day to see its tasks.
 
@@ -1036,7 +1105,7 @@ const indicatorColor = completionRate === 1
 - `src/components/CalendarView.jsx` - Monthly calendar component
 - Integrated into `Today.jsx` with view mode toggle
 
-### 17. Data Validation & Safety
+### 18. Data Validation & Safety
 
 **Plain English:** TimeFlow prevents common mistakes like scheduling tasks in the past, creating duplicate carried tasks, or booking overlapping appointments. It validates your input to keep your schedule logical and error-free.
 
@@ -1109,7 +1178,7 @@ const deleteTask = (id) => {
 - Duplicate prevention (carried tasks)
 - Data consistency across dates
 
-### 18. Gentle Streaks & Mindful Gamification 🌿
+### 19. Gentle Streaks & Mindful Gamification 🌿
 - Tracks daily engagement streak
 - Visual plant growth as streak increases
 - Non-punitive grace period system

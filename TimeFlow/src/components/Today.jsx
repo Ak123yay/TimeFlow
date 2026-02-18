@@ -1048,6 +1048,9 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
 
   // ==================== MOBILE RENDER ====================
   if (isMobile) {
+    // Detect system color scheme for mobile
+    const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+
     const handleMobileNav = (tab) => {
       haptic.light();
       if (tab === 'week') onShowWeek();
@@ -1089,17 +1092,17 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
         {/* ---- Hero Card ---- */}
         {!activeTask ? (
           <div style={{
-            background: '#fff',
+            background: isDark ? '#242B24' : '#fff',
             borderRadius: '16px',
             padding: '16px',
             marginBottom: '12px',
-            boxShadow: '0 1px 8px rgba(0,0,0,0.05)'
+            boxShadow: isDark ? '0 1px 8px rgba(0,0,0,0.3)' : '0 1px 8px rgba(0,0,0,0.05)'
           }}>
             {/* Top row: greeting + toggles */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '10px' }}>
               <div>
-                <p style={{ fontSize: '12px', color: '#8E8E93', margin: 0, fontWeight: 500 }}>{greeting}</p>
-                <h1 style={{ fontSize: '20px', fontWeight: 800, color: '#1A1A1A', margin: '2px 0 0', letterSpacing: '-0.3px' }}>
+                <p style={{ fontSize: '12px', color: isDark ? '#9CA59C' : '#8E8E93', margin: 0, fontWeight: 500 }}>{greeting}</p>
+                <h1 style={{ fontSize: '20px', fontWeight: 800, color: isDark ? '#E8F0E8' : '#1A1A1A', margin: '2px 0 0', letterSpacing: '-0.3px' }}>
                   Today's Flow
                 </h1>
               </div>
@@ -1109,8 +1112,8 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
                   style={{
                     width: '34px', height: '34px', borderRadius: '10px',
                     border: 'none',
-                    background: viewMode === 'calendar' ? '#3B6E3B' : '#F0F0F0',
-                    color: viewMode === 'calendar' ? '#fff' : '#8E8E93',
+                    background: viewMode === 'calendar' ? '#3B6E3B' : (isDark ? '#1A1F1A' : '#F0F0F0'),
+                    color: viewMode === 'calendar' ? '#fff' : (isDark ? '#9CA59C' : '#8E8E93'),
                     fontSize: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center',
                     cursor: 'pointer', touchAction: 'manipulation',
                     boxShadow: viewMode === 'calendar' ? '0 2px 8px rgba(59,110,59,0.25)' : 'none',
@@ -1123,8 +1126,8 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
                   style={{
                     width: '34px', height: '34px', borderRadius: '10px',
                     border: 'none',
-                    background: focusModeEnabled ? '#3B6E3B' : '#F0F0F0',
-                    color: focusModeEnabled ? '#fff' : '#8E8E93',
+                    background: focusModeEnabled ? '#3B6E3B' : (isDark ? '#1A1F1A' : '#F0F0F0'),
+                    color: focusModeEnabled ? '#fff' : (isDark ? '#9CA59C' : '#8E8E93'),
                     fontSize: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center',
                     cursor: 'pointer', touchAction: 'manipulation',
                     boxShadow: focusModeEnabled ? '0 2px 8px rgba(59,110,59,0.25)' : 'none',
@@ -1137,8 +1140,8 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
                   style={{
                     width: '34px', height: '34px', borderRadius: '10px',
                     border: 'none',
-                    background: notificationsEnabled ? '#3B6E3B' : '#F0F0F0',
-                    color: notificationsEnabled ? '#fff' : '#8E8E93',
+                    background: notificationsEnabled ? '#3B6E3B' : (isDark ? '#1A1F1A' : '#F0F0F0'),
+                    color: notificationsEnabled ? '#fff' : (isDark ? '#9CA59C' : '#8E8E93'),
                     fontSize: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center',
                     cursor: 'pointer', touchAction: 'manipulation',
                     boxShadow: notificationsEnabled ? '0 2px 8px rgba(59,110,59,0.25)' : 'none',
@@ -1153,10 +1156,10 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
             {tasks.length > 0 && (
               <div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
-                  <span style={{ fontSize: '11px', color: '#8E8E93', fontWeight: 500 }}>{completedCount} of {tasks.length} tasks</span>
+                  <span style={{ fontSize: '11px', color: isDark ? '#9CA59C' : '#8E8E93', fontWeight: 500 }}>{completedCount} of {tasks.length} tasks</span>
                   <span style={{ fontSize: '11px', color: '#3B6E3B', fontWeight: 700 }}>{progressPercent}%</span>
                 </div>
-                <div style={{ height: '5px', background: '#F0F0F0', borderRadius: '99px', overflow: 'hidden' }}>
+                <div style={{ height: '5px', background: isDark ? 'rgba(107,123,107,0.3)' : '#F0F0F0', borderRadius: '99px', overflow: 'hidden' }}>
                   <div style={{
                     height: '100%', width: `${progressPercent}%`,
                     background: '#3B6E3B', borderRadius: '99px', transition: 'width 0.4s ease'
@@ -1176,8 +1179,8 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
         ) : (
           /* Active Timer Hero */
           <div style={{
-            background: '#fff', borderRadius: '16px', padding: '16px',
-            marginBottom: '12px', boxShadow: '0 1px 8px rgba(0,0,0,0.05)'
+            background: isDark ? '#242B24' : '#fff', borderRadius: '16px', padding: '16px',
+            marginBottom: '12px', boxShadow: isDark ? '0 1px 8px rgba(0,0,0,0.3)' : '0 1px 8px rgba(0,0,0,0.05)'
           }}>
           <TaskTimerComponent
               activeTask={activeTask}
@@ -1214,12 +1217,12 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
             ].map((pill, i) => (
               <div key={i} style={{
                 flex: 1, padding: '10px 8px',
-                background: pill.warn ? 'rgba(220,38,38,0.05)' : '#fff',
-                borderRadius: '12px', boxShadow: '0 1px 4px rgba(0,0,0,0.04)',
+                background: pill.warn ? 'rgba(220,38,38,0.05)' : (isDark ? '#242B24' : '#fff'),
+                borderRadius: '12px', boxShadow: isDark ? '0 1px 4px rgba(0,0,0,0.2)' : '0 1px 4px rgba(0,0,0,0.04)',
                 textAlign: 'center'
               }}>
-                <div style={{ fontSize: '14px', fontWeight: 700, color: pill.warn ? '#DC2626' : '#1A1A1A' }}>{pill.label}</div>
-                <div style={{ fontSize: '10px', color: pill.warn ? '#DC2626' : '#8E8E93', fontWeight: 500, marginTop: '1px' }}>{pill.sub}</div>
+                <div style={{ fontSize: '14px', fontWeight: 700, color: pill.warn ? '#DC2626' : (isDark ? '#E8F0E8' : '#1A1A1A') }}>{pill.label}</div>
+                <div style={{ fontSize: '10px', color: pill.warn ? '#DC2626' : (isDark ? '#9CA59C' : '#8E8E93'), fontWeight: 500, marginTop: '1px' }}>{pill.sub}</div>
               </div>
             ))}
           </div>
@@ -1256,8 +1259,8 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
         ) : tasks.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '40px 20px' }}>
             <div style={{ fontSize: '36px', marginBottom: '12px' }}>🌱</div>
-            <p style={{ fontSize: '15px', fontWeight: 600, color: '#1A1A1A', margin: '0 0 4px' }}>Start your day</p>
-            <p style={{ fontSize: '13px', color: '#8E8E93', margin: 0 }}>Tap + to add your first task</p>
+            <p style={{ fontSize: '15px', fontWeight: 600, color: isDark ? '#E8F0E8' : '#1A1A1A', margin: '0 0 4px' }}>Start your day</p>
+            <p style={{ fontSize: '13px', color: isDark ? '#9CA59C' : '#8E8E93', margin: 0 }}>Tap + to add your first task</p>
           </div>
         ) : (
           <div>
@@ -1405,10 +1408,10 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
             {filterForFocus(carriedTasks).length === 0 && filterForFocus(todayTasks).length === 0 && (
               <div style={{ textAlign: 'center', padding: '40px 20px' }}>
                 <div style={{ fontSize: '36px', marginBottom: '12px' }}>✨</div>
-                <p style={{ fontSize: '15px', fontWeight: 600, color: '#1A1A1A', margin: '0 0 4px' }}>
+                <p style={{ fontSize: '15px', fontWeight: 600, color: isDark ? '#E8F0E8' : '#1A1A1A', margin: '0 0 4px' }}>
                   All complete!
                 </p>
-                <p style={{ fontSize: '13px', color: '#8E8E93', margin: 0 }}>
+                <p style={{ fontSize: '13px', color: isDark ? '#9CA59C' : '#8E8E93', margin: 0 }}>
                   {focusModeEnabled ? 'Toggle focus mode off to see completed tasks' : 'Great job finishing your tasks'}
                 </p>
               </div>
@@ -1444,13 +1447,13 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
             }} />
             <div style={{
               position: 'fixed', bottom: 'calc(56px + env(safe-area-inset-bottom))', left: 0, right: 0,
-              background: '#fff', borderRadius: '18px 18px 0 0',
+              background: isDark ? '#242B24' : '#fff', borderRadius: '18px 18px 0 0',
               padding: '14px 18px 20px',
-              zIndex: 1001, boxShadow: '0 -4px 20px rgba(0,0,0,0.1)',
+              zIndex: 1001, boxShadow: isDark ? '0 -4px 20px rgba(0,0,0,0.5)' : '0 -4px 20px rgba(0,0,0,0.1)',
               maxHeight: 'calc(80vh - 56px - env(safe-area-inset-bottom))', overflowY: 'auto', animation: 'slideUp 0.3s ease-out'
             }}>
-              <div style={{ width: '32px', height: '4px', background: '#D1D5DB', borderRadius: '99px', margin: '0 auto 12px' }} />
-              <h3 style={{ fontSize: '16px', fontWeight: 700, color: '#1A1A1A', margin: '0 0 12px', textAlign: 'center' }}>New Task</h3>
+              <div style={{ width: '32px', height: '4px', background: isDark ? '#6B7B6B' : '#D1D5DB', borderRadius: '99px', margin: '0 auto 12px' }} />
+              <h3 style={{ fontSize: '16px', fontWeight: 700, color: isDark ? '#E8F0E8' : '#1A1A1A', margin: '0 0 12px', textAlign: 'center' }}>New Task</h3>
 
               {/* Name */}
               <input
@@ -1464,7 +1467,8 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
                   padding: '0 14px',
                   border: '1.5px solid #E5E5E5',
                   borderRadius: '10px',
-                  background: '#FAFAFA',
+                  background: isDark ? '#1A1F1A' : '#FAFAFA',
+                  color: isDark ? '#E8F0E8' : '#1A1A1A',
                   outline: 'none',
                   marginBottom: '10px'
                 }}
@@ -1475,14 +1479,14 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
               {/* Time + Duration row */}
               <div style={{ display: 'flex', gap: '8px', marginBottom: '10px' }}>
                 <div style={{ flex: 1 }}>
-                  <label style={{ fontSize: '11px', fontWeight: 600, color: '#8E8E93', marginBottom: '6px', display: 'block' }}>Start</label>
+                  <label style={{ fontSize: '11px', fontWeight: 600, color: isDark ? '#9CA59C' : '#8E8E93', marginBottom: '6px', display: 'block' }}>Start</label>
                   <div style={{
                     display: 'flex',
                     alignItems: 'center',
                     height: '44px',
                     border: '1.5px solid #E5E5E5',
                     borderRadius: '10px',
-                    background: '#FAFAFA',
+                    background: isDark ? '#1A1F1A' : '#FAFAFA',
                     padding: '0 12px',
                     boxSizing: 'border-box'
                   }}>
@@ -1494,6 +1498,7 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
                         outline: 'none',
                         flex: 1,
                         background: 'transparent',
+                        color: isDark ? '#E8F0E8' : '#1A1A1A',
                         width: '100%',
                         height: '100%'
                       }}
@@ -1501,14 +1506,14 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
                   </div>
                 </div>
                 <div style={{ flex: 1 }}>
-                  <label style={{ fontSize: '11px', fontWeight: 600, color: '#8E8E93', marginBottom: '6px', display: 'block' }}>Duration</label>
+                  <label style={{ fontSize: '11px', fontWeight: 600, color: isDark ? '#9CA59C' : '#8E8E93', marginBottom: '6px', display: 'block' }}>Duration</label>
                   <div style={{
                     display: 'flex',
                     alignItems: 'center',
                     height: '44px',
                     border: '1.5px solid #E5E5E5',
                     borderRadius: '10px',
-                    background: '#FAFAFA',
+                    background: isDark ? '#1A1F1A' : '#FAFAFA',
                     padding: '0 12px',
                     boxSizing: 'border-box'
                   }}>
@@ -1521,26 +1526,27 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
                         outline: 'none',
                         flex: 1,
                         background: 'transparent',
+                        color: isDark ? '#E8F0E8' : '#1A1A1A',
                         textAlign: 'center',
                         width: '100%',
                         height: '100%'
                       }}
                     />
-                    <span style={{ color: '#8E8E93', fontSize: '12px', fontWeight: 500, marginLeft: '4px', flexShrink: 0 }}>min</span>
+                    <span style={{ color: isDark ? '#9CA59C' : '#8E8E93', fontSize: '12px', fontWeight: 500, marginLeft: '4px', flexShrink: 0 }}>min</span>
                   </div>
                 </div>
               </div>
 
               {/* Deadline */}
               <div style={{ marginBottom: '10px' }}>
-                <label style={{ fontSize: '11px', fontWeight: 600, color: '#8E8E93', marginBottom: '6px', display: 'block' }}>Deadline (optional)</label>
+                <label style={{ fontSize: '11px', fontWeight: 600, color: isDark ? '#9CA59C' : '#8E8E93', marginBottom: '6px', display: 'block' }}>Deadline (optional)</label>
                 <div style={{
                   display: 'flex',
                   alignItems: 'center',
                   height: '44px',
                   border: '1.5px solid #E5E5E5',
                   borderRadius: '10px',
-                  background: '#FAFAFA',
+                  background: isDark ? '#1A1F1A' : '#FAFAFA',
                   padding: '0 12px',
                   boxSizing: 'border-box',
                   gap: '8px'
@@ -1553,6 +1559,7 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
                       outline: 'none',
                       flex: 1,
                       background: 'transparent',
+                      color: isDark ? '#E8F0E8' : '#1A1A1A',
                       width: '100%',
                       height: '100%'
                     }}
@@ -1600,7 +1607,7 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
               <div style={{ display: 'flex', gap: '6px', marginBottom: '12px', flexWrap: 'wrap' }}>
                 {[{n:"Break",d:15},{n:"Meeting",d:30},{n:"Deep Work",d:90},{n:"Email",d:20}].map(p => (
                   <button type="button" key={p.n} onClick={() => { setTaskName(p.n); setTaskDuration(p.d.toString()); haptic.light(); }}
-                    style={{ padding: '6px 12px', borderRadius: '99px', border: '1px solid #E5E5E5', background: '#fff', color: '#1A1A1A', fontSize: '12px', fontWeight: 500, cursor: 'pointer', touchAction: 'manipulation' }}>
+                    style={{ padding: '6px 12px', borderRadius: '99px', border: `1px solid ${isDark ? '#6B7B6B' : '#E5E5E5'}`, background: isDark ? '#1A1F1A' : '#fff', color: isDark ? '#E8F0E8' : '#1A1A1A', fontSize: '12px', fontWeight: 500, cursor: 'pointer', touchAction: 'manipulation' }}>
                     {p.n} · {p.d}m
                   </button>
                 ))}

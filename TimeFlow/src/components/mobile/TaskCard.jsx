@@ -14,6 +14,9 @@ export default function TaskCard({
   onEdit,
   showSwipeActions = true
 }) {
+  // Detect system color scheme
+  const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+
   // OPTIMIZED: Memoize deadline calculation - only recalculates when deadline changes
   const deadlineInfo = useMemo(() => {
     if (!task.deadline) return null;
@@ -39,12 +42,12 @@ export default function TaskCard({
         padding: '14px 16px',
         minHeight: '60px',
         borderRadius: '14px',
-        background: isActive ? '#3B6E3B' : '#fff',
+        background: isActive ? '#3B6E3B' : (isDark ? '#242B24' : '#fff'),
         boxShadow: isActive
           ? '0 4px 16px rgba(59,110,59,0.25)'
-          : task.conflicts ? '0 1px 8px rgba(220,38,38,0.12)' : '0 1px 6px rgba(0,0,0,0.05)',
+          : task.conflicts ? '0 1px 8px rgba(220,38,38,0.12)' : (isDark ? '0 1px 6px rgba(0,0,0,0.3)' : '0 1px 6px rgba(0,0,0,0.05)'),
         transition: 'all 0.2s ease',
-        color: isActive ? '#fff' : '#1A1A1A',
+        color: isActive ? '#fff' : (isDark ? '#E8F0E8' : '#1A1A1A'),
         cursor: 'pointer',
         WebkitTapHighlightColor: 'transparent',
         opacity: task.completed ? 0.5 : 1
@@ -93,7 +96,7 @@ export default function TaskCard({
           fontSize: '14px',
           fontWeight: 600,
           lineHeight: 1.3,
-          color: isActive ? '#fff' : task.completed ? '#9CA3AF' : '#1A1A1A',
+          color: isActive ? '#fff' : task.completed ? (isDark ? '#6B7B6B' : '#9CA3AF') : (isDark ? '#E8F0E8' : '#1A1A1A'),
           textDecoration: task.completed ? 'line-through' : 'none',
           overflow: 'hidden',
           textOverflow: 'ellipsis',
@@ -109,7 +112,7 @@ export default function TaskCard({
           gap: '5px',
           marginTop: '2px',
           fontSize: '11px',
-          color: isActive ? 'rgba(255,255,255,0.7)' : '#8E8E93',
+          color: isActive ? 'rgba(255,255,255,0.7)' : (isDark ? '#9CA59C' : '#8E8E93'),
           flexWrap: 'wrap'
         }}>
           <span>{task.duration}m</span>

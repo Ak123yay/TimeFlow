@@ -15,6 +15,8 @@ TimeFlow prevents this by:
 - **Early warnings** - Get alerted when you're overbooked before the day starts
 - **Smart rescheduling** - 7 intelligent options when tasks take longer than expected
 - **Pattern learning** - Tracks which tasks you avoid and which take longer than planned
+- **Adaptive UI** - Light/dark mode based on your system preferences
+- **First-time guidance** - Helpful tooltips when you first visit each feature
 
 ## Core Features
 
@@ -30,6 +32,11 @@ When a task timer ends and you're not done, choose from 7 smart options:
 - **Back to Pool** - Returns to idea bucket (guilt-free)
 - **Pick Time** - Choose custom time
 - **Break Task** - Splits into smaller pieces (appears after 3+ delays)
+
+### ↩️ Flexible Task Management
+- **Toggle completion status** - Accidentally marked complete? Click again to uncheck
+- **Carried task tracking** - Shows original date ("from Feb 14") for carried tasks
+- **Cross-date synchronization** - Completing carried tasks updates the original date
 
 ### 📊 Task Health Assessment
 Each task gets a health score based on:
@@ -53,8 +60,18 @@ Press 'F' to hide everything except your active task and timer. Minimalist, dist
 Built for mobile with:
 - **Swipe gestures** - Swipe left to reveal Complete ✓ and Delete 🗑️ buttons
 - **Touch-optimized** - Large hit targets and haptic feedback
-- **Monthly calendar** - See your month at a glance with task completion indicators
+- **Daily calendar** - See today's date prominently with progress stats
+- **Monthly calendar** - Available in Week tab - see your full month at a glance
 - **Timer controls** - Pause/resume and cancel buttons for active tasks
+- **Bottom navigation** - Always accessible 5-tab navigation
+- **First-time tooltips** - Friendly guidance cards on first visit to each feature
+- **Dark mode** - Automatic light/dark theme based on system preferences
+
+### 📅 Weekly Overview
+- **Week/Month toggle** - Switch between weekly breakdown and monthly calendar
+- **Reflection viewing** - Tap days with reflection badges to view past reflections
+- **Task statistics** - See completion rates and task counts per day
+- **Carried task tracking** - View how many tasks were carried each day
 
 ### 🌿 Gentle Streaks
 Track consistency with a growing plant metaphor. Miss a day? Get 1 grace day per week. Miss 2 days? Your streak pauses (not lost) giving you one more chance. No toxic pressure - just gentle encouragement.
@@ -67,6 +84,18 @@ TimeFlow prevents common mistakes:
 - Validates required fields and number ranges
 - Safe deletion with cross-date state management
 
+### 🌓 Adaptive Theming
+- **System-based** - Automatically switches between light and dark mode
+- **Nature-inspired** - Forest greens in both themes
+- **Dark mode palette** - Deep forest night colors with lighter accents
+- **Seamless transitions** - All components adapt automatically
+
+### 💡 First-Time Experience
+- **Contextual tooltips** - Brief, helpful guidance when visiting features for the first time
+- **Dismissible** - Mark as seen with "Got it" button
+- **Persistent** - Never shows again once dismissed
+- **5 key areas**: Today, Week, Pool, Stats (Reflection), and Streak
+
 ## How It Works
 
 **Morning:** Open TimeFlow → See carried-over tasks → Add new tasks with times → Review visual timeline → Adjust if overbooked
@@ -75,7 +104,7 @@ TimeFlow prevents common mistakes:
 
 **Evening:** Click "End Day" → Review completion stats → Write reflection → Decide what to carry over
 
-**Weekly Review:** Check weekly calendar → Review patterns → Adjust future planning
+**Weekly Review:** Check weekly calendar → Toggle to month view → Review patterns → Adjust future planning
 
 ## Technology
 
@@ -83,6 +112,8 @@ TimeFlow prevents common mistakes:
 - **React 19.2** - Modern, responsive UI
 - **Mobile-Optimized** - Touch gestures, haptic feedback, responsive design
 - **No Dependencies** - Minimal, fast, no external state management
+- **CSS Variables** - Dynamic theming with system preference detection
+- **Lazy Loading** - Optimized code splitting for fast initial load
 
 ## Key Differentiators
 
@@ -95,6 +126,8 @@ TimeFlow prevents common mistakes:
 | Task deletion = failure | Back to Pool = low-pressure deferral |
 | Toxic streaks | Gentle streaks with grace periods |
 | Generic design | Nature-themed calm productivity |
+| Static appearance | Adaptive light/dark mode |
+| No guidance | First-time tooltips |
 
 ## Perfect For
 
@@ -104,24 +137,31 @@ TimeFlow prevents common mistakes:
 - Individuals seeking a calmer, more intentional productivity system
 - Remote workers managing their own schedules
 - Students balancing multiple projects with deadlines
+- Users who prefer dark mode for late-night planning
 
 ## Philosophy
 
 TimeFlow embraces **calm productivity** over hustle culture:
 - Warm, encouraging language (no guilt-inducing messages)
 - Nature-themed design (forest greens, growing plants)
+- Adaptive dark theme for comfort in any lighting
 - Realistic planning over wishful thinking
 - Learning from patterns rather than forcing discipline
 - Progress over perfection
+- Gentle guidance for first-time users
 
 ## Quick Stats
 
 - **7 rescheduling options** intelligently suggested
 - **3-tier health system** (healthy, warning, critical)
-- **Monthly calendar view** with completion indicators
+- **Toggle completion** - Uncheck tasks if marked by mistake
+- **Daily + Monthly calendars** - Daily view in Today, monthly in Week
 - **Bidirectional swipe gestures** for mobile task actions
 - **Pause/resume/cancel** timer controls
 - **Cross-date validation** prevents scheduling mistakes
+- **Automatic theming** - Light/dark based on system
+- **5 first-time tooltips** - Helpful guidance on first use
+- **Persistent bottom nav** - Always accessible navigation
 
 ## Get Started
 
@@ -131,6 +171,8 @@ TimeFlow embraces **calm productivity** over hustle culture:
 4. Complete first-time setup (set work hours)
 5. Add your first task with a time
 6. Start the timer and begin flowing through your day
+
+**Tip:** Your system's light/dark mode preference will be automatically applied!
 
 ---
 
