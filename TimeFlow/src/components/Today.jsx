@@ -23,7 +23,7 @@ import {
   setNotificationPreference
 } from "../utils/notifications";
 import DetailedTimeline from "./DetailedTimeline";
-import CalendarView from "./CalendarView";
+import DailyCalendar from "./DailyCalendar";
 import Celebration from "./Celebration";
 import FirstTimeTooltip from "./FirstTimeTooltip";
 import { hasSeenTooltip, markTooltipSeen, TOOLTIP_CONTENT } from "../utils/firstTimeTooltips";
@@ -1252,15 +1252,7 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
 
         {/* ---- Task List / Calendar View ---- */}
         {viewMode === 'calendar' ? (
-          <CalendarView
-            selectedDate={getTodayString()}
-            onDaySelect={(dateStr) => {
-              // When selecting a date, switch to list view and potentially navigate to that date
-              console.log('Selected date:', dateStr);
-              setViewMode('list');
-              // Future: could navigate to that specific date
-            }}
-          />
+          <DailyCalendar />
         ) : tasks.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '40px 20px' }}>
             <div style={{ fontSize: '36px', marginBottom: '12px' }}>🌱</div>
@@ -1293,23 +1285,42 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
                       isActive={activeTaskId === task.id}
                       onStart={() => startTask(task)}
                       onComplete={() => {
-                        haptic.success();
-                        const completedTask = task;
-                        setTasks(prev => prev.map(t =>
-                          t.id === task.id ? { ...t, completed: true, remaining: 0, completedAt: new Date().toISOString() } : t
-                        ));
+                        const isCurrentlyCompleted = task.completed;
 
-                        // FIXED: If completing a carried task, mark it as completed in original date
-                        if (completedTask.carriedOver && completedTask.originalDate) {
-                          const originalTasks = loadTasksForDate(completedTask.originalDate);
-                          const updatedOriginalTasks = originalTasks.map(t =>
-                            t.name === completedTask.name ? { ...t, completed: true, remaining: 0 } : t
-                          );
-                          saveTasksForDate(completedTask.originalDate, updatedOriginalTasks);
+                        if (isCurrentlyCompleted) {
+                          // Uncomplete the task
+                          haptic.light();
+                          setTasks(prev => prev.map(t =>
+                            t.id === task.id ? { ...t, completed: false, remaining: task.duration, completedAt: null } : t
+                          ));
+
+                          // If uncompleting a carried task, mark it as incomplete in original date
+                          if (task.carriedOver && task.originalDate) {
+                            const originalTasks = loadTasksForDate(task.originalDate);
+                            const updatedOriginalTasks = originalTasks.map(t =>
+                              t.name === task.name ? { ...t, completed: false, remaining: t.duration } : t
+                            );
+                            saveTasksForDate(task.originalDate, updatedOriginalTasks);
+                          }
+                        } else {
+                          // Complete the task
+                          haptic.success();
+                          setTasks(prev => prev.map(t =>
+                            t.id === task.id ? { ...t, completed: true, remaining: 0, completedAt: new Date().toISOString() } : t
+                          ));
+
+                          // If completing a carried task, mark it as completed in original date
+                          if (task.carriedOver && task.originalDate) {
+                            const originalTasks = loadTasksForDate(task.originalDate);
+                            const updatedOriginalTasks = originalTasks.map(t =>
+                              t.name === task.name ? { ...t, completed: true, remaining: 0 } : t
+                            );
+                            saveTasksForDate(task.originalDate, updatedOriginalTasks);
+                          }
+
+                          setShowCelebration('task');
+                          setTimeout(() => setShowCelebration(null), 3000);
                         }
-
-                        setShowCelebration('task');
-                        setTimeout(() => setShowCelebration(null), 3000);
                       }}
                       onDelete={() => deleteTask(task.id)}
                       onEdit={() => handleEditTask(task)}
@@ -1344,23 +1355,42 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
                       isActive={activeTaskId === task.id}
                       onStart={() => startTask(task)}
                       onComplete={() => {
-                        haptic.success();
-                        const completedTask = task;
-                        setTasks(prev => prev.map(t =>
-                          t.id === task.id ? { ...t, completed: true, remaining: 0, completedAt: new Date().toISOString() } : t
-                        ));
+                        const isCurrentlyCompleted = task.completed;
 
-                        // FIXED: If completing a carried task, mark it as completed in original date
-                        if (completedTask.carriedOver && completedTask.originalDate) {
-                          const originalTasks = loadTasksForDate(completedTask.originalDate);
-                          const updatedOriginalTasks = originalTasks.map(t =>
-                            t.name === completedTask.name ? { ...t, completed: true, remaining: 0 } : t
-                          );
-                          saveTasksForDate(completedTask.originalDate, updatedOriginalTasks);
+                        if (isCurrentlyCompleted) {
+                          // Uncomplete the task
+                          haptic.light();
+                          setTasks(prev => prev.map(t =>
+                            t.id === task.id ? { ...t, completed: false, remaining: task.duration, completedAt: null } : t
+                          ));
+
+                          // If uncompleting a carried task, mark it as incomplete in original date
+                          if (task.carriedOver && task.originalDate) {
+                            const originalTasks = loadTasksForDate(task.originalDate);
+                            const updatedOriginalTasks = originalTasks.map(t =>
+                              t.name === task.name ? { ...t, completed: false, remaining: t.duration } : t
+                            );
+                            saveTasksForDate(task.originalDate, updatedOriginalTasks);
+                          }
+                        } else {
+                          // Complete the task
+                          haptic.success();
+                          setTasks(prev => prev.map(t =>
+                            t.id === task.id ? { ...t, completed: true, remaining: 0, completedAt: new Date().toISOString() } : t
+                          ));
+
+                          // If completing a carried task, mark it as completed in original date
+                          if (task.carriedOver && task.originalDate) {
+                            const originalTasks = loadTasksForDate(task.originalDate);
+                            const updatedOriginalTasks = originalTasks.map(t =>
+                              t.name === task.name ? { ...t, completed: true, remaining: 0 } : t
+                            );
+                            saveTasksForDate(task.originalDate, updatedOriginalTasks);
+                          }
+
+                          setShowCelebration('task');
+                          setTimeout(() => setShowCelebration(null), 3000);
                         }
-
-                        setShowCelebration('task');
-                        setTimeout(() => setShowCelebration(null), 3000);
                       }}
                       onDelete={() => deleteTask(task.id)}
                       onEdit={() => handleEditTask(task)}

@@ -899,7 +899,7 @@ const resumeTask = () => {
 };
 
 const cancelTask = () => {
-  clearInterval(timerRef.current);
+  clearInterval(timerRef.current); 
   setActiveTaskId(null);
   setSecondsLeft(0);
   setIsPaused(false);

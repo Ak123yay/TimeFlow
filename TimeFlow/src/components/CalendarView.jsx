@@ -47,6 +47,7 @@ export default function CalendarView({ onDaySelect, selectedDate }) {
   // Add all days in month
   for (let day = 1; day <= daysInMonth; day++) {
     const date = new Date(year, month, day);
+    date.setHours(0, 0, 0, 0); // Normalize to midnight
     const dateString = date.toISOString().slice(0, 10);
     const tasks = loadTasksForDate(dateString);
     const completedTasks = tasks.filter(t => t.completed).length;

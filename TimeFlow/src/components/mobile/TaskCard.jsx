@@ -54,7 +54,7 @@ export default function TaskCard({
       <div
         onClick={(e) => {
           e.stopPropagation();
-          if (!task.completed && onComplete) onComplete();
+          if (onComplete) onComplete();
         }}
         style={{
           width: '32px',
