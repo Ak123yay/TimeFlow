@@ -72,7 +72,7 @@ export default function Streak({ onNavigate }) {
           <h1 style={{ fontSize: '20px', fontWeight: 800, color: isDark ? '#E8F0E8' : '#1A1A1A', margin: '0 0 4px', letterSpacing: '-0.3px' }}>
             Your Streak 🌿
           </h1>
-          <p style={{ fontSize: '12px', color: '#8E8E93', margin: 0 }}>
+          <p style={{ fontSize: '12px', color: isDark ? '#9CA59C' : '#8E8E93', margin: 0 }}>
             Track your daily progress
           </p>
         </div>
@@ -110,30 +110,30 @@ export default function Streak({ onNavigate }) {
         {/* Stats Grid */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '10px', marginBottom: '14px' }}>
           <div style={{
-            background: '#fff', borderRadius: '14px', padding: '16px',
+            background: isDark ? '#242B24' : '#fff', borderRadius: '14px', padding: '16px',
             boxShadow: '0 1px 6px rgba(0,0,0,0.04)', textAlign: 'center'
           }}>
             <div style={{ fontSize: '28px', fontWeight: 800, color: '#3B6E3B' }}>
               {streak.longest}
             </div>
-            <div style={{ fontSize: '11px', color: '#8E8E93', marginTop: '4px' }}>Longest Streak</div>
+            <div style={{ fontSize: '11px', color: isDark ? '#9CA59C' : '#8E8E93', marginTop: '4px' }}>Longest Streak</div>
           </div>
 
           <div style={{
-            background: '#fff', borderRadius: '14px', padding: '16px',
+            background: isDark ? '#242B24' : '#fff', borderRadius: '14px', padding: '16px',
             boxShadow: '0 1px 6px rgba(0,0,0,0.04)', textAlign: 'center'
           }}>
             <div style={{ fontSize: '28px', fontWeight: 800, color: '#3B6E3B' }}>
               {reflections.length}
             </div>
-            <div style={{ fontSize: '11px', color: '#8E8E93', marginTop: '4px' }}>Total Days</div>
+            <div style={{ fontSize: '11px', color: isDark ? '#9CA59C' : '#8E8E93', marginTop: '4px' }}>Total Days</div>
           </div>
         </div>
 
         {/* Next Milestone */}
         {getDaysUntilMilestone() && (
           <div style={{
-            background: '#fff', borderRadius: '14px', padding: '14px',
+            background: isDark ? '#242B24' : '#fff', borderRadius: '14px', padding: '14px',
             marginBottom: '14px', boxShadow: '0 1px 6px rgba(0,0,0,0.04)',
             display: 'flex', alignItems: 'center', gap: '12px'
           }}>
@@ -145,10 +145,10 @@ export default function Streak({ onNavigate }) {
               🎯
             </div>
             <div style={{ flex: 1 }}>
-              <div style={{ fontSize: '13px', fontWeight: 700, color: '#1A1A1A' }}>
+              <div style={{ fontSize: '13px', fontWeight: 700, color: isDark ? '#E8F0E8' : '#1A1A1A' }}>
                 Next Milestone
               </div>
-              <div style={{ fontSize: '12px', color: '#8E8E93', marginTop: '2px' }}>
+              <div style={{ fontSize: '12px', color: isDark ? '#9CA59C' : '#8E8E93', marginTop: '2px' }}>
                 {getDaysUntilMilestone()} more {getDaysUntilMilestone() === 1 ? 'day' : 'days'} to reach {streak.current + getDaysUntilMilestone()} days!
               </div>
             </div>
@@ -158,13 +158,13 @@ export default function Streak({ onNavigate }) {
         {/* Recent Activity */}
         {reflections.length > 0 && (
           <div>
-            <h3 style={{ fontSize: '14px', fontWeight: 700, color: '#1A1A1A', margin: '0 0 10px', paddingLeft: '2px' }}>
+            <h3 style={{ fontSize: '14px', fontWeight: 700, color: isDark ? '#E8F0E8' : '#1A1A1A', margin: '0 0 10px', paddingLeft: '2px' }}>
               Recent Activity
             </h3>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
               {reflections.map((ref, idx) => (
                 <div key={idx} style={{
-                  background: '#fff', borderRadius: '12px', padding: '12px 14px',
+                  background: isDark ? '#242B24' : '#fff', borderRadius: '12px', padding: '12px 14px',
                   boxShadow: '0 1px 6px rgba(0,0,0,0.04)',
                   display: 'flex', alignItems: 'center', gap: '12px'
                 }}>
@@ -179,10 +179,10 @@ export default function Streak({ onNavigate }) {
                     {ref.mood === 'great' ? '🌟' : ref.mood === 'good' ? '😊' : ref.mood === 'okay' ? '😐' : '😔'}
                   </div>
                   <div style={{ flex: 1 }}>
-                    <div style={{ fontSize: '13px', fontWeight: 700, color: '#1A1A1A' }}>
+                    <div style={{ fontSize: '13px', fontWeight: 700, color: isDark ? '#E8F0E8' : '#1A1A1A' }}>
                       {ref.date}
                     </div>
-                    <div style={{ fontSize: '11px', color: '#8E8E93', marginTop: '2px' }}>
+                    <div style={{ fontSize: '11px', color: isDark ? '#9CA59C' : '#8E8E93', marginTop: '2px' }}>
                       {ref.completedCount}/{ref.totalCount} tasks • {Math.floor(ref.timeSpent/60)}h {ref.timeSpent%60}m
                     </div>
                   </div>
@@ -197,10 +197,10 @@ export default function Streak({ onNavigate }) {
         {reflections.length === 0 && (
           <div style={{ textAlign: 'center', padding: '40px 20px' }}>
             <div style={{ fontSize: '48px', marginBottom: '12px' }}>🌱</div>
-            <p style={{ fontSize: '15px', fontWeight: 600, color: '#1A1A1A', margin: '0 0 4px' }}>
+            <p style={{ fontSize: '15px', fontWeight: 600, color: isDark ? '#E8F0E8' : '#1A1A1A', margin: '0 0 4px' }}>
               Start Your Journey
             </p>
-            <p style={{ fontSize: '13px', color: '#8E8E93', margin: 0 }}>
+            <p style={{ fontSize: '13px', color: isDark ? '#9CA59C' : '#8E8E93', margin: 0 }}>
               Complete your first day to build your streak
             </p>
           </div>

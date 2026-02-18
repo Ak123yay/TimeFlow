@@ -154,16 +154,16 @@ export default function WeeklyView({ onBackToToday }) {
         <div style={{
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
           marginBottom: '14px', padding: '10px 14px',
-          background: '#fff', borderRadius: '12px', boxShadow: '0 1px 4px rgba(0,0,0,0.04)'
+          background: isDark ? '#242B24' : '#fff', borderRadius: '12px', boxShadow: isDark ? '0 1px 4px rgba(0,0,0,0.3)' : '0 1px 4px rgba(0,0,0,0.04)'
         }}>
           <button onClick={goToPreviousWeek} style={{
             padding: '6px 10px', borderRadius: '8px', border: 'none',
-            background: '#F0F0F0', color: '#1A1A1A', fontSize: '12px', fontWeight: 600,
+            background: isDark ? '#1A1F1A' : '#F0F0F0', color: isDark ? '#E8F0E8' : '#1A1A1A', fontSize: '12px', fontWeight: 600,
             cursor: 'pointer', touchAction: 'manipulation'
           }}>←</button>
 
           <div style={{ flex: 1, textAlign: 'center' }}>
-            <div style={{ fontSize: '13px', fontWeight: 700, color: '#1A1A1A' }}>
+            <div style={{ fontSize: '13px', fontWeight: 700, color: isDark ? '#E8F0E8' : '#1A1A1A' }}>
               {weekData[0]?.month} {weekData[0]?.dayOfMonth} - {weekData[6]?.month} {weekData[6]?.dayOfMonth}
             </div>
             {!isCurrentWeek && (
@@ -177,7 +177,7 @@ export default function WeeklyView({ onBackToToday }) {
 
           <button onClick={goToNextWeek} style={{
             padding: '6px 10px', borderRadius: '8px', border: 'none',
-            background: '#F0F0F0', color: '#1A1A1A', fontSize: '12px', fontWeight: 600,
+            background: isDark ? '#1A1F1A' : '#F0F0F0', color: isDark ? '#E8F0E8' : '#1A1A1A', fontSize: '12px', fontWeight: 600,
             cursor: 'pointer', touchAction: 'manipulation'
           }}>→</button>
         </div>
@@ -195,8 +195,8 @@ export default function WeeklyView({ onBackToToday }) {
                 key={day.date}
                 onClick={() => { if (day.reflection) { setSelectedDay(day); haptic.light(); } }}
                 style={{
-                  background: day.isToday ? 'rgba(59,110,59,0.04)' : '#fff',
-                  border: day.isToday ? '1.5px solid #3B6E3B' : '1px solid #E5E5E5',
+                  background: day.isToday ? (isDark ? 'rgba(111,175,111,0.15)' : 'rgba(59,110,59,0.04)') : (isDark ? '#242B24' : '#fff'),
+                  border: day.isToday ? (isDark ? '1.5px solid #6FAF6F' : '1.5px solid #3B6E3B') : (isDark ? '1px solid #6B7B6B' : '1px solid #E5E5E5'),
                   borderRadius: '12px', padding: '12px 14px',
                   cursor: day.reflection ? 'pointer' : 'default',
                   touchAction: 'manipulation'
@@ -205,10 +205,10 @@ export default function WeeklyView({ onBackToToday }) {
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: day.hasTasks ? '10px' : 0 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                     <div>
-                      <div style={{ fontSize: '10px', fontWeight: 700, color: '#8E8E93', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                      <div style={{ fontSize: '10px', fontWeight: 700, color: isDark ? '#9CA59C' : '#8E8E93', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                         {day.dayOfWeek}
                       </div>
-                      <div style={{ fontSize: '16px', fontWeight: 800, color: '#1A1A1A' }}>
+                      <div style={{ fontSize: '16px', fontWeight: 800, color: isDark ? '#E8F0E8' : '#1A1A1A' }}>
                         {day.dayOfMonth}
                       </div>
                     </div>
@@ -220,8 +220,8 @@ export default function WeeklyView({ onBackToToday }) {
                     )}
                     {day.isFuture && !day.isToday && (
                       <div style={{
-                        padding: '3px 8px', background: '#F0F0F0',
-                        borderRadius: '6px', fontSize: '9px', fontWeight: 600, color: '#8E8E93'
+                        padding: '3px 8px', background: isDark ? '#1A1F1A' : '#F0F0F0',
+                        borderRadius: '6px', fontSize: '9px', fontWeight: 600, color: isDark ? '#9CA59C' : '#8E8E93'
                       }}>UPCOMING</div>
                     )}
                   </div>
@@ -232,7 +232,7 @@ export default function WeeklyView({ onBackToToday }) {
                         width: '20px', height: '20px', borderRadius: '50%',
                         background: 'linear-gradient(135deg, #A7D3A7, #6FAF6F)',
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        fontSize: '10px', border: '1.5px solid #fff'
+                        fontSize: '10px', border: isDark ? '1.5px solid #242B24' : '1.5px solid #fff'
                       }}>📝</div>
                     )}
                     {day.hasTasks && (
@@ -246,7 +246,7 @@ export default function WeeklyView({ onBackToToday }) {
                 {day.hasTasks && (
                   <>
                     <div style={{
-                      height: '4px', background: '#F0F0F0', borderRadius: '99px',
+                      height: '4px', background: isDark ? '#1A1F1A' : '#F0F0F0', borderRadius: '99px',
                       overflow: 'hidden', marginBottom: '6px'
                     }}>
                       <div style={{
@@ -256,7 +256,7 @@ export default function WeeklyView({ onBackToToday }) {
                     </div>
 
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                      <span style={{ fontSize: '11px', color: '#8E8E93' }}>
+                      <span style={{ fontSize: '11px', color: isDark ? '#9CA59C' : '#8E8E93' }}>
                         {day.completionRate}% complete
                       </span>
                       {day.carriedOverCount > 0 && (
@@ -269,7 +269,7 @@ export default function WeeklyView({ onBackToToday }) {
                 )}
 
                 {!day.hasTasks && (
-                  <div style={{ padding: '8px 0', textAlign: 'center', color: '#D1D5DB', fontSize: '11px' }}>
+                  <div style={{ padding: '8px 0', textAlign: 'center', color: isDark ? '#6B7B6B' : '#D1D5DB', fontSize: '11px' }}>
                     No tasks
                   </div>
                 )}
@@ -280,27 +280,27 @@ export default function WeeklyView({ onBackToToday }) {
 
         {/* Summary Stats */}
         <div style={{
-          background: '#fff', borderRadius: '14px', padding: '14px',
-          boxShadow: '0 1px 6px rgba(0,0,0,0.04)'
+          background: isDark ? '#242B24' : '#fff', borderRadius: '14px', padding: '14px',
+          boxShadow: isDark ? '0 1px 6px rgba(0,0,0,0.3)' : '0 1px 6px rgba(0,0,0,0.04)'
         }}>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px' }}>
             <div style={{ textAlign: 'center' }}>
               <div style={{ fontSize: '18px', fontWeight: 800, color: '#3B6E3B' }}>
                 {weekData.reduce((sum, day) => sum + day.completedCount, 0)}/{weekData.reduce((sum, day) => sum + day.taskCount, 0)}
               </div>
-              <div style={{ fontSize: '10px', color: '#8E8E93', marginTop: '2px' }}>Tasks</div>
+              <div style={{ fontSize: '10px', color: isDark ? '#9CA59C' : '#8E8E93', marginTop: '2px' }}>Tasks</div>
             </div>
             <div style={{ textAlign: 'center' }}>
               <div style={{ fontSize: '18px', fontWeight: 800, color: '#3B6E3B' }}>
                 {weekData.filter(d => d.hasTasks).length}/7
               </div>
-              <div style={{ fontSize: '10px', color: '#8E8E93', marginTop: '2px' }}>Active</div>
+              <div style={{ fontSize: '10px', color: isDark ? '#9CA59C' : '#8E8E93', marginTop: '2px' }}>Active</div>
             </div>
             <div style={{ textAlign: 'center' }}>
               <div style={{ fontSize: '18px', fontWeight: 800, color: '#3B6E3B' }}>
                 {weekData.reduce((sum, day) => sum + day.carriedOverCount, 0)}
               </div>
-              <div style={{ fontSize: '10px', color: '#8E8E93', marginTop: '2px' }}>Carried</div>
+              <div style={{ fontSize: '10px', color: isDark ? '#9CA59C' : '#8E8E93', marginTop: '2px' }}>Carried</div>
             </div>
           </div>
         </div>

@@ -14,6 +14,8 @@ export default function TaskTimer({
 }) {
   if (!activeTask) return null;
 
+  const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+
   const progressPct = totalSeconds > 0
     ? ((totalSeconds - secondsLeft) / totalSeconds) * 100
     : 0;
@@ -35,7 +37,7 @@ export default function TaskTimer({
       <div style={{
         fontSize: '11px',
         fontWeight: 700,
-        color: '#8E8E93',
+        color: isDark ? '#9CA59C' : '#8E8E93',
         textTransform: 'uppercase',
         letterSpacing: '0.5px',
         marginBottom: '8px',
@@ -50,7 +52,7 @@ export default function TaskTimer({
       <div style={{
         fontSize: '17px',
         fontWeight: 700,
-        color: '#1A1A1A',
+        color: isDark ? '#E8F0E8' : '#1A1A1A',
         marginBottom: '14px',
         overflow: 'hidden',
         textOverflow: 'ellipsis',
@@ -66,7 +68,7 @@ export default function TaskTimer({
           fontSize: '28px',
           fontWeight: 800,
           fontVariantNumeric: 'tabular-nums',
-          color: isPaused ? '#8E8E93' : timerColor,
+          color: isPaused ? (isDark ? '#9CA59C' : '#8E8E93') : timerColor,
           lineHeight: 1,
           flexShrink: 0
         }}>
@@ -77,21 +79,21 @@ export default function TaskTimer({
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{
             height: '6px',
-            background: '#F0F0F0',
+            background: isDark ? '#6B7B6B' : '#F0F0F0',
             borderRadius: '99px',
             overflow: 'hidden'
           }}>
             <div style={{
               height: '100%',
               width: `${progressPct}%`,
-              background: isPaused ? '#8E8E93' : timerColor,
+              background: isPaused ? (isDark ? '#9CA59C' : '#8E8E93') : timerColor,
               borderRadius: '99px',
               transition: isPaused ? 'none' : 'width 1s linear'
             }} />
           </div>
           <div style={{
             fontSize: '11px',
-            color: '#8E8E93',
+            color: isDark ? '#9CA59C' : '#8E8E93',
             marginTop: '4px',
             fontWeight: 500
           }}>
@@ -109,9 +111,9 @@ export default function TaskTimer({
             flex: 1,
             padding: '10px',
             borderRadius: '10px',
-            border: '1.5px solid #E5E5E5',
-            background: '#fff',
-            color: '#1A1A1A',
+            border: `1.5px solid ${isDark ? '#6B7B6B' : '#E5E5E5'}`,
+            background: isDark ? '#242B24' : '#fff',
+            color: isDark ? '#E8F0E8' : '#1A1A1A',
             fontSize: '13px',
             fontWeight: 600,
             cursor: 'pointer',
@@ -133,7 +135,7 @@ export default function TaskTimer({
             padding: '10px',
             borderRadius: '10px',
             border: '1.5px solid #3B6E3B',
-            background: '#fff',
+            background: isDark ? '#242B24' : '#fff',
             color: '#3B6E3B',
             fontSize: '13px',
             fontWeight: 600,
@@ -152,7 +154,7 @@ export default function TaskTimer({
             height: '40px',
             borderRadius: '10px',
             border: '1.5px solid #DC2626',
-            background: '#fff',
+            background: isDark ? '#242B24' : '#fff',
             color: '#DC2626',
             fontSize: '16px',
             cursor: 'pointer',

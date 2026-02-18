@@ -93,10 +93,10 @@ export default function DayReflection({ todayDate, onComplete }) {
         else if (tab === 'streak') window.location.hash = '#/streak';
       }} activeTab="stats">{/* Header */}
         <div style={{ marginBottom: '16px', textAlign: 'center' }}>
-          <h1 style={{ fontSize: '20px', fontWeight: 800, color: '#1A1A1A', margin: '0 0 4px', letterSpacing: '-0.3px' }}>
+          <h1 style={{ fontSize: '20px', fontWeight: 800, color: isDark ? '#E8F0E8' : '#1A1A1A', margin: '0 0 4px', letterSpacing: '-0.3px' }}>
             Day Complete ✨
           </h1>
-          <p style={{ fontSize: '12px', color: '#8E8E93', margin: 0 }}>
+          <p style={{ fontSize: '12px', color: isDark ? '#9CA59C' : '#8E8E93', margin: 0 }}>
             {todayDate} • Reflect on your progress
           </p>
         </div>
@@ -135,34 +135,34 @@ export default function DayReflection({ todayDate, onComplete }) {
 
         {/* Stats Summary */}
         <div style={{
-          background: '#fff', borderRadius: '14px', padding: '16px',
-          marginBottom: '14px', boxShadow: '0 1px 6px rgba(0,0,0,0.04)'
+          background: isDark ? '#242B24' : '#fff', borderRadius: '14px', padding: '16px',
+          marginBottom: '14px', boxShadow: isDark ? '0 1px 6px rgba(0,0,0,0.3)' : '0 1px 6px rgba(0,0,0,0.04)'
         }}>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px' }}>
             <div style={{ textAlign: 'center' }}>
               <div style={{ fontSize: '18px', fontWeight: 800, color: '#3B6E3B' }}>
                 {completedTasks.length}/{tasks.length}
               </div>
-              <div style={{ fontSize: '10px', color: '#8E8E93', marginTop: '2px' }}>Tasks</div>
+              <div style={{ fontSize: '10px', color: isDark ? '#9CA59C' : '#8E8E93', marginTop: '2px' }}>Tasks</div>
             </div>
             <div style={{ textAlign: 'center' }}>
               <div style={{ fontSize: '18px', fontWeight: 800, color: '#3B6E3B' }}>
                 {Math.floor(completedTime/60)}h {completedTime%60}m
               </div>
-              <div style={{ fontSize: '10px', color: '#8E8E93', marginTop: '2px' }}>Time</div>
+              <div style={{ fontSize: '10px', color: isDark ? '#9CA59C' : '#8E8E93', marginTop: '2px' }}>Time</div>
             </div>
             <div style={{ textAlign: 'center' }}>
               <div style={{ fontSize: '18px', fontWeight: 800, color: '#3B6E3B' }}>
                 {tasks.length > 0 ? Math.round((completedTasks.length / tasks.length) * 100) : 0}%
               </div>
-              <div style={{ fontSize: '10px', color: '#8E8E93', marginTop: '2px' }}>Done</div>
+              <div style={{ fontSize: '10px', color: isDark ? '#9CA59C' : '#8E8E93', marginTop: '2px' }}>Done</div>
             </div>
           </div>
         </div>
 
         {/* Mood Selection */}
         <div style={{ marginBottom: '14px' }}>
-          <label style={{ display: 'block', marginBottom: '10px', fontSize: '13px', fontWeight: 700, color: '#1A1A1A' }}>
+          <label style={{ display: 'block', marginBottom: '10px', fontSize: '13px', fontWeight: 700, color: isDark ? '#E8F0E8' : '#1A1A1A' }}>
             How was your day?
           </label>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '8px' }}>
@@ -173,8 +173,8 @@ export default function DayReflection({ todayDate, onComplete }) {
                 style={{
                   padding: '12px 10px',
                   borderRadius: '12px',
-                  border: mood === option.value ? `2px solid ${option.color}` : '1.5px solid #E5E5E5',
-                  background: mood === option.value ? `${option.color}15` : '#fff',
+                  border: mood === option.value ? `2px solid ${option.color}` : `1.5px solid ${isDark ? '#6B7B6B' : '#E5E5E5'}`,
+                  background: mood === option.value ? `${option.color}15` : (isDark ? '#242B24' : '#fff'),
                   cursor: 'pointer',
                   touchAction: 'manipulation',
                   display: 'flex',
@@ -193,7 +193,7 @@ export default function DayReflection({ todayDate, onComplete }) {
         {/* Unfinished Tasks */}
         {unfinishedTasks.length > 0 && (
           <div style={{ marginBottom: '14px' }}>
-            <label style={{ display: 'block', marginBottom: '10px', fontSize: '13px', fontWeight: 700, color: '#1A1A1A' }}>
+            <label style={{ display: 'block', marginBottom: '10px', fontSize: '13px', fontWeight: 700, color: isDark ? '#E8F0E8' : '#1A1A1A' }}>
               Unfinished tasks ({unfinishedTasks.length})
             </label>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
@@ -201,23 +201,23 @@ export default function DayReflection({ todayDate, onComplete }) {
                 const action = unfinishedActions[task.id];
                 return (
                   <div key={task.id} style={{
-                    background: '#fff', borderRadius: '12px', padding: '10px 12px',
-                    boxShadow: '0 1px 6px rgba(0,0,0,0.04)',
+                    background: isDark ? '#242B24' : '#fff', borderRadius: '12px', padding: '10px 12px',
+                    boxShadow: isDark ? '0 1px 6px rgba(0,0,0,0.3)' : '0 1px 6px rgba(0,0,0,0.04)',
                     display: 'flex', flexDirection: 'column', gap: '8px'
                   }}>
                     <div>
-                      <div style={{ fontSize: '13px', fontWeight: 700, color: '#1A1A1A' }}>{task.name}</div>
-                      <div style={{ fontSize: '11px', color: '#8E8E93' }}>{task.duration} min</div>
+                      <div style={{ fontSize: '13px', fontWeight: 700, color: isDark ? '#E8F0E8' : '#1A1A1A' }}>{task.name}</div>
+                      <div style={{ fontSize: '11px', color: isDark ? '#9CA59C' : '#8E8E93' }}>{task.duration} min</div>
                     </div>
                     <div style={{ display: 'flex', gap: '6px' }}>
                       <button
                         onClick={() => { handleUnfinishedAction(task.id, 'completed'); haptic.light(); }}
                         style={{
                           flex: 1, padding: '6px 10px', fontSize: '11px', borderRadius: '8px',
-                          border: action === 'completed' ? '2px solid #10b981' : '1.5px solid #E5E5E5',
-                          background: action === 'completed' ? 'rgba(16,185,129,0.1)' : '#fff',
+                          border: action === 'completed' ? '2px solid #10b981' : `1.5px solid ${isDark ? '#6B7B6B' : '#E5E5E5'}`,
+                          background: action === 'completed' ? 'rgba(16,185,129,0.1)' : (isDark ? '#242B24' : '#fff'),
                           cursor: 'pointer', touchAction: 'manipulation', fontWeight: 600,
-                          color: action === 'completed' ? '#10b981' : '#8E8E93'
+                          color: action === 'completed' ? '#10b981' : (isDark ? '#9CA59C' : '#8E8E93')
                         }}
                       >
                         ✓ Done
@@ -226,10 +226,10 @@ export default function DayReflection({ todayDate, onComplete }) {
                         onClick={() => { handleUnfinishedAction(task.id, 'carry'); haptic.light(); }}
                         style={{
                           flex: 1, padding: '6px 10px', fontSize: '11px', borderRadius: '8px',
-                          border: action === 'carry' || !action ? '2px solid #3B6E3B' : '1.5px solid #E5E5E5',
-                          background: action === 'carry' || !action ? 'rgba(59,110,59,0.1)' : '#fff',
+                          border: action === 'carry' || !action ? '2px solid #3B6E3B' : `1.5px solid ${isDark ? '#6B7B6B' : '#E5E5E5'}`,
+                          background: action === 'carry' || !action ? 'rgba(59,110,59,0.1)' : (isDark ? '#242B24' : '#fff'),
                           cursor: 'pointer', touchAction: 'manipulation', fontWeight: 600,
-                          color: action === 'carry' || !action ? '#3B6E3B' : '#8E8E93'
+                          color: action === 'carry' || !action ? '#3B6E3B' : (isDark ? '#9CA59C' : '#8E8E93')
                         }}
                       >
                         📅 Carry
@@ -238,10 +238,10 @@ export default function DayReflection({ todayDate, onComplete }) {
                         onClick={() => { handleUnfinishedAction(task.id, 'delete'); haptic.heavy(); }}
                         style={{
                           width: '36px', height: '36px', borderRadius: '8px',
-                          border: action === 'delete' ? '2px solid #DC2626' : '1.5px solid #E5E5E5',
-                          background: action === 'delete' ? 'rgba(220,38,38,0.1)' : '#fff',
+                          border: action === 'delete' ? '2px solid #DC2626' : `1.5px solid ${isDark ? '#6B7B6B' : '#E5E5E5'}`,
+                          background: action === 'delete' ? 'rgba(220,38,38,0.1)' : (isDark ? '#242B24' : '#fff'),
                           cursor: 'pointer', touchAction: 'manipulation', fontSize: '16px',
-                          color: action === 'delete' ? '#DC2626' : '#8E8E93',
+                          color: action === 'delete' ? '#DC2626' : (isDark ? '#9CA59C' : '#8E8E93'),
                           display: 'flex', alignItems: 'center', justifyContent: 'center'
                         }}
                       >
@@ -257,7 +257,7 @@ export default function DayReflection({ todayDate, onComplete }) {
 
         {/* Reflection */}
         <div style={{ marginBottom: '14px' }}>
-          <label style={{ display: 'block', marginBottom: '10px', fontSize: '13px', fontWeight: 700, color: '#1A1A1A' }}>
+          <label style={{ display: 'block', marginBottom: '10px', fontSize: '13px', fontWeight: 700, color: isDark ? '#E8F0E8' : '#1A1A1A' }}>
             What went well today? (Optional)
           </label>
           <textarea
@@ -266,9 +266,10 @@ export default function DayReflection({ todayDate, onComplete }) {
             placeholder="Reflect on your day, celebrate wins, or note what you learned..."
             style={{
               width: '100%', boxSizing: 'border-box', minHeight: '80px',
-              padding: '12px 14px', borderRadius: '12px', border: '1.5px solid #E5E5E5',
+              padding: '12px 14px', borderRadius: '12px', border: `1.5px solid ${isDark ? '#6B7B6B' : '#E5E5E5'}`,
               fontSize: '16px', lineHeight: '1.5', fontFamily: 'inherit',
-              resize: 'vertical', background: '#FAFAFA', outline: 'none'
+              resize: 'vertical', background: isDark ? '#1A1F1A' : '#FAFAFA', outline: 'none',
+              color: isDark ? '#E8F0E8' : '#1A1A1A'
             }}
           />
         </div>
@@ -278,8 +279,8 @@ export default function DayReflection({ todayDate, onComplete }) {
           <button
             onClick={() => { haptic.light(); onComplete(); }}
             style={{
-              flex: 1, padding: '12px', borderRadius: '10px', border: '1.5px solid #E5E5E5',
-              background: '#fff', color: '#1A1A1A', fontSize: '13px', fontWeight: 600,
+              flex: 1, padding: '12px', borderRadius: '10px', border: `1.5px solid ${isDark ? '#6B7B6B' : '#E5E5E5'}`,
+              background: isDark ? '#242B24' : '#fff', color: isDark ? '#E8F0E8' : '#1A1A1A', fontSize: '13px', fontWeight: 600,
               cursor: 'pointer', touchAction: 'manipulation'
             }}
           >
