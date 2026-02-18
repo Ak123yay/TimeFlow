@@ -3,10 +3,13 @@
 /* Import mobile-first CSS system */
 @import url('./styles/mobile.css');
 
-/* Palette */
+/* Palette - Light Mode */
 :root{
   --bg: #F0F8F2;        /* soft green / cream */
   --card: #ffffff;
+  --text-primary: #1A1A1A;
+  --text-secondary: #8E8E93;
+  --text-muted: #4B6B4B;
   --primary: #3B6E3B;   /* forest green */
   --primary-2: #6FAF6F; /* light green */
   --muted: #4B6B4B;
@@ -15,7 +18,7 @@
   --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   --transition-fast: all 0.15s ease;
 
-  /* NEW: Enhanced nature-inspired earthy tones */
+  /* Enhanced nature-inspired earthy tones */
   --moss: #7C9A73;           /* Soft moss green */
   --sage: #9DB39B;           /* Sage green */
   --earth: #8B7355;          /* Earthy brown */
@@ -40,6 +43,41 @@
   --bp-desktop: 1024px;
 }
 
+/* Dark Mode Palette */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #1A1F1A;              /* Deep forest night */
+    --card: #242B24;            /* Dark moss card */
+    --text-primary: #E8F0E8;    /* Light text */
+    --text-secondary: #9CA59C;  /* Muted text */
+    --text-muted: #6B7B6B;      /* Even more muted */
+    --primary: #6FAF6F;         /* Lighter green for dark mode */
+    --primary-2: #8BC98B;       /* Brighter accent */
+    --muted: #6B7B6B;
+    --vine: #4A6B4A;            /* Darker vine */
+    --soft-shadow: rgba(0, 0, 0, 0.3);
+
+    /* Adjusted earthy tones for dark */
+    --moss: #5B7A52;
+    --sage: #6B8B6B;
+    --earth: #6B5545;
+    --sand: #2F342D;
+    --sky: #1F2B2A;
+    --sunset: #CC8A5A;
+
+    /* Status colors adjusted for dark */
+    --success: #52B788;
+    --warning: #F9C74F;
+    --danger: #FF8888;
+    --info: #90E0EF;
+
+    /* Dark mode gradients */
+    --gradient-dawn: linear-gradient(135deg, #3A2F2A, #4A3A2A);
+    --gradient-forest: linear-gradient(135deg, #4A6B4A, #3B6E3B);
+    --gradient-mist: linear-gradient(135deg, rgba(36,43,36,0.98), rgba(26,31,26,0.95));
+  }
+}
+
 /* base */
 *{box-sizing:border-box}
 html, body, #root {
@@ -51,7 +89,7 @@ body{
   margin:0;
   font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, Arial;
   background: var(--bg);
-  color: #123a12;
+  color: var(--text-primary);
   -webkit-font-smoothing:antialiased;
   -moz-osx-font-smoothing:grayscale;
 }
@@ -80,7 +118,7 @@ html {
 .setup-inner {
   width: 100%;
   max-width: 960px;
-  background: linear-gradient(180deg, rgba(255,255,255,0.98), #fff);
+  background: var(--gradient-mist);
   border-radius: 18px;
   box-shadow: 0 18px 40px var(--soft-shadow), 0 0 0 1px rgba(167,211,167,0.1);
   padding: 28px;
@@ -90,6 +128,12 @@ html {
   position: relative;
   overflow: visible;
   animation: fadeInUp 0.5s ease-out;
+}
+
+@media (prefers-color-scheme: dark) {
+  .setup-inner {
+    box-shadow: 0 18px 40px var(--soft-shadow), 0 0 0 1px rgba(74,107,74,0.2);
+  }
 }
 
 @keyframes fadeInUp {

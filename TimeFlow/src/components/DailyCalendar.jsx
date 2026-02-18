@@ -5,6 +5,7 @@ import { loadTasksForDate } from '../utils/storage';
  * DailyCalendar - Simple view showing just today's date and stats
  */
 export default function DailyCalendar() {
+  const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
   const today = new Date();
   const dateString = today.toISOString().slice(0, 10);
   const tasks = loadTasksForDate(dateString);
@@ -20,8 +21,12 @@ export default function DailyCalendar() {
 
   return (
     <div style={{
-      background: 'linear-gradient(135deg, rgba(167,211,167,0.15), rgba(111,175,111,0.08))',
-      border: '1.5px solid rgba(111,175,111,0.25)',
+      background: isDark
+        ? 'linear-gradient(135deg, rgba(74,107,74,0.15), rgba(59,110,59,0.08))'
+        : 'linear-gradient(135deg, rgba(167,211,167,0.15), rgba(111,175,111,0.08))',
+      border: isDark
+        ? '1.5px solid rgba(74,107,74,0.25)'
+        : '1.5px solid rgba(111,175,111,0.25)',
       borderRadius: '16px',
       padding: '20px',
       marginBottom: '16px'
@@ -31,7 +36,7 @@ export default function DailyCalendar() {
         <div style={{
           fontSize: '14px',
           fontWeight: 700,
-          color: '#3B6E3B',
+          color: isDark ? '#8BC98B' : '#3B6E3B',
           textTransform: 'uppercase',
           letterSpacing: '1px',
           marginBottom: '8px'
@@ -41,7 +46,7 @@ export default function DailyCalendar() {
         <div style={{
           fontSize: '48px',
           fontWeight: 900,
-          color: '#1A1A1A',
+          color: isDark ? '#E8F0E8' : '#1A1A1A',
           lineHeight: 1,
           marginBottom: '4px'
         }}>
@@ -50,7 +55,7 @@ export default function DailyCalendar() {
         <div style={{
           fontSize: '16px',
           fontWeight: 600,
-          color: '#6B8E6B'
+          color: isDark ? '#9CA59C' : '#6B8E6B'
         }}>
           {month} {year}
         </div>
@@ -59,7 +64,7 @@ export default function DailyCalendar() {
       {/* Task Stats */}
       {totalTasks > 0 && (
         <div style={{
-          background: 'rgba(255,255,255,0.7)',
+          background: isDark ? 'rgba(36,43,36,0.5)' : 'rgba(255,255,255,0.7)',
           borderRadius: '12px',
           padding: '14px',
           display: 'flex',
@@ -74,14 +79,14 @@ export default function DailyCalendar() {
             <span style={{
               fontSize: '13px',
               fontWeight: 600,
-              color: '#6B8E6B'
+              color: isDark ? '#9CA59C' : '#6B8E6B'
             }}>
               Today's Progress
             </span>
             <span style={{
               fontSize: '15px',
               fontWeight: 700,
-              color: '#3B6E3B'
+              color: isDark ? '#8BC98B' : '#3B6E3B'
             }}>
               {completedTasks}/{totalTasks}
             </span>
@@ -90,7 +95,7 @@ export default function DailyCalendar() {
           {/* Progress Bar */}
           <div style={{
             height: '6px',
-            background: 'rgba(209,213,219,0.5)',
+            background: isDark ? 'rgba(107,123,107,0.3)' : 'rgba(209,213,219,0.5)',
             borderRadius: '99px',
             overflow: 'hidden'
           }}>
@@ -111,7 +116,7 @@ export default function DailyCalendar() {
           <div style={{
             fontSize: '12px',
             fontWeight: 600,
-            color: '#8E8E93',
+            color: isDark ? '#9CA59C' : '#8E8E93',
             textAlign: 'center'
           }}>
             {completionRate}% complete
@@ -124,7 +129,7 @@ export default function DailyCalendar() {
           textAlign: 'center',
           padding: '12px',
           fontSize: '13px',
-          color: '#8E8E93'
+          color: isDark ? '#9CA59C' : '#8E8E93'
         }}>
           No tasks scheduled for today
         </div>

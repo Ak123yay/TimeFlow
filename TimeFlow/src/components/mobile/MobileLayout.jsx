@@ -8,12 +8,15 @@ import '../../styles/mobile.css';
  * Bottom nav for main navigation
  */
 export default function MobileLayout({ children, showBottomNav = true, onNavigate, activeTab = 'today' }) {
+  // Detect system color scheme
+  const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+
   return (
     <div style={{
       display: 'flex',
       flexDirection: 'column',
       minHeight: '100dvh',
-      background: '#F8F8F8',
+      background: isDark ? '#1A1F1A' : '#F8F8F8',
       paddingTop: 'env(safe-area-inset-top)',
       paddingBottom: 'env(safe-area-inset-bottom)'
     }}>
@@ -37,10 +40,10 @@ export default function MobileLayout({ children, showBottomNav = true, onNavigat
           left: 0,
           right: 0,
           height: 'calc(56px + env(safe-area-inset-bottom))',
-          background: 'rgba(255,255,255,0.92)',
+          background: isDark ? 'rgba(36,43,36,0.92)' : 'rgba(255,255,255,0.92)',
           backdropFilter: 'blur(20px)',
           WebkitBackdropFilter: 'blur(20px)',
-          borderTop: '0.5px solid rgba(0,0,0,0.08)',
+          borderTop: isDark ? '0.5px solid rgba(255,255,255,0.1)' : '0.5px solid rgba(0,0,0,0.08)',
           display: 'flex',
           justifyContent: 'space-around',
           alignItems: 'flex-start',
@@ -71,7 +74,7 @@ export default function MobileLayout({ children, showBottomNav = true, onNavigat
                 padding: '4px 8px',
                 flex: 1,
                 minHeight: '44px',
-                color: activeTab === item.id ? '#3B6E3B' : '#8E8E93',
+                color: activeTab === item.id ? '#6FAF6F' : (isDark ? '#9CA59C' : '#8E8E93'),
                 fontSize: '9px',
                 fontWeight: activeTab === item.id ? 600 : 400,
                 cursor: 'pointer',
