@@ -15,6 +15,7 @@ import "./App.css";
 function LoadingFallback() {
   // Get current time period for matching background
   const period = getTimePeriod();
+  const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
   const periodClass = period === 'evening' || period === 'night'
     ? 'app-night'
     : period === 'dawn'
@@ -31,12 +32,12 @@ function LoadingFallback() {
       justifyContent: 'center',
       alignItems: 'center',
       background: period === 'evening' || period === 'night'
-        ? 'linear-gradient(135deg, #E8F4F8, #E0F0E8)'
+        ? isDark ? 'linear-gradient(135deg, #1A2225, #171C1A)' : 'linear-gradient(135deg, #E8F4F8, #E0F0E8)'
         : period === 'dawn'
-        ? 'linear-gradient(135deg, #FFF5F5, #F0F8F2)'
+        ? isDark ? 'linear-gradient(135deg, #2A1F1F, #1A1F1A)' : 'linear-gradient(135deg, #FFF5F5, #F0F8F2)'
         : period === 'dusk'
-        ? 'linear-gradient(135deg, #F5F0FF, #F0F8F2)'
-        : '#F0F8F2',
+        ? isDark ? 'linear-gradient(135deg, #251F2A, #1A1F1A)' : 'linear-gradient(135deg, #F5F0FF, #F0F8F2)'
+        : isDark ? '#1A1F1A' : '#F0F8F2',
       transition: 'background 0.3s ease'
     }}>
       <div style={{ textAlign: 'center' }}>
@@ -44,13 +45,13 @@ function LoadingFallback() {
           width: '48px',
           height: '48px',
           borderRadius: '50%',
-          border: '3px solid rgba(59,110,59,0.2)',
-          borderTopColor: '#3B6E3B',
+          border: isDark ? '3px solid rgba(139,201,139,0.2)' : '3px solid rgba(59,110,59,0.2)',
+          borderTopColor: isDark ? '#8BC98B' : '#3B6E3B',
           animation: 'spin 0.8s linear infinite',
           margin: '0 auto 16px'
         }} />
         <div style={{
-          color: '#3B6E3B',
+          color: isDark ? '#8BC98B' : '#3B6E3B',
           fontWeight: 600,
           fontSize: '15px',
           fontFamily: 'Inter, system-ui, -apple-system, "Segoe UI", Roboto, Arial'

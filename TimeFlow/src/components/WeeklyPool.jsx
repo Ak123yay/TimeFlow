@@ -115,6 +115,7 @@ export default function WeeklyPool({ onNavigateToToday }) {
   };
 
   if (isMobile) {
+    const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
     return (
       <MobileLayout showBottomNav={true} onNavigate={(tab) => {
         haptic.light();
@@ -126,10 +127,10 @@ export default function WeeklyPool({ onNavigateToToday }) {
 
         {/* Header */}
         <div style={{ marginBottom: '12px' }}>
-          <h1 style={{ fontSize: '20px', fontWeight: 800, color: '#1A1A1A', margin: '0 0 2px', letterSpacing: '-0.3px' }}>
+          <h1 style={{ fontSize: '20px', fontWeight: 800, color: isDark ? '#E8F0E8' : '#1A1A1A', margin: '0 0 2px', letterSpacing: '-0.3px' }}>
             Weekly Pool 🌊
           </h1>
-          <p style={{ fontSize: '12px', color: '#8E8E93', margin: 0 }}>
+          <p style={{ fontSize: '12px', color: isDark ? '#9CA59C' : '#8E8E93', margin: 0 }}>
             {poolTasks.length} tasks to work on this week
           </p>
         </div>
@@ -149,16 +150,16 @@ export default function WeeklyPool({ onNavigateToToday }) {
 
         {/* Add Task Form */}
         <div style={{
-          background: '#fff', borderRadius: '14px', padding: '14px',
-          marginBottom: '14px', boxShadow: '0 1px 6px rgba(0,0,0,0.04)'
+          background: isDark ? '#242B24' : '#fff', borderRadius: '14px', padding: '14px',
+          marginBottom: '14px', boxShadow: isDark ? '0 1px 6px rgba(0,0,0,0.3)' : '0 1px 6px rgba(0,0,0,0.04)'
         }}>
           <div style={{
             display: 'flex',
             alignItems: 'center',
             height: '44px',
-            border: '1.5px solid #E5E5E5',
+            border: isDark ? '1.5px solid #6B7B6B' : '1.5px solid #E5E5E5',
             borderRadius: '10px',
-            background: '#FAFAFA',
+            background: isDark ? '#1A1F1A' : '#FAFAFA',
             padding: '0 14px',
             boxSizing: 'border-box',
             marginBottom: '10px'
@@ -176,22 +177,23 @@ export default function WeeklyPool({ onNavigateToToday }) {
                 flex: 1,
                 background: 'transparent',
                 width: '100%',
-                height: '100%'
+                height: '100%',
+                color: isDark ? '#E8F0E8' : '#1A1A1A'
               }}
             />
           </div>
 
           <div style={{ marginBottom: '10px' }}>
-            <label style={{ fontSize: '11px', fontWeight: 600, color: '#8E8E93', marginBottom: '6px', display: 'block' }}>
+            <label style={{ fontSize: '11px', fontWeight: 600, color: isDark ? '#9CA59C' : '#8E8E93', marginBottom: '6px', display: 'block' }}>
               Deadline (optional)
             </label>
             <div style={{
               display: 'flex',
               alignItems: 'center',
               height: '44px',
-              border: '1.5px solid #E5E5E5',
+              border: isDark ? '1.5px solid #6B7B6B' : '1.5px solid #E5E5E5',
               borderRadius: '10px',
-              background: '#FAFAFA',
+              background: isDark ? '#1A1F1A' : '#FAFAFA',
               padding: '0 12px',
               boxSizing: 'border-box'
             }}>
@@ -207,7 +209,9 @@ export default function WeeklyPool({ onNavigateToToday }) {
                   flex: 1,
                   background: 'transparent',
                   width: '100%',
-                  height: '100%'
+                  height: '100%',
+                  color: isDark ? '#E8F0E8' : '#1A1A1A',
+                  colorScheme: isDark ? 'dark' : 'light'
                 }}
               />
             </div>
@@ -230,10 +234,10 @@ export default function WeeklyPool({ onNavigateToToday }) {
         {poolTasks.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '40px 20px' }}>
             <div style={{ fontSize: '36px', marginBottom: '12px' }}>🌊</div>
-            <p style={{ fontSize: '15px', fontWeight: 600, color: '#1A1A1A', margin: '0 0 4px' }}>
+            <p style={{ fontSize: '15px', fontWeight: 600, color: isDark ? '#E8F0E8' : '#1A1A1A', margin: '0 0 4px' }}>
               Pool is empty
             </p>
-            <p style={{ fontSize: '13px', color: '#8E8E93', margin: 0 }}>
+            <p style={{ fontSize: '13px', color: isDark ? '#9CA59C' : '#8E8E93', margin: 0 }}>
               Add tasks you want to work on this week
             </p>
           </div>
@@ -246,13 +250,13 @@ export default function WeeklyPool({ onNavigateToToday }) {
                 <div
                   key={task.id}
                   style={{
-                    background: '#fff', borderRadius: '12px',
-                    padding: '12px 14px', boxShadow: '0 1px 6px rgba(0,0,0,0.04)',
+                    background: isDark ? '#242B24' : '#fff', borderRadius: '12px',
+                    padding: '12px 14px', boxShadow: isDark ? '0 1px 6px rgba(0,0,0,0.3)' : '0 1px 6px rgba(0,0,0,0.04)',
                     display: 'flex', flexDirection: 'column', gap: '10px'
                   }}
                 >
                   <div>
-                    <div style={{ fontSize: '14px', fontWeight: 700, color: '#1A1A1A', marginBottom: '4px' }}>
+                    <div style={{ fontSize: '14px', fontWeight: 700, color: isDark ? '#E8F0E8' : '#1A1A1A', marginBottom: '4px' }}>
                       {task.name}
                     </div>
                     {urgency && (

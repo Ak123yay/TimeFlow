@@ -63,6 +63,7 @@ export default function WeeklyView({ onBackToToday }) {
   const isCurrentWeek = weekStart === getCurrentWeekStart();
 
   if (isMobile) {
+    const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
     return (
       <MobileLayout showBottomNav={true} onNavigate={(tab) => {
         haptic.light();
@@ -74,10 +75,10 @@ export default function WeeklyView({ onBackToToday }) {
 
         {/* Header */}
         <div style={{ marginBottom: '12px' }}>
-          <h1 style={{ fontSize: '20px', fontWeight: 800, color: '#1A1A1A', margin: '0 0 2px', letterSpacing: '-0.3px' }}>
+          <h1 style={{ fontSize: '20px', fontWeight: 800, color: isDark ? '#E8F0E8' : '#1A1A1A', margin: '0 0 2px', letterSpacing: '-0.3px' }}>
             Weekly Overview
           </h1>
-          <p style={{ fontSize: '12px', color: '#8E8E93', margin: 0 }}>Your week at a glance</p>
+          <p style={{ fontSize: '12px', color: isDark ? '#9CA59C' : '#8E8E93', margin: 0 }}>Your week at a glance</p>
         </div>
 
         {/* First-Time Tooltip */}

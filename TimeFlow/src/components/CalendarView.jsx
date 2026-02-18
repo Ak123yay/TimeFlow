@@ -200,16 +200,16 @@ export default function CalendarView({ onDaySelect, selectedDate }) {
                 aspectRatio: '1',
                 borderRadius: '12px',
                 border: dayData.isToday
-                  ? '2px solid #3B6E3B'
+                  ? isDark ? '2px solid #6FAF6F' : '2px solid #3B6E3B'
                   : dayData.isSelected
-                  ? '2px solid #6FAF6F'
+                  ? isDark ? '2px solid #8BC98B' : '2px solid #6FAF6F'
                   : 'none',
                 background: dayData.isToday
-                  ? 'rgba(59,110,59,0.1)'
+                  ? isDark ? 'rgba(111,175,111,0.15)' : 'rgba(59,110,59,0.1)'
                   : dayData.isSelected
-                  ? 'rgba(111,175,111,0.1)'
+                  ? isDark ? 'rgba(139,201,139,0.15)' : 'rgba(111,175,111,0.1)'
                   : dayData.tasks > 0
-                  ? '#F5F5F5'
+                  ? isDark ? '#1A1F1A' : '#F5F5F5'
                   : 'transparent',
                 cursor: 'pointer',
                 display: 'flex',
@@ -229,10 +229,10 @@ export default function CalendarView({ onDaySelect, selectedDate }) {
                 fontSize: '13px',
                 fontWeight: dayData.isToday ? 700 : 600,
                 color: dayData.isToday
-                  ? '#3B6E3B'
+                  ? isDark ? '#8BC98B' : '#3B6E3B'
                   : dayData.isPast
-                  ? '#9CA3AF'
-                  : '#1A1A1A'
+                  ? isDark ? '#6B7B6B' : '#9CA3AF'
+                  : isDark ? '#E8F0E8' : '#1A1A1A'
               }}>
                 {dayData.day}
               </div>
@@ -250,16 +250,16 @@ export default function CalendarView({ onDaySelect, selectedDate }) {
                     height: '4px',
                     borderRadius: '50%',
                     background: completionRate === 1
-                      ? '#3B6E3B'
+                      ? isDark ? '#8BC98B' : '#3B6E3B'
                       : completionRate > 0
                       ? '#D97706'
-                      : '#9CA3AF'
+                      : isDark ? '#6B7B6B' : '#9CA3AF'
                   }} />
                   {/* Show task count if more than 3 */}
                   {dayData.tasks > 1 && (
                     <span style={{
                       fontSize: '8px',
-                      color: '#8E8E93',
+                      color: isDark ? '#9CA59C' : '#8E8E93',
                       fontWeight: 600
                     }}>
                       {dayData.tasks}

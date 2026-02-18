@@ -54,6 +54,7 @@ export default function Streak({ onNavigate }) {
   };
 
   if (isMobile) {
+    const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
     return (
       <MobileLayout
         showBottomNav={true}
@@ -68,7 +69,7 @@ export default function Streak({ onNavigate }) {
       >
         {/* Header */}
         <div style={{ marginBottom: '16px', textAlign: 'center' }}>
-          <h1 style={{ fontSize: '20px', fontWeight: 800, color: '#1A1A1A', margin: '0 0 4px', letterSpacing: '-0.3px' }}>
+          <h1 style={{ fontSize: '20px', fontWeight: 800, color: isDark ? '#E8F0E8' : '#1A1A1A', margin: '0 0 4px', letterSpacing: '-0.3px' }}>
             Your Streak 🌿
           </h1>
           <p style={{ fontSize: '12px', color: '#8E8E93', margin: 0 }}>

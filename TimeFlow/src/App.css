@@ -726,12 +726,30 @@ input:focus-visible {
   background: linear-gradient(135deg, #FFF5F5, #F0F8F2) !important;
 }
 
+@media (prefers-color-scheme: dark) {
+  .app-dawn {
+    background: linear-gradient(135deg, #2A1F1F, #1A1F1A) !important;
+  }
+}
+
 .app-dusk {
   background: linear-gradient(135deg, #F5F0FF, #F0F8F2) !important;
 }
 
+@media (prefers-color-scheme: dark) {
+  .app-dusk {
+    background: linear-gradient(135deg, #251F2A, #1A1F1A) !important;
+  }
+}
+
 .app-night {
   background: linear-gradient(135deg, #E8F4F8, #E0F0E8) !important;
+}
+
+@media (prefers-color-scheme: dark) {
+  .app-night {
+    background: linear-gradient(135deg, #1A2225, #171C1A) !important;
+  }
 }
 
 /* ==================== Floating Leaves ==================== */
@@ -865,7 +883,7 @@ input:focus-visible {
   .setup-fullscreen {
     padding: 0;  /* Edge-to-edge */
     min-height: 100dvh;
-    background: var(--sand);  /* Warm sandy background instead of pure white */
+    background: var(--sand);  /* Uses CSS variable, adapts in dark mode */
     display: flex;
     align-items: flex-end;  /* Align to bottom for sheet effect */
     justify-content:center;
@@ -874,8 +892,8 @@ input:focus-visible {
   .setup-inner {
     padding: 20px 16px 24px;  /* Tighter horizontal padding */
     border-radius: 24px 24px 0 0;  /* Rounded top corners (card from bottom) */
-    background: linear-gradient(180deg, #FFFEF9 0%, #F5F1E8 100%);  /* Subtle gradient */
-    box-shadow: 0 -4px 24px rgba(59,110,59,0.08);  /* Soft upward shadow */
+    background: var(--gradient-mist);  /* Uses CSS variable gradient, adapts in dark mode */
+    box-shadow: 0 -4px 24px var(--soft-shadow);  /* Uses CSS variable shadow */
     min-height: calc(100dvh - 40px);
     width: 100%;
     max-width: 100%;
@@ -893,7 +911,7 @@ input:focus-visible {
   .App {
     min-height: 100dvh;
     min-height: -webkit-fill-available;
-    background: var(--sand);  /* Warm sandy background */
+    background: var(--sand);  /* Uses CSS variable, adapts in dark mode */
   }
 
   /* Better spacing for section headers */

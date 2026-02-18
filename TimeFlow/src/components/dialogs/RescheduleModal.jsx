@@ -113,6 +113,7 @@ export default function RescheduleModal({
 
   if (!task) return null;
 
+  const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
   const attempts = task.attempts || 0;
   const remaining = task.remaining || task.duration;
   const urgency = getDeadlineUrgency(task);
@@ -130,19 +131,19 @@ export default function RescheduleModal({
       animation: "fadeIn 0.2s ease-out"
     }}>
       <div style={{
-        background: "#fff",
+        background: isDark ? "#242B24" : "#fff",
         padding: 28,
         borderRadius: 20,
         width: "92%",
         maxWidth: 480,
         textAlign: "center",
-        boxShadow: "0 30px 80px rgba(0,0,0,0.25)",
+        boxShadow: isDark ? "0 30px 80px rgba(0,0,0,0.5)" : "0 30px 80px rgba(0,0,0,0.25)",
         animation: "scaleIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)"
       }}>
-        <div style={{ fontSize: 24, fontWeight: 900, color: "#123a12", marginBottom: 8 }}>
+        <div style={{ fontSize: 24, fontWeight: 900, color: isDark ? "#E8F0E8" : "#123a12", marginBottom: 8 }}>
           Task finished?
         </div>
-        <p style={{ fontSize: 16, fontWeight: 600, color: "#3B6E3B", marginBottom: 12 }}>
+        <p style={{ fontSize: 16, fontWeight: 600, color: isDark ? "#8BC98B" : "#3B6E3B", marginBottom: 12 }}>
           "{task.name}"
         </p>
 
@@ -190,7 +191,7 @@ export default function RescheduleModal({
           }}>
             <div style={{
               fontWeight: 700,
-              color: "#3B6E3B",
+              color: isDark ? '#8BC98B' : '#3B6E3B',
               marginBottom: 4,
               display: "flex",
               alignItems: "center",
@@ -211,7 +212,7 @@ export default function RescheduleModal({
                 </span>
               )}
             </div>
-            <div style={{ fontSize: 12, color: "#4B6B4B", lineHeight: 1.4 }}>
+            <div style={{ fontSize: 12, color: isDark ? '#9CA59C' : '#4B6B4B', lineHeight: 1.4 }}>
               {smartRecommendation.reason}
             </div>
           </div>
@@ -239,7 +240,7 @@ export default function RescheduleModal({
 
         <div style={{
           fontSize: 14,
-          color: "#6B8E6B",
+          color: isDark ? '#9CA59C' : '#6B8E6B',
           marginBottom: 20
         }}>
           {remaining} minutes remaining

@@ -82,6 +82,7 @@ export default function DayReflection({ todayDate, onComplete }) {
   ];
 
   if (isMobile) {
+    const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
     return (
       <MobileLayout showBottomNav={true} onNavigate={(tab) => {
         haptic.light();

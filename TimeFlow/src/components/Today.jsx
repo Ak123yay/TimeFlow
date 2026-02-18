@@ -1338,7 +1338,7 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
             {filterForFocus(todayTasks).length > 0 && (
               <div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px', paddingLeft: '2px' }}>
-                  <span style={{ fontSize: '11px', fontWeight: 700, color: '#1A1A1A', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                  <span style={{ fontSize: '11px', fontWeight: 700, color: isDark ? '#E8F0E8' : '#1A1A1A', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                     Tasks
                   </span>
                   <span style={{ fontSize: '10px', fontWeight: 600, background: 'rgba(59,110,59,0.08)', color: '#3B6E3B', padding: '1px 6px', borderRadius: '99px' }}>
@@ -1465,7 +1465,7 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
                   boxSizing: 'border-box',
                   fontSize: '16px',
                   padding: '0 14px',
-                  border: '1.5px solid #E5E5E5',
+                  border: `1.5px solid ${isDark ? '#6B7B6B' : '#E5E5E5'}`,
                   borderRadius: '10px',
                   background: isDark ? '#1A1F1A' : '#FAFAFA',
                   color: isDark ? '#E8F0E8' : '#1A1A1A',
@@ -1473,7 +1473,7 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
                   marginBottom: '10px'
                 }}
                 onFocus={(e) => e.target.style.borderColor = '#3B6E3B'}
-                onBlur={(e) => e.target.style.borderColor = '#E5E5E5'}
+                onBlur={(e) => e.target.style.borderColor = isDark ? '#6B7B6B' : '#E5E5E5'}
               />
 
               {/* Time + Duration row */}
@@ -1484,7 +1484,7 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
                     display: 'flex',
                     alignItems: 'center',
                     height: '44px',
-                    border: '1.5px solid #E5E5E5',
+                    border: `1.5px solid ${isDark ? '#6B7B6B' : '#E5E5E5'}`,
                     borderRadius: '10px',
                     background: isDark ? '#1A1F1A' : '#FAFAFA',
                     padding: '0 12px',
@@ -1511,7 +1511,7 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
                     display: 'flex',
                     alignItems: 'center',
                     height: '44px',
-                    border: '1.5px solid #E5E5E5',
+                    border: `1.5px solid ${isDark ? '#6B7B6B' : '#E5E5E5'}`,
                     borderRadius: '10px',
                     background: isDark ? '#1A1F1A' : '#FAFAFA',
                     padding: '0 12px',
@@ -1544,7 +1544,7 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
                   display: 'flex',
                   alignItems: 'center',
                   height: '44px',
-                  border: '1.5px solid #E5E5E5',
+                  border: `1.5px solid ${isDark ? '#6B7B6B' : '#E5E5E5'}`,
                   borderRadius: '10px',
                   background: isDark ? '#1A1F1A' : '#FAFAFA',
                   padding: '0 12px',

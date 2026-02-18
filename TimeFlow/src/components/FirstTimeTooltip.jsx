@@ -5,10 +5,16 @@ import { haptic } from '../utils/haptics';
  * FirstTimeTooltip - Intro card shown on first visit to a tab
  */
 export default function FirstTimeTooltip({ title, description, icon, onDismiss }) {
+  const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+
   return (
     <div style={{
-      background: 'linear-gradient(135deg, rgba(167,211,167,0.15), rgba(111,175,111,0.08))',
-      border: '1.5px solid rgba(111,175,111,0.25)',
+      background: isDark
+        ? 'linear-gradient(135deg, rgba(74,107,74,0.2), rgba(59,110,59,0.1))'
+        : 'linear-gradient(135deg, rgba(167,211,167,0.15), rgba(111,175,111,0.08))',
+      border: isDark
+        ? '1.5px solid rgba(74,107,74,0.35)'
+        : '1.5px solid rgba(111,175,111,0.25)',
       borderRadius: '14px',
       padding: '14px 16px',
       marginBottom: '14px',
@@ -27,7 +33,7 @@ export default function FirstTimeTooltip({ title, description, icon, onDismiss }
             margin: '0 0 6px',
             fontSize: '15px',
             fontWeight: 700,
-            color: '#1A1A1A'
+            color: isDark ? '#E8F0E8' : '#1A1A1A'
           }}>
             {title}
           </h3>
@@ -35,7 +41,7 @@ export default function FirstTimeTooltip({ title, description, icon, onDismiss }
             margin: '0 0 10px',
             fontSize: '13px',
             lineHeight: '1.5',
-            color: '#6B8E6B'
+            color: isDark ? '#9CA59C' : '#6B8E6B'
           }}>
             {description}
           </p>
