@@ -229,9 +229,87 @@ export default function Setup({ onDone }) {
           </div>
         </div>
 
-        {/* Features Section */}
+        {/* Install Instructions */}
         <div style={{
           marginTop: "28px",
+          marginBottom: "20px",
+          padding: "20px",
+          background: "linear-gradient(135deg, rgba(59,110,59,0.12), rgba(59,110,59,0.06))",
+          borderRadius: "16px",
+          border: "2px solid rgba(59,110,59,0.25)"
+        }}>
+          <div style={{
+            fontSize: "16px",
+            fontWeight: "700",
+            color: "#3B6E3B",
+            marginBottom: "12px",
+            display: "flex",
+            alignItems: "center",
+            gap: "8px"
+          }}>
+            <span style={{ fontSize: "20px" }}>📱</span>
+            <span>Install TimeFlow as an App</span>
+          </div>
+          <div style={{
+            fontSize: "13px",
+            color: "#6B8E6B",
+            marginBottom: "16px",
+            lineHeight: "1.5"
+          }}>
+            Get the full app experience with offline support and instant loading
+          </div>
+
+          <div style={{
+            display: "flex",
+            flexDirection: "column",
+            gap: "12px"
+          }}>
+            <div style={{
+              padding: "12px",
+              background: "rgba(255,255,255,0.5)",
+              borderRadius: "10px",
+              border: "1px solid rgba(59,110,59,0.15)"
+            }}>
+              <div style={{ fontSize: "13px", fontWeight: "600", color: "#3B6E3B", marginBottom: "6px" }}>
+                📱 Android (Chrome/Edge)
+              </div>
+              <div style={{ fontSize: "12px", color: "#6B8E6B", lineHeight: "1.4" }}>
+                Look for the "Install" banner at the bottom, or tap the menu (⋮) → "Install app"
+              </div>
+            </div>
+
+            <div style={{
+              padding: "12px",
+              background: "rgba(255,255,255,0.5)",
+              borderRadius: "10px",
+              border: "1px solid rgba(59,110,59,0.15)"
+            }}>
+              <div style={{ fontSize: "13px", fontWeight: "600", color: "#3B6E3B", marginBottom: "6px" }}>
+                🍎 iOS (Safari)
+              </div>
+              <div style={{ fontSize: "12px", color: "#6B8E6B", lineHeight: "1.4" }}>
+                Tap the Share button <span style={{ fontSize: "14px" }}>⎙</span> → "Add to Home Screen"
+              </div>
+            </div>
+
+            <div style={{
+              padding: "12px",
+              background: "rgba(255,255,255,0.5)",
+              borderRadius: "10px",
+              border: "1px solid rgba(59,110,59,0.15)"
+            }}>
+              <div style={{ fontSize: "13px", fontWeight: "600", color: "#3B6E3B", marginBottom: "6px" }}>
+                💻 Desktop (Chrome/Edge/Brave)
+              </div>
+              <div style={{ fontSize: "12px", color: "#6B8E6B", lineHeight: "1.4" }}>
+                Look for the install icon <span style={{ fontSize: "14px" }}>⊕</span> in the address bar
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Features Section */}
+        <div style={{
           marginBottom: "20px",
           padding: "20px",
           background: "linear-gradient(135deg, rgba(167,211,167,0.08), rgba(111,175,111,0.04))",
@@ -364,6 +442,42 @@ export default function Setup({ onDone }) {
                 </div>
                 <div style={{ fontSize: "12px", color: "#6B8E6B", lineHeight: "1.4" }}>
                   Set deadlines and get auto-escalating urgency as dates approach
+                </div>
+              </div>
+            </div>
+
+            <div style={{ display: "flex", gap: "10px" }}>
+              <span style={{ fontSize: "18px", flexShrink: 0 }}>✈️</span>
+              <div>
+                <div style={{ fontSize: "13px", fontWeight: "600", color: "#3B6E3B", marginBottom: "4px" }}>
+                  Works Offline
+                </div>
+                <div style={{ fontSize: "12px", color: "#6B8E6B", lineHeight: "1.4" }}>
+                  Full offline support with 710KB cached - works with zero internet
+                </div>
+              </div>
+            </div>
+
+            <div style={{ display: "flex", gap: "10px" }}>
+              <span style={{ fontSize: "18px", flexShrink: 0 }}>⚡</span>
+              <div>
+                <div style={{ fontSize: "13px", fontWeight: "600", color: "#3B6E3B", marginBottom: "4px" }}>
+                  Instant Loading
+                </div>
+                <div style={{ fontSize: "12px", color: "#6B8E6B", lineHeight: "1.4" }}>
+                  Service worker caches everything for near-instant load times
+                </div>
+              </div>
+            </div>
+
+            <div style={{ display: "flex", gap: "10px" }}>
+              <span style={{ fontSize: "18px", flexShrink: 0 }}>🔄</span>
+              <div>
+                <div style={{ fontSize: "13px", fontWeight: "600", color: "#3B6E3B", marginBottom: "4px" }}>
+                  Auto-Updates
+                </div>
+                <div style={{ fontSize: "12px", color: "#6B8E6B", lineHeight: "1.4" }}>
+                  New versions download automatically in the background
                 </div>
               </div>
             </div>
