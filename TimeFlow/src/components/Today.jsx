@@ -36,6 +36,7 @@ import {
   closestCenter,
   KeyboardSensor,
   PointerSensor,
+  TouchSensor,
   useSensor,
   useSensors,
 } from '@dnd-kit/core';
@@ -199,6 +200,66 @@ function SortableTaskItem({ task, children, onClick, style: customStyle, classNa
           onMouseLeave={onMouseLeave}
           {...otherProps}
         >
+          {children}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Mobile drag and drop wrapper
+function MobileSortableTask({ task, isActive, children }) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: task.id });
+
+  const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+    touchAction: 'none', // Prevent default touch behavior during drag
+  };
+
+  return (
+    <div ref={setNodeRef} style={style}>
+      <div style={{ display: 'flex', gap: '8px', alignItems: 'stretch' }}>
+        {/* Drag Handle - only show if not active */}
+        {!isActive && (
+          <div {...attributes} {...listeners} style={{
+            width: '32px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            cursor: 'grab',
+            touchAction: 'none',
+            WebkitTapHighlightColor: 'transparent'
+          }}>
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(2, 4px)',
+              gap: '4px'
+            }}>
+              {[...Array(6)].map((_, i) => (
+                <div key={i} style={{
+                  width: '4px',
+                  height: '4px',
+                  borderRadius: '50%',
+                  background: isDark ? '#6B7B6B' : '#D1D5DB'
+                }} />
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Task Card Content */}
+        <div style={{ flex: 1 }}>
           {children}
         </div>
       </div>
@@ -382,6 +443,12 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
   // Drag and drop sensors
   const sensors = useSensors(
     useSensor(PointerSensor),
+    useSensor(TouchSensor, {
+      activationConstraint: {
+        delay: 200,      // 200ms hold before drag starts
+        tolerance: 5,    // 5px movement tolerance
+      },
+    }),
     useSensor(KeyboardSensor, {
       coordinateGetter: sortableKeyboardCoordinates,
     })
@@ -1087,7 +1154,12 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
     const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
 
     return (
-      <MobileLayout showBottomNav={!activeTaskId} onNavigate={handleMobileNav}>
+      <DndContext
+        sensors={sensors}
+        collisionDetection={closestCenter}
+        onDragEnd={handleDragEnd}
+      >
+        <MobileLayout showBottomNav={!activeTaskId} onNavigate={handleMobileNav}>
 
         {/* ---- Hero Card ---- */}
         {!activeTask ? (
@@ -1275,19 +1347,23 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
                     {filterForFocus(carriedTasks).length}
                   </span>
                 </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                  {filterForFocus(carriedTasks).map((task, i) => (
-                    <TaskCard
-                      key={task.id}
-                      task={{
-                        ...task, position: i + 1,
-                        startTime: minutesToHHMM(task.start),
-                        endTime: minutesToHHMM(task.end),
-                        conflicts: hasConflict(task.id)
-                      }}
-                      isActive={activeTaskId === task.id}
-                      onStart={() => startTask(task)}
-                      onComplete={() => {
+                <SortableContext
+                  items={filterForFocus(carriedTasks).map(t => t.id)}
+                  strategy={verticalListSortingStrategy}
+                >
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                    {filterForFocus(carriedTasks).map((task, i) => (
+                      <MobileSortableTask key={task.id} task={task} isActive={activeTaskId === task.id}>
+                        <TaskCard
+                          task={{
+                            ...task, position: i + 1,
+                            startTime: minutesToHHMM(task.start),
+                            endTime: minutesToHHMM(task.end),
+                            conflicts: hasConflict(task.id)
+                          }}
+                          isActive={activeTaskId === task.id}
+                          onStart={() => startTask(task)}
+                          onComplete={() => {
                         const isCurrentlyCompleted = task.completed;
 
                         if (isCurrentlyCompleted) {
@@ -1329,8 +1405,10 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
                       onEdit={() => handleEditTask(task)}
                       showSwipeActions={activeTaskId !== task.id}
                     />
+                      </MobileSortableTask>
                   ))}
                 </div>
+                </SortableContext>
               </div>
             )}
 
@@ -1345,19 +1423,23 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
                     {filterForFocus(todayTasks).length}
                   </span>
                 </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                  {filterForFocus(todayTasks).map((task, i) => (
-                    <TaskCard
-                      key={task.id}
-                      task={{
-                        ...task, position: i + 1,
-                        startTime: minutesToHHMM(task.start),
-                        endTime: minutesToHHMM(task.end),
-                        conflicts: hasConflict(task.id)
-                      }}
-                      isActive={activeTaskId === task.id}
-                      onStart={() => startTask(task)}
-                      onComplete={() => {
+                <SortableContext
+                  items={filterForFocus(todayTasks).map(t => t.id)}
+                  strategy={verticalListSortingStrategy}
+                >
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                    {filterForFocus(todayTasks).map((task, i) => (
+                      <MobileSortableTask key={task.id} task={task} isActive={activeTaskId === task.id}>
+                        <TaskCard
+                          task={{
+                            ...task, position: i + 1,
+                            startTime: minutesToHHMM(task.start),
+                            endTime: minutesToHHMM(task.end),
+                            conflicts: hasConflict(task.id)
+                          }}
+                          isActive={activeTaskId === task.id}
+                          onStart={() => startTask(task)}
+                          onComplete={() => {
                         const isCurrentlyCompleted = task.completed;
 
                         if (isCurrentlyCompleted) {
@@ -1399,8 +1481,10 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
                       onEdit={() => handleEditTask(task)}
                       showSwipeActions={activeTaskId !== task.id}
                     />
+                      </MobileSortableTask>
                   ))}
                 </div>
+                </SortableContext>
               </div>
             )}
 
@@ -1653,6 +1737,7 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
           <Celebration type={showCelebration} onComplete={() => setShowCelebration(null)} />
         )}
       </MobileLayout>
+      </DndContext>
     );
   }
 
