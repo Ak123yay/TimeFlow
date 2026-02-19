@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import "../App.css";
 
 function LeafIcon({ size = 24, fill = "#6FAF6F" }) {
@@ -31,6 +31,7 @@ function ProgressDots({ currentStep, totalSteps }) {
 
 export default function Onboarding({ onComplete }) {
   const [step, setStep] = useState(0);
+  const [windowWidth, setWindowWidth] = useState(typeof window !== 'undefined' ? window.innerWidth : 1024);
 
   const handleSkip = () => {
     localStorage.setItem('onboardingCompleted', 'true');
@@ -38,7 +39,7 @@ export default function Onboarding({ onComplete }) {
   };
 
   const handleNext = () => {
-    if (step < 2) {
+    if (step < 4) {
       setStep(step + 1);
     } else {
       localStorage.setItem('onboardingCompleted', 'true');
@@ -52,11 +53,17 @@ export default function Onboarding({ onComplete }) {
     }
   };
 
+  useEffect(() => {
+    const handleResize = () => setWindowWidth(window.innerWidth);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   return (
     <div className="setup-fullscreen nat-bg">
       <div className="setup-inner nat-card" style={{ maxWidth: "600px", animation: "fadeInUp 0.5s ease-out" }}>
 
-        <ProgressDots currentStep={step} totalSteps={3} />
+        <ProgressDots currentStep={step} totalSteps={5} />
 
         {step === 0 && (
           <div style={{ textAlign: "center" }}>
@@ -227,6 +234,215 @@ export default function Onboarding({ onComplete }) {
         )}
 
         {step === 2 && (
+          <div>
+            <h1 className="title" style={{ fontSize: "24px", marginBottom: "20px", textAlign: "center" }}>
+              What Makes TimeFlow Special 🌿
+            </h1>
+
+            <div style={{
+              display: "grid",
+              gridTemplateColumns: windowWidth < 640 ? "1fr" : "repeat(2, 1fr)",
+              gap: "12px",
+              maxHeight: "400px",
+              overflowY: "auto",
+              padding: "4px"
+            }}>
+              <div style={{ display: "flex", gap: "10px", padding: "12px", background: "rgba(167,211,167,0.08)", borderRadius: "10px" }}>
+                <span style={{ fontSize: "18px", flexShrink: 0 }}>🔄</span>
+                <div>
+                  <div style={{ fontSize: "13px", fontWeight: "600", color: "#3B6E3B", marginBottom: "4px" }}>
+                    Adaptive Rescheduling
+                  </div>
+                  <div style={{ fontSize: "12px", color: "#6B8E6B", lineHeight: "1.4" }}>
+                    Running late? We'll help you find the next available slot
+                  </div>
+                </div>
+              </div>
+
+              <div style={{ display: "flex", gap: "10px", padding: "12px", background: "rgba(167,211,167,0.08)", borderRadius: "10px" }}>
+                <span style={{ fontSize: "18px", flexShrink: 0 }}>🌊</span>
+                <div>
+                  <div style={{ fontSize: "13px", fontWeight: "600", color: "#3B6E3B", marginBottom: "4px" }}>
+                    Weekly Pool
+                  </div>
+                  <div style={{ fontSize: "12px", color: "#6B8E6B", lineHeight: "1.4" }}>
+                    Capture tasks without pressure, schedule when ready
+                  </div>
+                </div>
+              </div>
+
+              <div style={{ display: "flex", gap: "10px", padding: "12px", background: "rgba(167,211,167,0.08)", borderRadius: "10px" }}>
+                <span style={{ fontSize: "18px", flexShrink: 0 }}>📝</span>
+                <div>
+                  <div style={{ fontSize: "13px", fontWeight: "600", color: "#3B6E3B", marginBottom: "4px" }}>
+                    Daily Reflections
+                  </div>
+                  <div style={{ fontSize: "12px", color: "#6B8E6B", lineHeight: "1.4" }}>
+                    End each day with mindful reflection
+                  </div>
+                </div>
+              </div>
+
+              <div style={{ display: "flex", gap: "10px", padding: "12px", background: "rgba(167,211,167,0.08)", borderRadius: "10px" }}>
+                <span style={{ fontSize: "18px", flexShrink: 0 }}>🎯</span>
+                <div>
+                  <div style={{ fontSize: "13px", fontWeight: "600", color: "#3B6E3B", marginBottom: "4px" }}>
+                    Focus Mode
+                  </div>
+                  <div style={{ fontSize: "12px", color: "#6B8E6B", lineHeight: "1.4" }}>
+                    Hide distractions with timer support
+                  </div>
+                </div>
+              </div>
+
+              <div style={{ display: "flex", gap: "10px", padding: "12px", background: "rgba(167,211,167,0.08)", borderRadius: "10px" }}>
+                <span style={{ fontSize: "18px", flexShrink: 0 }}>🌿</span>
+                <div>
+                  <div style={{ fontSize: "13px", fontWeight: "600", color: "#3B6E3B", marginBottom: "4px" }}>
+                    Calm Interface
+                  </div>
+                  <div style={{ fontSize: "12px", color: "#6B8E6B", lineHeight: "1.4" }}>
+                    Nature-themed design that adapts daily
+                  </div>
+                </div>
+              </div>
+
+              <div style={{ display: "flex", gap: "10px", padding: "12px", background: "rgba(167,211,167,0.08)", borderRadius: "10px" }}>
+                <span style={{ fontSize: "18px", flexShrink: 0 }}>📊</span>
+                <div>
+                  <div style={{ fontSize: "13px", fontWeight: "600", color: "#3B6E3B", marginBottom: "4px" }}>
+                    Weekly Overview
+                  </div>
+                  <div style={{ fontSize: "12px", color: "#6B8E6B", lineHeight: "1.4" }}>
+                    Track your progress at a glance
+                  </div>
+                </div>
+              </div>
+
+              <div style={{ display: "flex", gap: "10px", padding: "12px", background: "rgba(167,211,167,0.08)", borderRadius: "10px" }}>
+                <span style={{ fontSize: "18px", flexShrink: 0 }}>🌱</span>
+                <div>
+                  <div style={{ fontSize: "13px", fontWeight: "600", color: "#3B6E3B", marginBottom: "4px" }}>
+                    Gentle Streaks
+                  </div>
+                  <div style={{ fontSize: "12px", color: "#6B8E6B", lineHeight: "1.4" }}>
+                    Growing plant rewards consistency
+                  </div>
+                </div>
+              </div>
+
+              <div style={{ display: "flex", gap: "10px", padding: "12px", background: "rgba(167,211,167,0.08)", borderRadius: "10px" }}>
+                <span style={{ fontSize: "18px", flexShrink: 0 }}>⚠️</span>
+                <div>
+                  <div style={{ fontSize: "13px", fontWeight: "600", color: "#3B6E3B", marginBottom: "4px" }}>
+                    Task Health Check
+                  </div>
+                  <div style={{ fontSize: "12px", color: "#6B8E6B", lineHeight: "1.4" }}>
+                    Color-coded warnings for overdue tasks
+                  </div>
+                </div>
+              </div>
+
+              <div style={{ display: "flex", gap: "10px", padding: "12px", background: "rgba(167,211,167,0.08)", borderRadius: "10px" }}>
+                <span style={{ fontSize: "18px", flexShrink: 0 }}>✈️</span>
+                <div>
+                  <div style={{ fontSize: "13px", fontWeight: "600", color: "#3B6E3B", marginBottom: "4px" }}>
+                    Works Offline
+                  </div>
+                  <div style={{ fontSize: "12px", color: "#6B8E6B", lineHeight: "1.4" }}>
+                    Full offline support with instant loading
+                  </div>
+                </div>
+              </div>
+
+              <div style={{ display: "flex", gap: "10px", padding: "12px", background: "rgba(167,211,167,0.08)", borderRadius: "10px" }}>
+                <span style={{ fontSize: "18px", flexShrink: 0 }}>🔄</span>
+                <div>
+                  <div style={{ fontSize: "13px", fontWeight: "600", color: "#3B6E3B", marginBottom: "4px" }}>
+                    Auto-Updates
+                  </div>
+                  <div style={{ fontSize: "12px", color: "#6B8E6B", lineHeight: "1.4" }}>
+                    New versions download automatically
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {step === 3 && (
+          <div>
+            <h1 className="title" style={{ fontSize: "24px", marginBottom: "16px", textAlign: "center" }}>
+              📱 Install TimeFlow as an App
+            </h1>
+            <p style={{ fontSize: "14px", color: "#6B8E6B", marginBottom: "20px", textAlign: "center", lineHeight: "1.5" }}>
+              Get the full app experience with offline support and instant loading
+            </p>
+
+            <div style={{
+              display: "flex",
+              flexDirection: "column",
+              gap: "12px"
+            }}>
+              <div style={{
+                padding: "14px",
+                background: "linear-gradient(135deg, rgba(59,110,59,0.12), rgba(59,110,59,0.06))",
+                borderRadius: "10px",
+                border: "1px solid rgba(59,110,59,0.15)"
+              }}>
+                <div style={{ fontSize: "13px", fontWeight: "600", color: "#3B6E3B", marginBottom: "6px" }}>
+                  📱 Android (Chrome/Edge)
+                </div>
+                <div style={{ fontSize: "12px", color: "#6B8E6B", lineHeight: "1.4" }}>
+                  Look for the "Install" banner at the bottom, or tap the menu (⋮) → "Install app"
+                </div>
+              </div>
+
+              <div style={{
+                padding: "14px",
+                background: "linear-gradient(135deg, rgba(59,110,59,0.12), rgba(59,110,59,0.06))",
+                borderRadius: "10px",
+                border: "1px solid rgba(59,110,59,0.15)"
+              }}>
+                <div style={{ fontSize: "13px", fontWeight: "600", color: "#3B6E3B", marginBottom: "6px" }}>
+                  🍎 iOS (Safari)
+                </div>
+                <div style={{ fontSize: "12px", color: "#6B8E6B", lineHeight: "1.4" }}>
+                  Tap the Share button <span style={{ fontSize: "14px" }}>⎙</span> → "Add to Home Screen"
+                </div>
+              </div>
+
+              <div style={{
+                padding: "14px",
+                background: "linear-gradient(135deg, rgba(59,110,59,0.12), rgba(59,110,59,0.06))",
+                borderRadius: "10px",
+                border: "1px solid rgba(59,110,59,0.15)"
+              }}>
+                <div style={{ fontSize: "13px", fontWeight: "600", color: "#3B6E3B", marginBottom: "6px" }}>
+                  💻 Desktop (Chrome/Edge/Brave)
+                </div>
+                <div style={{ fontSize: "12px", color: "#6B8E6B", lineHeight: "1.4" }}>
+                  Look for the install icon <span style={{ fontSize: "14px" }}>⊕</span> in the address bar
+                </div>
+              </div>
+            </div>
+
+            <div style={{
+              marginTop: "16px",
+              padding: "12px",
+              background: "rgba(167,211,167,0.08)",
+              borderRadius: "10px",
+              fontSize: "12px",
+              color: "#6B8E6B",
+              textAlign: "center",
+              fontStyle: "italic"
+            }}>
+              💡 You can always install later from your browser menu
+            </div>
+          </div>
+        )}
+
+        {step === 4 && (
           <div style={{ textAlign: "center" }}>
             <LeafIcon size={64} fill="#3B6E3B" />
             <h1 className="title" style={{ fontSize: "28px", marginTop: "16px", marginBottom: "16px" }}>
@@ -278,7 +494,7 @@ export default function Onboarding({ onComplete }) {
             className="btn primary"
             style={{ flex: 2 }}
           >
-            {step === 2 ? "Get Started →" : "Next →"}
+            {step === 4 ? "Get Started →" : "Next →"}
           </button>
         </div>
       </div>
