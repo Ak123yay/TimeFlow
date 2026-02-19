@@ -3,10 +3,12 @@ import Setup from "./components/Setup";
 import Today from "./components/Today";
 import DayReflection from "./components/DayReflection";
 import Streak from "./components/Streak";
-// OPTIMIZED: Lazy load WeeklyView and WeeklyPool to reduce initial bundle size
+// OPTIMIZED: Lazy load WeeklyView, WeeklyPool, and Insights to reduce initial bundle size
 const WeeklyView = lazy(() => import("./components/WeeklyView"));
 const WeeklyPool = lazy(() => import("./components/WeeklyPool"));
+const Insights = lazy(() => import("./components/Insights"));
 import Onboarding from "./components/Onboarding";
+import InstallPrompt from "./components/InstallPrompt";
 import { loadAvailability } from "./utils/storage";
 import { getTimePeriod } from "./utils/timeUtils";
 import "./App.css";
@@ -73,7 +75,7 @@ export default function App() {
     return !!(availability && availability.start && availability.end);
   });
 
-  const [currentView, setCurrentView] = useState('today'); // 'today' | 'reflection' | 'week' | 'pool' | 'streak'
+  const [currentView, setCurrentView] = useState('today'); // 'today' | 'reflection' | 'week' | 'pool' | 'streak' | 'insights'
   const [timePeriod, setTimePeriod] = useState(getTimePeriod());
 
   // Hash routing
@@ -88,6 +90,8 @@ export default function App() {
         setCurrentView('pool');
       } else if (hash === '#/streak') {
         setCurrentView('streak');
+      } else if (hash === '#/insights') {
+        setCurrentView('insights');
       } else {
         setCurrentView('today');
       }
@@ -172,9 +176,21 @@ export default function App() {
           else if (view === 'pool') showPool();
           else if (view === 'stats') showReflection();
         }} />
+      ) : currentView === 'insights' ? (
+        <Suspense fallback={<LoadingFallback />}>
+          <Insights onNavigate={(view) => {
+            if (view === 'today') showToday();
+            else if (view === 'week') showWeek();
+            else if (view === 'pool') showPool();
+            else if (view === 'streak') showStreak();
+          }} />
+        </Suspense>
       ) : (
         <Today onEndDay={showReflection} onShowWeek={showWeek} onShowPool={showPool} />
       )}
+
+      {/* PWA Install Prompt */}
+      {onboardingDone && setupDone && <InstallPrompt />}
     </div>
   );
 }

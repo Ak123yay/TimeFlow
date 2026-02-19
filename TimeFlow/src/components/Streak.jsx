@@ -130,6 +130,51 @@ export default function Streak({ onNavigate }) {
           </div>
         </div>
 
+        {/* Insights Card */}
+        <div
+          onClick={() => {
+            haptic.light();
+            window.location.hash = '#/insights';
+          }}
+          style={{
+            background: isDark ? '#242B24' : '#fff',
+            borderRadius: '14px',
+            padding: '14px',
+            marginBottom: '14px',
+            boxShadow: '0 1px 6px rgba(0,0,0,0.04)',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '12px',
+            cursor: 'pointer',
+            transition: 'transform 0.2s ease',
+            border: `1.5px solid ${isDark ? '#6B7B6B' : '#E5E5E5'}`
+          }}
+        >
+          <div style={{
+            width: '40px',
+            height: '40px',
+            borderRadius: '50%',
+            background: 'rgba(59,110,59,0.1)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            fontSize: '20px'
+          }}>
+            📊
+          </div>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: '13px', fontWeight: 700, color: isDark ? '#E8F0E8' : '#1A1A1A' }}>
+              View Insights
+            </div>
+            <div style={{ fontSize: '12px', color: isDark ? '#9CA59C' : '#8E8E93', marginTop: '2px' }}>
+              Time accuracy, best hours, and smart suggestions
+            </div>
+          </div>
+          <div style={{ fontSize: '18px', color: isDark ? '#9CA59C' : '#8E8E93' }}>
+            →
+          </div>
+        </div>
+
         {/* Next Milestone */}
         {getDaysUntilMilestone() && (
           <div style={{

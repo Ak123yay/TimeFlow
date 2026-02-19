@@ -12,6 +12,7 @@ import MobileLayout from './mobile/MobileLayout';
 import FirstTimeTooltip from './FirstTimeTooltip';
 import { hasSeenTooltip, markTooltipSeen, TOOLTIP_CONTENT } from "../utils/firstTimeTooltips";
 import { haptic } from "../utils/haptics";
+import SearchBar from './shared/SearchBar';
 import "../App.css";
 
 function LeafIconLocal({ className = "", size = 18, fill = "#3B6E3B" }) {
@@ -50,6 +51,15 @@ export default function WeeklyPool({ onNavigateToToday }) {
   const [taskToMove, setTaskToMove] = useState(null);
   const [isMobile, setIsMobile] = useState(() => window.matchMedia('(max-width: 768px)').matches);
   const [showTooltip, setShowTooltip] = useState(() => !hasSeenTooltip('pool'));
+  const [searchQuery, setSearchQuery] = useState('');
+
+  // Filter function
+  const filterTasksBySearch = (tasks) => {
+    if (!searchQuery) return tasks;
+    return tasks.filter(task =>
+      task.name.toLowerCase().includes(searchQuery)
+    );
+  };
 
   useState(() => {
     const mq = window.matchMedia('(max-width: 768px)');
@@ -148,6 +158,12 @@ export default function WeeklyPool({ onNavigateToToday }) {
           />
         )}
 
+        {/* SearchBar */}
+        <SearchBar
+          onSearch={setSearchQuery}
+          placeholder="Search pool tasks..."
+        />
+
         {/* Add Task Form */}
         <div style={{
           background: isDark ? '#242B24' : '#fff', borderRadius: '14px', padding: '14px',
@@ -231,19 +247,19 @@ export default function WeeklyPool({ onNavigateToToday }) {
         </div>
 
         {/* Pool Tasks List */}
-        {poolTasks.length === 0 ? (
+        {filterTasksBySearch(poolTasks).length === 0 ? (
           <div style={{ textAlign: 'center', padding: '40px 20px' }}>
             <div style={{ fontSize: '36px', marginBottom: '12px' }}>🌊</div>
             <p style={{ fontSize: '15px', fontWeight: 600, color: isDark ? '#E8F0E8' : '#1A1A1A', margin: '0 0 4px' }}>
-              Pool is empty
+              {searchQuery ? 'No matching tasks' : 'Pool is empty'}
             </p>
             <p style={{ fontSize: '13px', color: isDark ? '#9CA59C' : '#8E8E93', margin: 0 }}>
-              Add tasks you want to work on this week
+              {searchQuery ? 'Try a different search term' : 'Add tasks you want to work on this week'}
             </p>
           </div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-            {poolTasks.map(task => {
+            {filterTasksBySearch(poolTasks).map(task => {
               const urgency = task.deadline ? getDeadlineUrgency(task) : null;
 
               return (

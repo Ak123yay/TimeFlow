@@ -56,6 +56,7 @@ import TaskTimerComponent from './shared/TaskTimer';
 import StatsBar, { OverflowWarning } from './shared/StatsBar';
 import GrowingVine from './mobile/animations/GrowingVine';
 import { LeafSwipeLeft, LeafCelebration } from './mobile/animations/LeafSwipe';
+import SearchBar from './shared/SearchBar';
 
 // Memoized LeafIcon component to prevent unnecessary re-renders
 const LeafIcon = React.memo(({ className = "", size = 18, fill = "#3B6E3B" }) => {
@@ -271,6 +272,9 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
 
   // First-time tooltip
   const [showTooltip, setShowTooltip] = useState(() => !hasSeenTooltip('today'));
+
+  // Search query state
+  const [searchQuery, setSearchQuery] = useState('');
 
   // --- keep original UI state names ---
   const [tasks, setTasks] = useState(() => loadTasks());
@@ -772,6 +776,15 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
     setIsPaused(false);
     haptic.medium();
   };
+
+  // Filter tasks by search query
+  const filterTasksBySearch = useCallback((taskList) => {
+    if (!searchQuery) return taskList;
+    return taskList.filter(task =>
+      task.name.toLowerCase().includes(searchQuery) ||
+      (task.notes && task.notes.toLowerCase().includes(searchQuery))
+    );
+  }, [searchQuery]);
 
   // effect: ticking (creates interval when activeTaskId is set)
   useEffect(() => {
@@ -1320,23 +1333,29 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
           </div>
         ) : (
           <div>
+            {/* SearchBar */}
+            <SearchBar
+              onSearch={setSearchQuery}
+              placeholder="Search today's tasks..."
+            />
+
             {/* Carried Over */}
-            {filterForFocus(carriedTasks).length > 0 && (
+            {filterForFocus(filterTasksBySearch(carriedTasks)).length > 0 && (
               <div style={{ marginBottom: '14px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px', paddingLeft: '2px' }}>
                   <span style={{ fontSize: '11px', fontWeight: 700, color: '#D97706', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                     Carried Over
                   </span>
                   <span style={{ fontSize: '10px', fontWeight: 600, background: 'rgba(217,119,6,0.1)', color: '#D97706', padding: '1px 6px', borderRadius: '99px' }}>
-                    {filterForFocus(carriedTasks).length}
+                    {filterForFocus(filterTasksBySearch(carriedTasks)).length}
                   </span>
                 </div>
                 <SortableContext
-                  items={filterForFocus(carriedTasks).map(t => t.id)}
+                  items={filterForFocus(filterTasksBySearch(carriedTasks)).map(t => t.id)}
                   strategy={verticalListSortingStrategy}
                 >
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                    {filterForFocus(carriedTasks).map((task, i) => (
+                    {filterForFocus(filterTasksBySearch(carriedTasks)).map((task, i) => (
                       <MobileSortableTask key={task.id} task={task} isActive={activeTaskId === task.id}>
                         <TaskCard
                           task={{
@@ -1397,22 +1416,22 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
             )}
 
             {/* Today's Tasks */}
-            {filterForFocus(todayTasks).length > 0 && (
+            {filterForFocus(filterTasksBySearch(todayTasks)).length > 0 && (
               <div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px', paddingLeft: '2px' }}>
                   <span style={{ fontSize: '11px', fontWeight: 700, color: isDark ? '#E8F0E8' : '#1A1A1A', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                     Tasks
                   </span>
                   <span style={{ fontSize: '10px', fontWeight: 600, background: 'rgba(59,110,59,0.08)', color: '#3B6E3B', padding: '1px 6px', borderRadius: '99px' }}>
-                    {filterForFocus(todayTasks).length}
+                    {filterForFocus(filterTasksBySearch(todayTasks)).length}
                   </span>
                 </div>
                 <SortableContext
-                  items={filterForFocus(todayTasks).map(t => t.id)}
+                  items={filterForFocus(filterTasksBySearch(todayTasks)).map(t => t.id)}
                   strategy={verticalListSortingStrategy}
                 >
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                    {filterForFocus(todayTasks).map((task, i) => (
+                    {filterForFocus(filterTasksBySearch(todayTasks)).map((task, i) => (
                       <MobileSortableTask key={task.id} task={task} isActive={activeTaskId === task.id}>
                         <TaskCard
                           task={{
