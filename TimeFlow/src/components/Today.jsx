@@ -218,8 +218,6 @@ function MobileSortableTask({ task, isActive, children }) {
     isDragging,
   } = useSortable({ id: task.id });
 
-  const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
@@ -229,33 +227,19 @@ function MobileSortableTask({ task, isActive, children }) {
 
   return (
     <div ref={setNodeRef} style={style}>
-      <div style={{ display: 'flex', gap: '8px', alignItems: 'stretch' }}>
-        {/* Drag Handle - only show if not active */}
+      <div style={{ display: 'flex', gap: '0px', alignItems: 'stretch' }}>
+        {/* Invisible Drag Handle - only show if not active */}
         {!isActive && (
           <div {...attributes} {...listeners} style={{
-            width: '32px',
+            width: '16px',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             cursor: 'grab',
             touchAction: 'none',
-            WebkitTapHighlightColor: 'transparent'
-          }}>
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(2, 4px)',
-              gap: '4px'
-            }}>
-              {[...Array(6)].map((_, i) => (
-                <div key={i} style={{
-                  width: '4px',
-                  height: '4px',
-                  borderRadius: '50%',
-                  background: isDark ? '#6B7B6B' : '#D1D5DB'
-                }} />
-              ))}
-            </div>
-          </div>
+            WebkitTapHighlightColor: 'transparent',
+            opacity: 0
+          }} />
         )}
 
         {/* Task Card Content */}
