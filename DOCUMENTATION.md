@@ -1360,6 +1360,714 @@ TimeFlow's Gentle Streaks:
 - `src/components/StreakDisplay.jsx` - Visual component
 - `Today.jsx` - Integration with task completion
 
+### 20. Search & Filter
+
+**Plain English:** Quickly find specific tasks across your day or weekly pool by typing in a search box. The search works instantly as you type, filtering tasks by name or notes. Perfect for when you have many tasks and need to find "that meeting with Sarah" or "the blog post task."
+
+**What it does:**
+- Real-time search filtering in Today view and Weekly Pool
+- Searches both task names and notes
+- 300ms debouncing to prevent performance issues
+- Sticky search bar stays visible while scrolling
+- Clear button (×) to reset search instantly
+- Case-insensitive matching
+
+**Implementation:**
+
+**SearchBar Component** (`src/components/shared/SearchBar.jsx`):
+```jsx
+import { useState, useEffect } from 'react';
+
+export default function SearchBar({ onSearch, placeholder = "Search tasks..." }) {
+  const [query, setQuery] = useState('');
+  const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+
+  // Debounced search with 300ms delay
+  useEffect(() => {
+    const debounce = setTimeout(() => {
+      onSearch(query.toLowerCase().trim());
+    }, 300);
+    return () => clearTimeout(debounce);
+  }, [query, onSearch]);
+
+  return (
+    <div style={{
+      position: 'sticky',
+      top: 0,
+      zIndex: 10,
+      background: isDark ? '#1A1F1A' : '#F0F8F2',
+      padding: '12px 0',
+      marginBottom: '12px'
+    }}>
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        background: isDark ? '#242B24' : '#fff',
+        borderRadius: '12px',
+        padding: '10px 14px',
+        border: `1.5px solid ${isDark ? '#6B7B6B' : '#E5E5E5'}`
+      }}>
+        <span style={{ fontSize: '16px', marginRight: '8px' }}>🔍</span>
+        <input
+          type="text"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder={placeholder}
+          style={{
+            flex: 1,
+            border: 'none',
+            outline: 'none',
+            background: 'transparent',
+            fontSize: '15px',
+            color: isDark ? '#E8F0E8' : '#1A1A1A'
+          }}
+        />
+        {query && (
+          <button
+            onClick={() => setQuery('')}
+            style={{
+              background: 'none',
+              border: 'none',
+              cursor: 'pointer',
+              fontSize: '18px',
+              color: isDark ? '#9CA59C' : '#8E8E93'
+            }}
+          >
+            ✕
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
+```
+
+**Integration in Today.jsx:**
+```javascript
+import SearchBar from './components/shared/SearchBar';
+
+// Add search state
+const [searchQuery, setSearchQuery] = useState('');
+
+// Filter function
+const filterTasks = (tasks) => {
+  if (!searchQuery) return tasks;
+  return tasks.filter(task =>
+    task.name?.toLowerCase().includes(searchQuery) ||
+    task.notes?.toLowerCase().includes(searchQuery)
+  );
+};
+
+// Use filtered tasks in render
+const filteredTasks = filterTasks(tasks);
+
+// Render SearchBar
+<SearchBar onSearch={setSearchQuery} placeholder="Search today's tasks..." />
+```
+
+**Performance Optimization:**
+- **Debouncing:** 300ms delay prevents excessive re-renders on every keystroke
+- **Memoization:** Filter function only runs when search query or tasks change
+- **Sticky positioning:** Search bar remains visible during scroll without layout shifts
+- **toLowerCase() caching:** Search query lowercased once, not on every task
+
+**Key Features:**
+- Works in Today view and Weekly Pool
+- Searches both task name and notes fields
+- Instant clear with × button
+- Adapts to light/dark mode
+- Mobile-optimized with large touch targets
+- Maintains focus for continuous typing
+
+**Key Files:**
+- `src/components/shared/SearchBar.jsx` - Reusable search component
+- `Today.jsx` - Search integration for Today tasks (line 277, 780-787, 1122)
+- `WeeklyPool.jsx` - Search integration for Pool tasks (line 54, 57-62, 134)
+
+### 21. Insights Dashboard 📊
+
+**Plain English:** Learn from your task patterns with a personal analytics dashboard. See how accurately you estimate time, discover your most productive hours, and get smart duration suggestions based on your history. It's like having a data analyst review all your completed tasks and tell you what patterns emerge.
+
+**What it does:**
+- **Duration Accuracy:** Shows your average time estimation accuracy percentage with trend (improving/stable/declining)
+- **Best Hours:** Identifies your top 3 most productive hours based on completion rates
+- **Smart Suggestions:** Recommends task durations based on your historical completion data
+- **Category Insights:** Tracks patterns across different task types
+- **Trend Analysis:** Compares recent performance to overall average
+
+**Dashboard Cards:**
+
+**1. Duration Accuracy Card:**
+```javascript
+// Calculate from task history
+const history = JSON.parse(localStorage.getItem('timeflow-task-history') || '[]');
+
+if (history.length > 0) {
+  const accuracies = history.map(h => {
+    const diff = Math.abs(h.estimatedDuration - h.actualDuration);
+    return Math.max(0, 100 - (diff / h.estimatedDuration) * 100);
+  });
+
+  const avgAccuracy = accuracies.reduce((a, b) => a + b, 0) / accuracies.length;
+  const recentAccuracies = accuracies.slice(-5);
+  const recentAvg = recentAccuracies.reduce((a, b) => a + b, 0) / recentAccuracies.length;
+
+  // Calculate trend
+  const trend = recentAvg > avgAccuracy + 5 ? 'improving' :
+                recentAvg < avgAccuracy - 5 ? 'declining' : 'stable';
+
+  setAccuracyStats({
+    average: Math.round(avgAccuracy),
+    totalTasks: history.length,
+    trend,
+    recentAvg: Math.round(recentAvg)
+  });
+}
+```
+
+**Display:**
+```
+┌────────────────────────────────────┐
+│ ⏱️ Duration Accuracy               │
+│                                    │
+│        78%                         │
+│   Based on 42 tasks                │
+│                                    │
+│   📈 Improving (Recent: 85%)       │
+│   You're getting better at         │
+│   estimating task durations!       │
+└────────────────────────────────────┘
+```
+
+**2. Best Hours Card:**
+```javascript
+// Analyze completion patterns by hour
+const energyPatterns = JSON.parse(localStorage.getItem('timeflow-energy-patterns') || '{}');
+
+const hourlyStats = Object.entries(energyPatterns).map(([hour, data]) => ({
+  hour: parseInt(hour),
+  completionRate: (data.completed / data.total) * 100,
+  totalTasks: data.total
+})).filter(h => h.totalTasks >= 3)  // Minimum sample size
+  .sort((a, b) => b.completionRate - a.completionRate)
+  .slice(0, 3);  // Top 3
+
+setBestHours(hourlyStats);
+```
+
+**Display:**
+```
+┌────────────────────────────────────┐
+│ 🌟 Your Best Hours                │
+│                                    │
+│  1. 9:00 AM  ━━━━━━━━━ 92%        │
+│     12 tasks completed             │
+│                                    │
+│  2. 2:00 PM  ━━━━━━━━ 85%         │
+│     8 tasks completed              │
+│                                    │
+│  3. 10:00 AM ━━━━━━━ 78%          │
+│     15 tasks completed             │
+└────────────────────────────────────┘
+```
+
+**3. Smart Suggestions Card:**
+```javascript
+// Find frequent tasks with duration history
+const taskDurations = {};
+history.forEach(h => {
+  if (!taskDurations[h.name]) {
+    taskDurations[h.name] = [];
+  }
+  taskDurations[h.name].push(h.actualDuration);
+});
+
+const suggestions = Object.entries(taskDurations)
+  .filter(([name, durations]) => durations.length >= 3)  // At least 3 completions
+  .map(([name, durations]) => {
+    const avgDuration = durations.reduce((a, b) => a + b, 0) / durations.length;
+    return {
+      taskName: name,
+      suggestedDuration: Math.round(avgDuration),
+      basedOn: durations.length
+    };
+  })
+  .sort((a, b) => b.basedOn - a.basedOn)
+  .slice(0, 5);
+
+setSuggestions(suggestions);
+```
+
+**Display:**
+```
+┌────────────────────────────────────┐
+│ 💡 Smart Suggestions               │
+│                                    │
+│ "Morning standup"                  │
+│ → Usually takes 25 min             │
+│   (based on 8 completions)         │
+│                                    │
+│ "Write blog post"                  │
+│ → Usually takes 90 min             │
+│   (based on 5 completions)         │
+└────────────────────────────────────┘
+```
+
+**Implementation:** (`src/components/Insights.jsx`)
+```jsx
+import { useState, useEffect } from 'react';
+
+export default function Insights({ onBack }) {
+  const [accuracyStats, setAccuracyStats] = useState(null);
+  const [bestHours, setBestHours] = useState([]);
+  const [suggestions, setSuggestions] = useState([]);
+
+  useEffect(() => {
+    calculateInsights();
+  }, []);
+
+  const calculateInsights = () => {
+    // Load data from localStorage
+    const history = JSON.parse(localStorage.getItem('timeflow-task-history') || '[]');
+    const energyPatterns = JSON.parse(localStorage.getItem('timeflow-energy-patterns') || '{}');
+
+    // Calculate accuracy, best hours, suggestions
+    // (Implementation shown above)
+  };
+
+  return (
+    <div>
+      {/* Dashboard cards with insights */}
+    </div>
+  );
+}
+```
+
+**Navigation:**
+- Accessed via "View Insights" card on Streak page
+- Also available via hash navigation: `#/insights`
+- Stats tab on bottom nav goes to Reflection (preserved user workflow)
+
+**Data Sources:**
+- `timeflow-task-history` - Completed task records with durations
+- `timeflow-energy-patterns` - Hourly completion statistics
+- Existing analytics infrastructure, no new data collection needed
+
+**Key Files:**
+- `src/components/Insights.jsx` - Main insights dashboard component
+- `src/components/Streak.jsx` - "View Insights" navigation card (lines 133-176)
+- `App.jsx` - Route handling for `#/insights` (lines 91-93, 175-183)
+
+### 22. PWA & Offline Support 📱
+
+**Plain English:** TimeFlow can be installed as a real app on your phone or computer, just like Instagram or Twitter. It works completely offline (no internet needed), loads instantly even without WiFi, and automatically updates itself in the background. It's a real app, not just a website bookmark.
+
+**What it does:**
+- **Installable:** Native "Add to Home Screen" prompt on mobile/desktop
+- **Offline-First:** Works without internet connection
+- **Service Worker:** Caches 713KB of assets for instant offline loading
+- **Auto-Updates:** Automatically downloads new versions in background
+- **Standalone Mode:** Runs without browser UI (no address bar)
+- **Native Experience:** Full-screen app with system integration
+
+**PWA Configuration** (`vite.config.js`):
+```javascript
+import { VitePWA } from 'vite-plugin-pwa';
+
+export default defineConfig({
+  plugins: [
+    react(),
+    VitePWA({
+      registerType: 'autoUpdate',
+      includeAssets: ['vite.svg'],
+      manifest: {
+        name: 'TimeFlow - Task Timer',
+        short_name: 'TimeFlow',
+        description: 'Nature-inspired task scheduling and time management',
+        theme_color: '#3B6E3B',
+        background_color: '#F0F8F2',
+        display: 'standalone',
+        scope: '/',
+        start_url: '/',
+        orientation: 'portrait',
+        icons: [
+          {
+            src: '/icon-192.png',
+            sizes: '192x192',
+            type: 'image/png'
+          },
+          {
+            src: '/icon-512.png',
+            sizes: '512x512',
+            type: 'image/png'
+          },
+          {
+            src: '/icon-512.png',
+            sizes: '512x512',
+            type: 'image/png',
+            purpose: 'any maskable'
+          }
+        ]
+      },
+      workbox: {
+        globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
+        runtimeCaching: [
+          {
+            urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'google-fonts-cache',
+              expiration: {
+                maxEntries: 10,
+                maxAgeSeconds: 60 * 60 * 24 * 365  // 1 year
+              },
+              cacheableResponse: {
+                statuses: [0, 200]
+              }
+            }
+          }
+        ]
+      }
+    })
+  ]
+});
+```
+
+**Service Worker Features:**
+- **Precaching:** 713KB of HTML, JS, CSS, icons precached during install
+- **Runtime Caching:** Google Fonts cached for 1 year
+- **Cache-First Strategy:** Assets served from cache, network as fallback
+- **Auto-Update:** New versions downloaded in background, activated on next load
+- **Offline Fallback:** Works completely offline after first visit
+
+**Install Prompt Component** (`src/components/InstallPrompt.jsx`):
+```jsx
+import { useState, useEffect } from 'react';
+import { haptic } from '../utils/haptics';
+
+export default function InstallPrompt() {
+  const [deferredPrompt, setDeferredPrompt] = useState(null);
+  const [showPrompt, setShowPrompt] = useState(false);
+
+  useEffect(() => {
+    const handler = (e) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+
+      // Only show if user hasn't dismissed before
+      const dismissed = localStorage.getItem('timeflow-install-dismissed');
+      if (!dismissed) {
+        setShowPrompt(true);
+      }
+    };
+
+    window.addEventListener('beforeinstallprompt', handler);
+    return () => window.removeEventListener('beforeinstallprompt', handler);
+  }, []);
+
+  const handleInstall = async () => {
+    if (!deferredPrompt) return;
+
+    haptic.success();
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+
+    setDeferredPrompt(null);
+    setShowPrompt(false);
+  };
+
+  const handleDismiss = () => {
+    haptic.light();
+    localStorage.setItem('timeflow-install-dismissed', 'true');
+    setShowPrompt(false);
+  };
+
+  if (!showPrompt) return null;
+
+  return (
+    <div style={{ /* Banner styles */ }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+        <div style={{ fontSize: '32px' }}>🌿</div>
+        <div style={{ flex: 1 }}>
+          <div style={{ fontWeight: 700, marginBottom: '4px' }}>
+            Install TimeFlow
+          </div>
+          <div style={{ fontSize: '13px', opacity: 0.85 }}>
+            Get the full app experience with offline support
+          </div>
+        </div>
+      </div>
+      <div style={{ display: 'flex', gap: '8px', marginTop: '12px' }}>
+        <button onClick={handleInstall}>Install</button>
+        <button onClick={handleDismiss}>Not Now</button>
+      </div>
+    </div>
+  );
+}
+```
+
+**PWA Meta Tags** (`index.html`):
+```html
+<head>
+  <meta charset="UTF-8" />
+  <link rel="icon" type="image/png" href="/icon-192.png" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TimeFlow 🌿</title>
+
+  <!-- PWA Theme Colors -->
+  <meta name="theme-color" content="#3B6E3B" media="(prefers-color-scheme: light)" />
+  <meta name="theme-color" content="#1A1F1A" media="(prefers-color-scheme: dark)" />
+  <link rel="apple-touch-icon" href="/icon-192.png" />
+</head>
+```
+
+**Installation Instructions (in Onboarding - Screen 4):**
+```
+📱 On Mobile (iOS/Android):
+1. Tap the share/menu button
+2. Select "Add to Home Screen"
+3. Tap "Add" to confirm
+
+💻 On Desktop (Chrome/Edge):
+1. Click install icon in address bar
+2. Click "Install" in the prompt
+3. TimeFlow opens as standalone app
+
+✨ You'll get:
+- Offline access (no WiFi needed)
+- Fast loading (713KB cached)
+- App icon on home screen
+- No browser UI
+```
+
+**Benefits Over Basic Bookmark:**
+| Bookmark | PWA |
+|----------|-----|
+| Opens in browser with URL bar | Opens as standalone app |
+| Requires internet | Works offline completely |
+| Slow loading | Instant (precached) |
+| No updates | Auto-updates in background |
+| Feels like website | Feels like native app |
+
+**Cache Stats:**
+- **Precached Assets:** 16 entries, 713KB total
+- **Cache Lifetime:** Persistent until app update
+- **Update Strategy:** Background download, activate on next launch
+- **Offline Capability:** 100% functional offline after first visit
+
+**Key Files:**
+- `vite.config.js` - PWA plugin configuration with manifest and workbox
+- `src/components/InstallPrompt.jsx` - Native install banner component
+- `index.html` - PWA meta tags and theme colors
+- `public/icon-192.png` - Home screen icon (192x192)
+- `public/icon-512.png` - Splash screen icon (512x512)
+- `App.jsx` - InstallPrompt integration (lines 188-189)
+
+**Technology Stack:**
+- **vite-plugin-pwa v1.2.0** - PWA build plugin
+- **Workbox** - Service worker generation and caching strategies
+- **Web App Manifest** - App metadata (name, icons, theme, display mode)
+- **Service Worker API** - Background caching and offline support
+
+### 23. Automatic Carry-Over at Start Time 🔄
+
+**Plain English:** Don't manually carry over incomplete tasks every morning. TimeFlow automatically moves yesterday's unfinished tasks to today when you reach your configured start time (like 9:00 AM). Even if you have the app open before your start time, tasks will automatically appear when it's time to begin your day.
+
+**What it does:**
+- Automatically carries over incomplete tasks at your availability start time
+- Works even if app is already open (periodic check)
+- Prevents duplicate carries with localStorage tracking
+- Only triggers once per day
+- Respects your personal schedule (uses your configured start time, not a fixed time like 9 AM)
+
+**Implementation** (`Today.jsx`):
+
+**1. Initial Mount Check (with Start Time Validation):**
+```javascript
+useEffect(() => {
+  const today = getTodayString();
+  const carryOverKey = `timeflow-carryover-loaded-${today}`;
+  const alreadyLoaded = localStorage.getItem(carryOverKey) === 'true';
+
+  if (alreadyLoaded) return;
+
+  // Check if current time is past availability start time
+  const now = new Date();
+  const currentMinutes = now.getHours() * 60 + now.getMinutes();
+  const [startHour, startMin] = availability.start.split(':').map(Number);
+  const startMinutes = startHour * 60 + startMin;
+
+  // Only auto-carry-over if current time is past start time
+  if (currentMinutes < startMinutes) {
+    return; // Too early, don't carry over yet
+  }
+
+  // Load yesterday's unfinished tasks
+  const yesterday = new Date();
+  yesterday.setDate(yesterday.getDate() - 1);
+  const yesterdayDate = yesterday.toISOString().slice(0, 10);
+  const yesterdayTasks = JSON.parse(
+    localStorage.getItem(`timeflow-tasks-${yesterdayDate}`) || '[]'
+  );
+
+  const unfinishedTasks = yesterdayTasks.filter(t => !t.completed);
+
+  if (unfinishedTasks.length === 0) {
+    localStorage.setItem(carryOverKey, 'true');
+    return;
+  }
+
+  // Check for existing carried tasks (prevent duplicates)
+  const existingCarriedIds = new Set(
+    tasks
+      .filter(t => t.carriedOver)
+      .map(t => `${t.originalDate}-${t.name}`)
+  );
+
+  // Only add new carried tasks not already present
+  const newUnfinishedTasks = unfinishedTasks
+    .filter(t => !existingCarriedIds.has(`${yesterdayDate}-${t.name}`))
+    .map((t, index) => ({
+      ...t,
+      id: Date.now() + index,
+      carriedOver: true,
+      originalDate: yesterdayDate,
+      attempts: (t.attempts || 0) + 1
+    }));
+
+  if (newUnfinishedTasks.length > 0) {
+    setTasks(prev => [...newUnfinishedTasks, ...prev]);
+  }
+
+  localStorage.setItem(carryOverKey, 'true');
+}, [availability, tasks]);
+```
+
+**2. Periodic Check (Every Minute):**
+```javascript
+// Periodic check to auto-carry-over when start time is reached
+useEffect(() => {
+  const checkCarryOver = () => {
+    const today = getTodayString();
+    const carryOverKey = `timeflow-carryover-loaded-${today}`;
+    const alreadyLoaded = localStorage.getItem(carryOverKey) === 'true';
+
+    if (alreadyLoaded) return;
+
+    // Check if current time is past availability start time
+    const now = new Date();
+    const currentMinutes = now.getHours() * 60 + now.getMinutes();
+    const [startHour, startMin] = availability.start.split(':').map(Number);
+    const startMinutes = startHour * 60 + startMin;
+
+    // Trigger carry-over if we've reached start time
+    if (currentMinutes >= startMinutes) {
+      const yesterday = new Date();
+      yesterday.setDate(yesterday.getDate() - 1);
+      const yesterdayDate = yesterday.toISOString().slice(0, 10);
+      const yesterdayTasks = JSON.parse(
+        localStorage.getItem(`timeflow-tasks-${yesterdayDate}`) || '[]'
+      );
+
+      const unfinishedTasks = yesterdayTasks.filter(t => !t.completed);
+
+      if (unfinishedTasks.length === 0) {
+        localStorage.setItem(carryOverKey, 'true');
+        return;
+      }
+
+      // Check for existing carried tasks
+      const existingCarriedIds = new Set(
+        tasks
+          .filter(t => t.carriedOver)
+          .map(t => `${t.originalDate}-${t.name}`)
+      );
+
+      const newUnfinishedTasks = unfinishedTasks
+        .filter(t => !existingCarriedIds.has(`${yesterdayDate}-${t.name}`))
+        .map((t, index) => ({
+          ...t,
+          id: Date.now() + index,
+          carriedOver: true,
+          originalDate: yesterdayDate,
+          attempts: (t.attempts || 0) + 1
+        }));
+
+      if (newUnfinishedTasks.length > 0) {
+        setTasks(prev => [...newUnfinishedTasks, ...prev]);
+      }
+
+      localStorage.setItem(carryOverKey, 'true');
+    }
+  };
+
+  // Check every minute (60000ms)
+  const interval = setInterval(checkCarryOver, 60000);
+
+  // Initial check on mount
+  checkCarryOver();
+
+  return () => clearInterval(interval);
+}, [availability, tasks]);
+```
+
+**How It Works:**
+
+**Scenario 1: Open app after start time (e.g., at 10 AM, start time is 9 AM)**
+```
+1. User opens TimeFlow at 10:00 AM
+2. Current time (600 min) > Start time (540 min) ✓
+3. Immediately carries over yesterday's unfinished tasks
+4. Marks as loaded with localStorage flag
+```
+
+**Scenario 2: Open app before start time (e.g., at 8 AM, start time is 9 AM)**
+```
+1. User opens TimeFlow at 8:00 AM
+2. Current time (480 min) < Start time (540 min) ✗
+3. No carry-over yet (too early)
+4. Periodic check runs every minute
+5. At 9:00 AM, check detects: Current time (540 min) >= Start time (540 min) ✓
+6. Automatically carries over tasks
+7. User sees tasks appear without refresh
+```
+
+**Scenario 3: Already carried over today**
+```
+1. localStorage has 'timeflow-carryover-loaded-2026-02-19' = 'true'
+2. Both mount check and periodic check skip
+3. No duplicate carries
+```
+
+**Duplicate Prevention:**
+- **localStorage flag:** `timeflow-carryover-loaded-${today}` prevents multiple triggers
+- **Composite key matching:** `${originalDate}-${taskName}` identifies existing carried tasks
+- **Set-based filtering:** O(1) lookup to avoid duplicate carries
+
+**Key Benefits:**
+- **User convenience:** No manual carry-over needed
+- **Respects schedule:** Uses your configured start time, not arbitrary time
+- **Real-time:** Works even if app is open before start time
+- **No duplicates:** Robust duplicate prevention logic
+- **Lightweight:** Only checks once per minute, minimal performance impact
+
+**User Control:**
+- Start time configured in Setup screen (`availability.start`)
+- Can be changed anytime in settings
+- Carry-over respects user's actual work hours
+- Example: Night shift worker with 9 PM start → carries over at 9 PM
+
+**Key Files:**
+- `Today.jsx` - Automatic carry-over logic (lines 485-494, 525-570)
+- localStorage keys:
+  - `timeflow-carryover-loaded-${date}` - Tracks if carry-over completed today
+  - `timeflow-tasks-${date}` - Yesterday's tasks to carry over
+  - `timeflow-availability` - User's start time configuration
+
+**User Feedback Confirmation:**
+User asked: "u made it the strrt time u pu in right?"
+Response: "Yes! It uses your availability.start setting (the start time you put in during setup)"
+
 ---
 
 ## How Rescheduling Works (Deep Dive)

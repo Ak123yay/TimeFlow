@@ -23,6 +23,9 @@ TimeFlow prevents this by:
 ### 🎯 Time-Blocked Scheduling
 Assign specific start times and durations to tasks. See your entire day visually with a timeline showing exactly when each task happens. TimeFlow blocks conflicts automatically - you can't schedule two things at once.
 
+### 🔍 Search & Filter
+Quickly find tasks across your day with real-time search. Filter by task name or notes with instant results and 300ms debouncing for smooth performance. Available in Today view and Weekly Pool.
+
 ### 🔄 Intelligent Rescheduling
 When a task timer ends and you're not done, choose from 7 smart options:
 - **Mark Complete** - Task is done
@@ -37,6 +40,22 @@ When a task timer ends and you're not done, choose from 7 smart options:
 - **Toggle completion status** - Accidentally marked complete? Click again to uncheck
 - **Carried task tracking** - Shows original date ("from Feb 14") for carried tasks
 - **Cross-date synchronization** - Completing carried tasks updates the original date
+- **Automatic carry-over** - Tasks automatically carry over at your configured start time
+
+### 📊 Insights Dashboard
+Learn from your task patterns with personalized analytics:
+- **Duration Accuracy** - See your time estimation accuracy with trends (improving/stable/declining)
+- **Best Hours** - Discover your top 3 most productive hours based on completion rates
+- **Smart Suggestions** - Get duration recommendations for frequent tasks based on your history
+- **Category Insights** - Track patterns across different task types
+
+### 📱 PWA & Offline Support
+Install TimeFlow as a full app with true offline capabilities:
+- **Installable** - Add to home screen on any device with native install prompt
+- **Offline-First** - Works completely offline with 713KB of cached assets
+- **Auto-Updates** - Service worker automatically downloads new versions in background
+- **App Experience** - Runs without browser UI in standalone window
+- **Fast Loading** - Precached assets load instantly, even offline
 
 ### 📊 Task Health Assessment
 Each task gets a health score based on:
@@ -63,9 +82,11 @@ Built for mobile with:
 - **Daily calendar** - See today's date prominently with progress stats
 - **Monthly calendar** - Available in Week tab - see your full month at a glance
 - **Timer controls** - Pause/resume and cancel buttons for active tasks
-- **Bottom navigation** - Always accessible 5-tab navigation
+- **Bottom navigation** - Always accessible 5-tab navigation (Today, Week, Pool, Reflection, Streak)
+- **5-screen onboarding** - Welcome, How It Works, Features, Install Guide, You're All Set
 - **First-time tooltips** - Friendly guidance cards on first visit to each feature
 - **Dark mode** - Automatic light/dark theme based on system preferences
+- **Install prompt** - Native PWA install banner with "Install" and "Not Now" options
 
 ### 📅 Weekly Overview
 - **Week/Month toggle** - Switch between weekly breakdown and monthly calendar
@@ -110,6 +131,9 @@ TimeFlow prevents common mistakes:
 
 - **100% Offline** - Uses browser localStorage, no server needed
 - **React 19.2** - Modern, responsive UI
+- **Vite 7.3.1** - Lightning-fast build and dev server
+- **PWA (Progressive Web App)** - vite-plugin-pwa v1.2.0 with Workbox
+- **Service Worker** - Precaches 713KB of assets, offline-first with auto-updates
 - **Mobile-Optimized** - Touch gestures, haptic feedback, responsive design
 - **No Dependencies** - Minimal, fast, no external state management
 - **CSS Variables** - Dynamic theming with system preference detection
@@ -122,12 +146,15 @@ TimeFlow prevents common mistakes:
 | Endless lists | Time-blocked schedule |
 | No capacity awareness | Visual overflow warnings |
 | Manual reschedule decisions | 7 smart options |
-| No pattern learning | Tracks avoidance & duration accuracy |
+| No pattern learning | Duration accuracy insights & smart suggestions |
 | Task deletion = failure | Back to Pool = low-pressure deferral |
 | Toxic streaks | Gentle streaks with grace periods |
 | Generic design | Nature-themed calm productivity |
 | Static appearance | Adaptive light/dark mode |
-| No guidance | First-time tooltips |
+| No guidance | First-time tooltips + 5-screen onboarding |
+| Browser bookmark | Installable PWA with offline support |
+| Manual task carry-over | Automatic at your start time |
+| No search | Real-time search with debouncing |
 
 ## Perfect For
 
@@ -154,8 +181,13 @@ TimeFlow embraces **calm productivity** over hustle culture:
 
 - **7 rescheduling options** intelligently suggested
 - **3-tier health system** (healthy, warning, critical)
+- **Real-time search** with 300ms debouncing in Today and Pool views
+- **Insights dashboard** with duration accuracy, best hours, and smart suggestions
+- **PWA support** - 713KB precached, offline-first with service worker
+- **Automatic carry-over** at your configured start time
 - **Toggle completion** - Uncheck tasks if marked by mistake
 - **Daily + Monthly calendars** - Daily view in Today, monthly in Week
+- **5-screen onboarding** - Welcome, How It Works, Features, Install Guide, Setup
 - **Bidirectional swipe gestures** for mobile task actions
 - **Pause/resume/cancel** timer controls
 - **Cross-date validation** prevents scheduling mistakes
@@ -168,9 +200,15 @@ TimeFlow embraces **calm productivity** over hustle culture:
 1. Clone the repository
 2. Run `npm install`
 3. Run `npm run dev`
-4. Complete first-time setup (set work hours)
+4. Complete 5-screen onboarding (Welcome → How It Works → Features → Install Guide → Setup)
 5. Add your first task with a time
 6. Start the timer and begin flowing through your day
+
+**PWA Installation:**
+- Run `npm run build` to generate the PWA with service worker
+- Serve the `dist` folder (e.g., `npx serve dist`)
+- Open on mobile to see native install prompt
+- Or use browser's "Install app" menu option
 
 **Tip:** Your system's light/dark mode preference will be automatically applied!
 

@@ -482,6 +482,17 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
     const alreadyLoaded = localStorage.getItem(carryOverKey) === 'true';
     if (alreadyLoaded) return;
 
+    // Check if current time is past availability start time
+    const now = new Date();
+    const currentMinutes = now.getHours() * 60 + now.getMinutes();
+    const [startHour, startMin] = availability.start.split(':').map(Number);
+    const startMinutes = startHour * 60 + startMin;
+
+    // Only auto-carry-over if current time is past start time
+    if (currentMinutes < startMinutes) {
+      return; // Too early, don't carry over yet
+    }
+
     const unfinishedTasks = getUnfinishedTasksFromPreviousDays();
     if (unfinishedTasks.length > 0) {
       const todayTasks = loadTasks();
@@ -510,6 +521,53 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
       localStorage.setItem(carryOverKey, 'true');
     }
   }, [availability]);
+
+  // Periodic check to auto-carry-over when start time is reached
+  useEffect(() => {
+    const checkCarryOver = () => {
+      const today = getTodayString();
+      const carryOverKey = `timeflow-carryover-loaded-${today}`;
+      const alreadyLoaded = localStorage.getItem(carryOverKey) === 'true';
+
+      if (alreadyLoaded) return;
+
+      // Check if current time is past availability start time
+      const now = new Date();
+      const currentMinutes = now.getHours() * 60 + now.getMinutes();
+      const [startHour, startMin] = availability.start.split(':').map(Number);
+      const startMinutes = startHour * 60 + startMin;
+
+      // Trigger carry-over if we've reached start time
+      if (currentMinutes >= startMinutes) {
+        const unfinishedTasks = getUnfinishedTasksFromPreviousDays();
+        if (unfinishedTasks.length > 0) {
+          const todayTasks = loadTasks();
+          const existingCarriedIds = new Set(
+            todayTasks
+              .filter(t => t.carriedOver)
+              .map(t => `${t.originalDate}-${t.name}`)
+          );
+
+          const newUnfinishedTasks = unfinishedTasks.filter(t =>
+            !existingCarriedIds.has(`${t.originalDate}-${t.name}`)
+          );
+
+          if (newUnfinishedTasks.length > 0) {
+            const rescheduled = rescheduleUnfinishedTasks(newUnfinishedTasks, todayTasks, availability);
+            setTasks(rescheduled);
+          }
+
+          localStorage.setItem(carryOverKey, 'true');
+        } else {
+          localStorage.setItem(carryOverKey, 'true');
+        }
+      }
+    };
+
+    // Check every minute
+    const interval = setInterval(checkCarryOver, 60000);
+    return () => clearInterval(interval);
+  }, [availability, tasks]);
 
   // OPTIMIZED: persist tasks to localStorage with debouncing - reduces I/O by 60%
   useEffect(() => {
