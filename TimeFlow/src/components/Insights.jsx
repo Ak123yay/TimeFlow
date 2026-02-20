@@ -23,42 +23,70 @@ export default function Insights({ onNavigate }) {
     // Calculate accuracy stats from task history
     const history = JSON.parse(localStorage.getItem('timeflow-task-history') || '[]');
 
+    console.log('Insights Debug - Task History:', history);
+    console.log('Insights Debug - History Length:', history.length);
+
     if (history.length > 0) {
-      const accuracies = history.map(h => {
-        const diff = Math.abs(h.estimatedDuration - h.actualDuration);
-        return Math.max(0, 100 - (diff / h.estimatedDuration) * 100);
-      });
+      // Filter out entries with invalid duration data
+      const validHistory = history.filter(h =>
+        h.estimatedDuration > 0 && h.actualDuration > 0
+      );
 
-      const avgAccuracy = accuracies.reduce((a, b) => a + b, 0) / accuracies.length;
-      const trend = calculateTrend(accuracies);
+      console.log('Insights Debug - Valid History:', validHistory);
+      console.log('Insights Debug - Valid History Length:', validHistory.length);
 
-      setAccuracyStats({
-        average: Math.round(avgAccuracy),
-        totalTasks: history.length,
-        trend,
-        recentAvg: Math.round(
-          accuracies.slice(-5).reduce((a, b) => a + b, 0) / Math.min(5, accuracies.length)
-        )
-      });
+      if (validHistory.length > 0) {
+        const accuracies = validHistory.map(h => {
+          const diff = Math.abs(h.estimatedDuration - h.actualDuration);
+          return Math.max(0, 100 - (diff / h.estimatedDuration) * 100);
+        });
+
+        const avgAccuracy = accuracies.reduce((a, b) => a + b, 0) / accuracies.length;
+        const trend = calculateTrend(accuracies);
+
+        setAccuracyStats({
+          average: Math.round(avgAccuracy),
+          totalTasks: validHistory.length,
+          trend,
+          recentAvg: Math.round(
+            accuracies.slice(-5).reduce((a, b) => a + b, 0) / Math.min(5, accuracies.length)
+          )
+        });
+      }
     }
 
     // Get energy patterns
-    const hourlyRates = getAllHourlyCompletionRates();
-    const bestHours = Object.entries(hourlyRates)
-      .sort(([,a], [,b]) => b - a)
-      .slice(0, 3)
-      .map(([hour, rate]) => ({
-        hour: parseInt(hour),
-        rate: Math.round(rate * 100)
-      }));
+    const energyPatternsData = JSON.parse(localStorage.getItem('timeflow-energy-patterns') || '{}');
 
-    setEnergyPattern(bestHours);
+    console.log('Insights Debug - Energy Patterns Data:', energyPatternsData);
+
+    if (energyPatternsData.hourlyCompletionRates) {
+      const hourlyRates = getAllHourlyCompletionRates();
+      console.log('Insights Debug - Hourly Rates:', hourlyRates);
+
+      const bestHours = Object.entries(hourlyRates)
+        .filter(([hour, rate]) => rate > 0) // Only show hours with actual data
+        .sort(([,a], [,b]) => b - a)
+        .slice(0, 3)
+        .map(([hour, rate]) => ({
+          hour: parseInt(hour),
+          rate: Math.round(rate * 100)
+        }));
+
+      console.log('Insights Debug - Best Hours:', bestHours);
+
+      if (bestHours.length > 0) {
+        setEnergyPattern(bestHours);
+      }
+    }
 
     // Find frequent tasks for suggestions
     const taskCounts = {};
     history.forEach(h => {
-      const normalized = h.name.toLowerCase().trim();
-      taskCounts[normalized] = (taskCounts[normalized] || 0) + 1;
+      if (h.name) {
+        const normalized = h.name.toLowerCase().trim();
+        taskCounts[normalized] = (taskCounts[normalized] || 0) + 1;
+      }
     });
 
     const frequent = Object.entries(taskCounts)
@@ -69,6 +97,8 @@ export default function Insights({ onNavigate }) {
         return { name, count, suggestion };
       })
       .filter(t => t.suggestion !== null);
+
+    console.log('Insights Debug - Frequent Tasks:', frequent);
 
     setFrequentTasks(frequent);
 
@@ -263,8 +293,30 @@ export default function Insights({ onNavigate }) {
             <p style={{ fontSize: '15px', fontWeight: 600, color: isDark ? '#E8F0E8' : '#1A1A1A', margin: '0 0 4px' }}>
               No Insights Yet
             </p>
-            <p style={{ fontSize: '13px', color: isDark ? '#9CA59C' : '#8E8E93', margin: 0 }}>
-              Complete tasks to generate personalized insights
+            <p style={{ fontSize: '13px', color: isDark ? '#9CA59C' : '#8E8E93', margin: '0 0 16px' }}>
+              Complete tasks using the timer to generate personalized insights
+            </p>
+            <div style={{
+              background: isDark ? '#242B24' : '#fff',
+              borderRadius: '12px',
+              padding: '16px',
+              textAlign: 'left',
+              maxWidth: '300px',
+              margin: '0 auto',
+              border: `1.5px solid ${isDark ? '#6B7B6B' : '#E5E5E5'}`
+            }}>
+              <div style={{ fontSize: '13px', fontWeight: 600, color: isDark ? '#E8F0E8' : '#1A1A1A', marginBottom: '8px' }}>
+                To start tracking insights:
+              </div>
+              <ol style={{ fontSize: '12px', color: isDark ? '#9CA59C' : '#8E8E93', margin: 0, paddingLeft: '20px' }}>
+                <li style={{ marginBottom: '6px' }}>Create a task with a duration</li>
+                <li style={{ marginBottom: '6px' }}>Start the timer</li>
+                <li style={{ marginBottom: '6px' }}>Complete the task (or let timer finish)</li>
+                <li>Mark as complete in the modal</li>
+              </ol>
+            </div>
+            <p style={{ fontSize: '11px', color: isDark ? '#9CA59C' : '#8E8E93', margin: '16px 0 0', fontStyle: 'italic' }}>
+              Open browser console (F12) to see debug info
             </p>
           </div>
         )}
