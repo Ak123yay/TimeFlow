@@ -225,16 +225,14 @@ export default function App() {
           else if (view === 'stats') showReflection();
         }} />
       ) : currentView === 'insights' ? (
-        <ErrorBoundary>
-          <Suspense fallback={<LoadingFallback />}>
-            <Insights onNavigate={(view) => {
-              if (view === 'today') showToday();
-              else if (view === 'week') showWeek();
-              else if (view === 'pool') showPool();
-              else if (view === 'streak') showStreak();
-            }} />
-          </Suspense>
-        </ErrorBoundary>
+        <Suspense fallback={<LoadingFallback />}>
+          <Insights onNavigate={(view) => {
+            if (view === 'today') showToday();
+            else if (view === 'week') showWeek();
+            else if (view === 'pool') showPool();
+            else if (view === 'streak') showStreak();
+          }} />
+        </Suspense>
       ) : (
         <Today onEndDay={showReflection} onShowWeek={showWeek} onShowPool={showPool} />
       )}

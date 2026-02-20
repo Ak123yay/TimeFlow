@@ -23,17 +23,11 @@ export default function Insights({ onNavigate }) {
     // Calculate accuracy stats from task history
     const history = JSON.parse(localStorage.getItem('timeflow-task-history') || '[]');
 
-    console.log('Insights Debug - Task History:', history);
-    console.log('Insights Debug - History Length:', history.length);
-
     if (history.length > 0) {
       // Filter out entries with invalid duration data
       const validHistory = history.filter(h =>
         h.estimatedDuration > 0 && h.actualDuration > 0
       );
-
-      console.log('Insights Debug - Valid History:', validHistory);
-      console.log('Insights Debug - Valid History Length:', validHistory.length);
 
       if (validHistory.length > 0) {
         const accuracies = validHistory.map(h => {
@@ -58,11 +52,8 @@ export default function Insights({ onNavigate }) {
     // Get energy patterns
     const energyPatternsData = JSON.parse(localStorage.getItem('timeflow-energy-patterns') || '{}');
 
-    console.log('Insights Debug - Energy Patterns Data:', energyPatternsData);
-
     if (energyPatternsData.hourlyCompletionRates) {
       const hourlyRates = getAllHourlyCompletionRates();
-      console.log('Insights Debug - Hourly Rates:', hourlyRates);
 
       const bestHours = Object.entries(hourlyRates)
         .filter(([hour, rate]) => rate > 0) // Only show hours with actual data
@@ -72,8 +63,6 @@ export default function Insights({ onNavigate }) {
           hour: parseInt(hour),
           rate: Math.round(rate * 100)
         }));
-
-      console.log('Insights Debug - Best Hours:', bestHours);
 
       if (bestHours.length > 0) {
         setEnergyPattern(bestHours);
@@ -97,8 +86,6 @@ export default function Insights({ onNavigate }) {
         return { name, count, suggestion };
       })
       .filter(t => t.suggestion !== null);
-
-    console.log('Insights Debug - Frequent Tasks:', frequent);
 
     setFrequentTasks(frequent);
 
@@ -251,43 +238,52 @@ export default function Insights({ onNavigate }) {
               Smart Suggestions 💡
             </h3>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-              {frequentTasks.map((task, idx) => (
-                <div key={idx} style={{
-                  padding: '12px',
-                  background: isDark ? '#1A1F1A' : '#F5F5F5',
-                  borderRadius: '10px'
-                }}>
-                  <div style={{ fontSize: '13px', fontWeight: 600, color: isDark ? '#E8F0E8' : '#1A1A1A', marginBottom: '4px' }}>
-                    {task.name}
-                  </div>
-                  <div style={{ fontSize: '11px', color: isDark ? '#9CA59C' : '#8E8E93', marginBottom: '6px' }}>
-                    Completed {task.count} times
-                  </div>
-                  <div style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '8px',
-                    fontSize: '12px',
-                    color: '#3B6E3B',
-                    fontWeight: 600
+              {frequentTasks.map((task, idx) => {
+                console.log('Rendering task suggestion:', task);
+                return (
+                  <div key={idx} style={{
+                    padding: '12px',
+                    background: isDark ? '#1A1F1A' : '#F5F5F5',
+                    borderRadius: '10px'
                   }}>
-                    Suggested: {task.suggestion.suggested}min
-                    <span style={{
-                      fontSize: '10px',
-                      color: isDark ? '#9CA59C' : '#8E8E93',
-                      fontWeight: 400
-                    }}>
-                      ({task.suggestion.min}-{task.suggestion.max}min)
-                    </span>
+                    <div style={{ fontSize: '13px', fontWeight: 600, color: isDark ? '#E8F0E8' : '#1A1A1A', marginBottom: '4px' }}>
+                      {task.name}
+                    </div>
+                    <div style={{ fontSize: '11px', color: isDark ? '#9CA59C' : '#8E8E93', marginBottom: '6px' }}>
+                      Completed {task.count} times
+                    </div>
+                    {task.suggestion && task.suggestion.suggested ? (
+                      <div style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '8px',
+                        fontSize: '12px',
+                        color: '#3B6E3B',
+                        fontWeight: 600
+                      }}>
+                        Suggested: {task.suggestion.suggested}min
+                        <span style={{
+                          fontSize: '10px',
+                          color: isDark ? '#9CA59C' : '#8E8E93',
+                          fontWeight: 400
+                        }}>
+                          ({task.suggestion.min}-{task.suggestion.max}min)
+                        </span>
+                      </div>
+                    ) : (
+                      <div style={{ fontSize: '11px', color: isDark ? '#9CA59C' : '#8E8E93', fontStyle: 'italic' }}>
+                        Need more data for suggestion (minimum 3 completions)
+                      </div>
+                    )}
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         )}
 
         {/* Empty State */}
-        {!accuracyStats && (
+        {!accuracyStats && (!energyPattern || energyPattern.length === 0) && frequentTasks.length === 0 && (
           <div style={{ textAlign: 'center', padding: '40px 20px' }}>
             <div style={{ fontSize: '48px', marginBottom: '12px' }}>📊</div>
             <p style={{ fontSize: '15px', fontWeight: 600, color: isDark ? '#E8F0E8' : '#1A1A1A', margin: '0 0 4px' }}>

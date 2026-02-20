@@ -1445,9 +1445,36 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
                         } else {
                           // Complete the task
                           haptic.success();
+
+                          const completedAt = new Date().toISOString();
+                          const startedAt = task.startedAt || task.scheduledFor || completedAt;
+                          const actualDuration = Math.round((new Date(completedAt) - new Date(startedAt)) / (1000 * 60));
+                          const durationAccuracy = calculateDurationAccuracy(
+                            task.estimatedDuration || task.duration,
+                            actualDuration
+                          );
+
                           setTasks(prev => prev.map(t =>
-                            t.id === task.id ? { ...t, completed: true, remaining: 0, completedAt: new Date().toISOString() } : t
+                            t.id === task.id ? {
+                              ...t,
+                              completed: true,
+                              remaining: 0,
+                              completedAt,
+                              actualDuration,
+                              durationAccuracy
+                            } : t
                           ));
+
+                          // Save analytics
+                          const taskToSave = {
+                            ...task,
+                            completedAt,
+                            actualDuration,
+                            durationAccuracy
+                          };
+                          saveTaskToHistory(taskToSave);
+                          trackCompletionByHour(taskToSave);
+                          trackRescheduleOption('complete');
 
                           // If completing a carried task, mark it as completed in original date
                           if (task.carriedOver && task.originalDate) {
@@ -1521,9 +1548,36 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
                         } else {
                           // Complete the task
                           haptic.success();
+
+                          const completedAt = new Date().toISOString();
+                          const startedAt = task.startedAt || task.scheduledFor || completedAt;
+                          const actualDuration = Math.round((new Date(completedAt) - new Date(startedAt)) / (1000 * 60));
+                          const durationAccuracy = calculateDurationAccuracy(
+                            task.estimatedDuration || task.duration,
+                            actualDuration
+                          );
+
                           setTasks(prev => prev.map(t =>
-                            t.id === task.id ? { ...t, completed: true, remaining: 0, completedAt: new Date().toISOString() } : t
+                            t.id === task.id ? {
+                              ...t,
+                              completed: true,
+                              remaining: 0,
+                              completedAt,
+                              actualDuration,
+                              durationAccuracy
+                            } : t
                           ));
+
+                          // Save analytics
+                          const taskToSave = {
+                            ...task,
+                            completedAt,
+                            actualDuration,
+                            durationAccuracy
+                          };
+                          saveTaskToHistory(taskToSave);
+                          trackCompletionByHour(taskToSave);
+                          trackRescheduleOption('complete');
 
                           // If completing a carried task, mark it as completed in original date
                           if (task.carriedOver && task.originalDate) {
