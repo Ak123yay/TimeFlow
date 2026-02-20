@@ -16,7 +16,7 @@ export default function SearchBar({ onSearch, placeholder = "Search tasks..." })
       position: 'sticky',
       top: 0,
       zIndex: 10,
-      background: isDark ? '#1A1F1A' : '#F0F8F2',
+      background: isDark ? '#1A1F1A' : '#F8F8F8',
       padding: '12px 0',
       marginBottom: '12px'
     }}>
