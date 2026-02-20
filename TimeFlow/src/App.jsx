@@ -1,4 +1,4 @@
-import { useState, useEffect, lazy, Suspense } from "react";
+import React, { useState, useEffect, lazy, Suspense } from "react";
 import Setup from "./components/Setup";
 import Today from "./components/Today";
 import DayReflection from "./components/DayReflection";
@@ -13,33 +13,77 @@ import { loadAvailability } from "./utils/storage";
 import { getTimePeriod } from "./utils/timeUtils";
 import "./App.css";
 
+// Error Boundary Component
+class ErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+
+  static getDerivedStateFromError(error) {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error, errorInfo) {
+    console.error('Component Error:', error, errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      return (
+        <div style={{
+          minHeight: '100dvh',
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'center',
+          alignItems: 'center',
+          padding: '20px',
+          background: isDark ? '#1A1F1A' : '#F8F8F8',
+          color: isDark ? '#E8F0E8' : '#1A1A1A'
+        }}>
+          <div style={{ fontSize: '48px', marginBottom: '16px' }}>⚠️</div>
+          <div style={{ fontSize: '18px', fontWeight: 600, marginBottom: '8px' }}>
+            Something went wrong
+          </div>
+          <div style={{ fontSize: '14px', color: isDark ? '#9CA59C' : '#8E8E93', marginBottom: '24px' }}>
+            Try refreshing the page
+          </div>
+          <button
+            onClick={() => window.location.reload()}
+            style={{
+              padding: '12px 24px',
+              background: '#3B6E3B',
+              color: 'white',
+              border: 'none',
+              borderRadius: '8px',
+              fontSize: '14px',
+              fontWeight: 600,
+              cursor: 'pointer'
+            }}
+          >
+            Refresh Page
+          </button>
+        </div>
+      );
+    }
+
+    return this.props.children;
+  }
+}
+
 // Loading fallback component for lazy-loaded routes
 function LoadingFallback() {
-  // Get current time period for matching background
-  const period = getTimePeriod();
   const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-  const periodClass = period === 'evening' || period === 'night'
-    ? 'app-night'
-    : period === 'dawn'
-    ? 'app-dawn'
-    : period === 'dusk'
-    ? 'app-dusk'
-    : '';
 
   return (
-    <div className={periodClass} style={{
+    <div style={{
       minHeight: '100dvh',
       width: '100%',
       display: 'flex',
       justifyContent: 'center',
       alignItems: 'center',
-      background: period === 'evening' || period === 'night'
-        ? isDark ? 'linear-gradient(135deg, #1A2225, #171C1A)' : 'linear-gradient(135deg, #E8F4F8, #E0F0E8)'
-        : period === 'dawn'
-        ? isDark ? 'linear-gradient(135deg, #2A1F1F, #1A1F1A)' : 'linear-gradient(135deg, #FFF5F5, #F0F8F2)'
-        : period === 'dusk'
-        ? isDark ? 'linear-gradient(135deg, #251F2A, #1A1F1A)' : 'linear-gradient(135deg, #F5F0FF, #F0F8F2)'
-        : isDark ? '#1A1F1A' : '#F0F8F2',
+      background: isDark ? '#1A1F1A' : '#F8F8F8', // Match MobileLayout background
       transition: 'background 0.3s ease'
     }}>
       <div style={{ textAlign: 'center' }}>
@@ -162,13 +206,17 @@ export default function App() {
           onComplete={showToday}
         />
       ) : currentView === 'week' ? (
-        <Suspense fallback={<LoadingFallback />}>
-          <WeeklyView onBackToToday={showToday} />
-        </Suspense>
+        <ErrorBoundary>
+          <Suspense fallback={<LoadingFallback />}>
+            <WeeklyView onBackToToday={showToday} />
+          </Suspense>
+        </ErrorBoundary>
       ) : currentView === 'pool' ? (
-        <Suspense fallback={<LoadingFallback />}>
-          <WeeklyPool onNavigateToToday={showToday} />
-        </Suspense>
+        <ErrorBoundary>
+          <Suspense fallback={<LoadingFallback />}>
+            <WeeklyPool onNavigateToToday={showToday} />
+          </Suspense>
+        </ErrorBoundary>
       ) : currentView === 'streak' ? (
         <Streak onNavigate={(view) => {
           if (view === 'today') showToday();
@@ -177,14 +225,16 @@ export default function App() {
           else if (view === 'stats') showReflection();
         }} />
       ) : currentView === 'insights' ? (
-        <Suspense fallback={<LoadingFallback />}>
-          <Insights onNavigate={(view) => {
-            if (view === 'today') showToday();
-            else if (view === 'week') showWeek();
-            else if (view === 'pool') showPool();
-            else if (view === 'streak') showStreak();
-          }} />
-        </Suspense>
+        <ErrorBoundary>
+          <Suspense fallback={<LoadingFallback />}>
+            <Insights onNavigate={(view) => {
+              if (view === 'today') showToday();
+              else if (view === 'week') showWeek();
+              else if (view === 'pool') showPool();
+              else if (view === 'streak') showStreak();
+            }} />
+          </Suspense>
+        </ErrorBoundary>
       ) : (
         <Today onEndDay={showReflection} onShowWeek={showWeek} onShowPool={showPool} />
       )}
