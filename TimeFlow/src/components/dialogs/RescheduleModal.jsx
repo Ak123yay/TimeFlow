@@ -310,9 +310,9 @@ export default function RescheduleModal({
       display: "flex", alignItems: "center", justifyContent: "center",
       zIndex: 9999, animation: "fadeIn 0.2s ease-out",
     }}>
-      <div style={{
+      <div className="reschedule-modal" style={{
         background: isDark ? "#242B24" : "#fff",
-        padding: 24, borderRadius: 20,
+        padding: 20, borderRadius: 20,
         width: "92%", maxWidth: 480,
         textAlign: "center",
         boxShadow: isDark
@@ -446,7 +446,7 @@ export default function RescheduleModal({
         {/* Grid of secondary options */}
         <div style={{
           display: "grid", gridTemplateColumns: "1fr 1fr",
-          gap: 8, marginBottom: 10,
+          gap: 8, marginBottom: 8, overflow: 'visible',
         }}>
           {/* Continue */}
           <button
@@ -461,6 +461,10 @@ export default function RescheduleModal({
             className="btn ghost"
             style={{
               fontSize: 13, position: 'relative',
+              borderRadius: 12,
+              display: 'flex', flexDirection: 'column',
+              alignItems: 'center', justifyContent: 'center',
+              minHeight: 64, padding: '10px 8px',
               ...(isTopRecommended('continue') && {
                 border: '2px solid rgba(76,175,80,0.4)',
               }),
@@ -503,6 +507,10 @@ export default function RescheduleModal({
             title={!bestSlot ? "No free time left today" : `Best slot: ${bestSlot.startTime} (score: ${bestSlot.score})`}
             style={{
               fontSize: 13, position: 'relative',
+              borderRadius: 12,
+              display: 'flex', flexDirection: 'column',
+              alignItems: 'center', justifyContent: 'center',
+              minHeight: 64, padding: '10px 8px',
               opacity: !bestSlot ? 0.5 : 1,
               cursor: !bestSlot ? "not-allowed" : "pointer",
               ...(isTopRecommended('later_today') && {
@@ -545,6 +553,10 @@ export default function RescheduleModal({
               : "Move to tomorrow"}
             style={{
               fontSize: 13, position: 'relative',
+              borderRadius: 12,
+              display: 'flex', flexDirection: 'column',
+              alignItems: 'center', justifyContent: 'center',
+              minHeight: 64, padding: '10px 8px',
               ...(urgency && (urgency.level === 'overdue' || urgency.level === 'today') && {
                 border: '1px solid rgba(245,158,11,0.5)',
                 background: 'linear-gradient(135deg, rgba(245,158,11,0.08), rgba(245,158,11,0.04))',
@@ -577,6 +589,10 @@ export default function RescheduleModal({
             className="btn ghost"
             style={{
               fontSize: 13, position: 'relative',
+              borderRadius: 12,
+              display: 'flex', flexDirection: 'column',
+              alignItems: 'center', justifyContent: 'center',
+              minHeight: 64, padding: '10px 8px',
               ...(isTopRecommended('back_to_pool') && {
                 border: '2px solid rgba(76,175,80,0.4)',
               }),
@@ -593,58 +609,64 @@ export default function RescheduleModal({
               }}>AI</span>
             )}
           </button>
+        </div>
 
-          {/* Pick time */}
+        {/* Secondary actions row: Pick Time + Break Task */}
+        <div style={{
+          display: 'flex', gap: 8, marginBottom: 10,
+        }}>
           <button
             onClick={onPickTime}
-            className="btn ghost"
-            style={{ fontSize: 13 }}
+            style={{
+              flex: 1, padding: '10px 14px',
+              borderRadius: 12,
+              border: `1.5px solid ${isDark ? 'rgba(255,255,255,0.1)' : 'rgba(59,110,59,0.15)'}`,
+              background: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(59,110,59,0.04)',
+              color: isDark ? '#9CA59C' : '#4B6B4B',
+              fontSize: 13, fontWeight: 600,
+              cursor: 'pointer', transition: 'all 0.2s ease',
+            }}
           >
             🎯 Pick time
           </button>
-        </div>
 
-        {/* Break Task - shown for avoidance patterns or high-attempt or long tasks */}
-        {showBreakTask && (
-          <button
-            onClick={onBreakTask}
-            style={{
-              width: "100%", padding: "10px",
-              borderRadius: "12px",
-              border: isTopRecommended('break_task')
-                ? "2px solid rgba(76,175,80,0.4)"
-                : "2px dashed rgba(245,158,11,0.4)",
-              background: isTopRecommended('break_task')
-                ? "linear-gradient(135deg, rgba(76,175,80,0.1), rgba(76,175,80,0.05))"
-                : "linear-gradient(135deg, rgba(255,165,0,0.08), rgba(255,165,0,0.04))",
-              color: isTopRecommended('break_task') ? "#2E6B2E" : "#d97706",
-              fontSize: 13, fontWeight: 600,
-              cursor: "pointer", transition: "all 0.2s ease",
-              marginBottom: 10, position: 'relative',
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.transform = 'scale(1.01)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.transform = 'scale(1)';
-            }}
-          >
-            🔨 Break into smaller tasks
-            {procrastination && procrastination.interventions.length > 0 && (
-              <div style={{ fontSize: 10, opacity: 0.7, marginTop: 2 }}>
-                {procrastination.interventions[0].reason.substring(0, 50)}
-              </div>
-            )}
-            {isTopRecommended('break_task') && (
-              <span style={{
-                position: 'absolute', top: -5, right: -5,
-                fontSize: 8, fontWeight: 700, padding: '1px 4px',
-                background: '#4CAF50', color: '#fff',
-                borderRadius: 4,
-              }}>AI</span>
-            )}
-          </button>
-        )}
+          {showBreakTask && (
+            <button
+              onClick={onBreakTask}
+              style={{
+                flex: 1, padding: '10px 14px',
+                borderRadius: 12,
+                border: isTopRecommended('break_task')
+                  ? '2px solid rgba(76,175,80,0.4)'
+                  : '1.5px dashed rgba(245,158,11,0.4)',
+                background: isTopRecommended('break_task')
+                  ? (isDark ? 'rgba(76,175,80,0.1)' : 'rgba(76,175,80,0.06)')
+                  : (isDark ? 'rgba(255,165,0,0.08)' : 'rgba(255,165,0,0.05)'),
+                color: isTopRecommended('break_task')
+                  ? (isDark ? '#8BC98B' : '#2E6B2E')
+                  : '#d97706',
+                fontSize: 13, fontWeight: 600,
+                cursor: 'pointer', transition: 'all 0.2s ease',
+                position: 'relative',
+              }}
+            >
+              🔨 Break task
+              {procrastination && procrastination.interventions.length > 0 && (
+                <span style={{ fontSize: 9, opacity: 0.6, display: 'block', marginTop: 2 }}>
+                  {procrastination.interventions[0].reason.substring(0, 35)}
+                </span>
+              )}
+              {isTopRecommended('break_task') && (
+                <span style={{
+                  position: 'absolute', top: -5, right: -5,
+                  fontSize: 8, fontWeight: 700, padding: '1px 4px',
+                  background: '#4CAF50', color: '#fff',
+                  borderRadius: 4,
+                }}>AI</span>
+              )}
+            </button>
+          )}
+        </div>
 
         {/* Details toggle */}
         <button

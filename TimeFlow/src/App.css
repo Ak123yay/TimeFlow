@@ -1302,3 +1302,45 @@ input:focus-visible {
     display: none !important;
   }
 }
+
+/* ============================================
+   RESCHEDULE MODAL - SCOPED OVERRIDES
+   Prevents aggressive mobile globals from
+   breaking the modal's carefully sized UI
+   ============================================ */
+@media (max-width: 640px) {
+  /* Let modal spans/labels use their own inline font-sizes */
+  .reschedule-modal p,
+  .reschedule-modal span,
+  .reschedule-modal label {
+    font-size: inherit !important;
+    line-height: inherit !important;
+  }
+
+  /* Let modal buttons use their own sizing */
+  .reschedule-modal button {
+    min-height: unset !important;
+    font-size: inherit !important;
+    font-weight: inherit !important;
+  }
+
+  /* But keep the primary button properly sized */
+  .reschedule-modal .btn.primary {
+    min-height: 48px !important;
+    font-size: 15px !important;
+    font-weight: 700 !important;
+  }
+
+  /* Override the fixed-position child padding rule */
+  .reschedule-modal {
+    padding: 20px !important;
+    max-width: calc(100vw - 24px) !important;
+  }
+
+  /* Grid buttons should use rounded rect, not pill */
+  .reschedule-modal .btn.ghost {
+    border-radius: 12px !important;
+    min-height: unset !important;
+    padding: 10px 8px !important;
+  }
+}
