@@ -184,23 +184,27 @@ Today's Tasks (green section):
 └─
 ```
 
-**When Timer Ends:**
+**When Timer Ends (AI-Powered):**
 ```
 Task Finished?
 "Write documentation"
 
-⚠️ This has been rescheduled 2 times
-💡 Recommended: Later today (3:00 PM)
+📊 Completion probability: 52% (Uncertain)
+⚠️ Some avoidance building (rescheduled 2 times)
+🔥 Momentum: 3 tasks completed in a row!
+
+⭐ AI Recommended: Later today (3:00 PM)
+   "Free slot at 3:00 PM - optimal time for creative tasks."
 
 [✓ Mark Complete]
 
-[⏱️ Continue +1 min]  [🕐 Later Today (3:00 PM)]
-[📅 Tomorrow]         [🎯 Pick Time]
+[⏱️ Continue +8 min]   [🕐 Later Today (3:00 PM)] ⭐AI
+[📅 Tomorrow]           [🎯 Pick Time]
 [🌊 Back to Pool]
 
 [🔨 Break into smaller tasks]
 
-[Cancel]
+[▼ View Analysis]       [Cancel]
 ```
 
 ### Real Example: A Typical Day
@@ -257,25 +261,32 @@ Task Finished?
 
 ### What Makes TimeFlow "Smart"
 
-**It notices patterns:**
-- "You reschedule coding tasks 60% of the time"
-- "You complete morning tasks 85% of the time"
-- "This task usually takes 45 min, not 30 min"
+**It learns from every decision:**
+- Records all 7 rescheduling choices with full context (hour, day, category, elapsed time)
+- Builds a behavioral profile tracking completion tendency, procrastination score, and preferred options
+- Maintains per-category and per-day-of-week aggregated statistics
+- Uses exponentially weighted averages for duration predictions (recent data counts more)
 
-**It predicts problems:**
-- "If you add this task, you'll be 2 hours overbooked"
-- "This task conflicts with your 2:00 PM meeting"
-- "You have 20 min free at 3:00 PM for this task"
+**It predicts outcomes:**
+- 8-factor weighted model predicts completion probability (0-95%)
+- Factors: base tendency, attempt decay, category rate, time-of-day energy, day-of-week, deadline urgency, duration realism, carried-over status
+- Labels: Very likely / Likely / Uncertain / Unlikely / Very unlikely
 
-**It learns from you:**
-- Tracks which reschedule options you prefer
-- Suggests durations based on past completions
-- Remembers your productive hours
+**It detects procrastination:**
+- 5-factor severity scoring: raw attempts, category avoidance, task-specific repetition, day-of-week effect, duration mismatch
+- 5 severity levels: none / mild / moderate / severe / chronic
+- Suggests interventions: break task, reduce duration, eliminate, adjust duration
 
-**It helps you improve:**
-- Shows which tasks you chronically avoid
-- Highlights unrealistic time estimates
-- Suggests breaking down large tasks
+**It finds optimal time slots:**
+- Scores free slots by hourly productivity + category-time fit + deadline urgency + buffer quality
+- Research-based category preferences (creative=morning, coding=mid-morning, admin=afternoon)
+- Workload balance across 6 upcoming days for reschedule targets
+
+**It generates ranked recommendations:**
+- Master engine scores all 7 options with personalized factors
+- Top recommendation gets "AI" badge with explanation
+- Shows completion probability meter and momentum streak
+- Expandable analysis panel reveals all scoring factors
 
 ### The Bottom Line
 
@@ -344,32 +355,42 @@ Weekly Pool (brainstorming) → Today (commitment) → Execution (flow) → Refl
 - `DetailedTimeline.jsx` - Visual calendar view
 - `scheduler.js` - Scheduling algorithms
 
-### 2. Intelligent Rescheduling System
+### 2. AI-Powered Intelligent Rescheduling System
 
-**Plain English:** When a task timer ends and you're not done, TimeFlow doesn't just say "too bad." It gives you 7 smart options - from "just need 1 more minute" to "move this to tomorrow" to "this task is too big, split it in half." If you keep rescheduling something 3+ times, TimeFlow suggests breaking it into smaller pieces because you're probably avoiding it.
+**Plain English:** When a task timer ends and you're not done, TimeFlow doesn't just say "too bad." Its AI engine analyzes your behavioral patterns, predicts how likely you are to complete the task, detects if you're procrastinating, and ranks all 7 options by how suitable they are for YOUR situation. The top recommendation gets an "AI" badge with a personalized explanation. If you keep rescheduling something, TimeFlow detects the avoidance pattern and strongly suggests breaking the task into smaller pieces.
 
 **What it does:**
-- 7 different rescheduling options when tasks aren't completed
-- Smart slot finding for "Later Today" option
-- Attempt tracking for behavioral insights
-- Break task suggestion after 3+ reschedules
+- AI-powered recommendation engine ranks all 7 options with personalized reasons
+- 8-factor completion probability prediction (base tendency, attempt decay, category rate, time-of-day energy, day-of-week, deadline urgency, duration realism, carried-over penalty)
+- 5-level procrastination detection (none/mild/moderate/severe/chronic) with targeted interventions
+- Energy-aware time slot scoring using hourly productivity data and category-time fit
+- Smart continue duration estimation using weighted historical averages (not just +1 min)
+- Workload balance analysis across the next 6 days for optimal reschedule targets
+- Behavioral pattern tracking with full decision context for ongoing learning
+- Task auto-categorization across 8 categories with keyword density analysis
 
 **Components:**
-- `RescheduleModal.jsx` - The rescheduling interface
-- Appears when timer ends and task isn't complete
-- Tracks every reschedule decision
+- `RescheduleModal.jsx` - AI-powered rescheduling interface with sub-components:
+  - `ProbabilityMeter` - Visual bar showing completion probability percentage
+  - `ProcrastinationBanner` - Warning banner for moderate+ procrastination patterns
+  - `AIRecommendationCard` - Highlighted card for the AI's top recommendation
+  - `WorkloadPreview` - Shows best upcoming day if rescheduling to another day
+  - `MomentumBadge` - Displays current completion streak for motivation
+- `smartReschedule.js` - Core AI engine (10 subsystems, 1500+ lines)
+- Appears when timer ends and analyzes task in real-time
+- Tracks every decision for pattern learning
 
 **Options explained:**
 
-| Option | When to Use | What Happens | Attempts++ |
-|--------|-------------|--------------|------------|
-| **Mark Complete** | Task is done | Sets `completed: true`, triggers celebration | No |
-| **Continue Now** | Need a bit more time | Adds 1 minute, resumes timer | No |
-| **Later Today** | Reschedule to later slot | Finds next free time, updates `startTime` | Yes |
-| **Tomorrow** | Move to next day | Creates copy in tomorrow's tasks, removes from today | Yes |
-| **Back to Pool** | Not ready to commit | Returns to Weekly Pool for later | Yes |
-| **Pick Time** | Custom reschedule | Opens edit dialog for manual time selection | Yes |
-| **Break Task** | Task too large | Splits into 2 tasks of half duration | Yes |
+| Option | When to Use | AI Scoring | Attempts++ |
+|--------|-------------|------------|------------|
+| **Mark Complete** | Task is done | Boosted by deadline urgency, high completion probability, attempt count | No |
+| **Continue +Xmin** | Need more time | Smart duration from history; boosted when almost done (high confidence) | No |
+| **Later Today** | Reschedule to later | Scored by energy-aware slot quality; boosted if user historically prefers | Yes |
+| **Tomorrow** | Move to next day | Discouraged for overdue/today deadlines; shows best day alternative | Yes |
+| **Back to Pool** | Not ready to commit | Discouraged for deadline tasks; suitable for chronic reschedules | Yes |
+| **Break Task** | Task too large | Strongly boosted for severe/chronic procrastination (score +35) | Yes |
+| **Pick Time** | Custom reschedule | Baseline score; always available as manual override | Yes |
 
 **Attempt Tracking:**
 ```javascript
@@ -2646,6 +2667,85 @@ All data stored in browser's localStorage:
   soundEnabled: true,
   theme: 'green'
 }
+
+// === AI Rescheduling Engine Storage (smartReschedule.js) ===
+
+// Behavioral profile (running averages)
+'timeflow-behavioral-profile': {
+  totalDecisions: 142,
+  preferredOptions: { complete: 89, later_today: 23, tomorrow: 18, ... },
+  avgDecisionHour: 14,
+  completionTendency: 0.63,     // 0 = always reschedule, 1 = always complete
+  procrastinationScore: 25,     // 0-100, exponentially smoothed
+  consistencyScore: 50,         // 0-100
+  _sumHours: 1988,
+  _completions: 89,
+  _reschedules: 53,
+  lastUpdated: "2026-02-20T15:30:00Z"
+}
+
+// Full rescheduling decision history (last 500 entries)
+'timeflow-reschedule-history': [
+  {
+    timestamp: "2026-02-20T14:30:00Z",
+    taskName: "Write documentation",
+    taskId: 1234567890,
+    category: "creative",
+    option: "later_today",
+    hour: 14,
+    dayOfWeek: 4,
+    dayName: "Thursday",
+    duration: 60,
+    remaining: 25,
+    elapsed: 35,
+    attempts: 2,
+    hadDeadline: true,
+    wasCarriedOver: false,
+    deadlineUrgency: "tomorrow"
+  }
+]
+
+// Per-category aggregated stats
+'timeflow-category-stats': {
+  coding: {
+    totalDecisions: 45,
+    completions: 32,
+    reschedules: 13,
+    avgDuration: 52,
+    avgAttempts: 1.2,
+    optionCounts: { complete: 32, later_today: 8, tomorrow: 5 },
+    totalDuration: 2340,
+    totalAttempts: 54
+  }
+}
+
+// Per-day-of-week aggregated stats
+'timeflow-dow-stats': {
+  '1': {  // Monday
+    dayName: "Monday",
+    totalDecisions: 28,
+    completions: 20,
+    reschedules: 8,
+    hourlyBreakdown: {
+      '09': { completions: 5, reschedules: 1 },
+      '14': { completions: 3, reschedules: 2 }
+    }
+  }
+}
+
+// Focus session log (last 200 sessions)
+'timeflow-session-log': [
+  {
+    timestamp: "2026-02-20T14:30:00Z",
+    taskName: "Morning standup",
+    category: "meetings",
+    completed: true,
+    durationMinutes: 25,
+    outcome: "complete",
+    hour: 9,
+    dayOfWeek: 4
+  }
+]
 ```
 
 ### Storage Functions
@@ -2789,7 +2889,12 @@ App.jsx
 ├── Setup.jsx (first-time setup)
 └── Today.jsx (main interface)
     ├── CalendarView.jsx
-    ├── RescheduleModal.jsx
+    ├── RescheduleModal.jsx (AI-powered)
+    │   ├── ProbabilityMeter (completion prediction visual)
+    │   ├── ProcrastinationBanner (avoidance warning)
+    │   ├── AIRecommendationCard (top pick highlight)
+    │   ├── WorkloadPreview (best day suggestion)
+    │   └── MomentumBadge (streak motivation)
     ├── EditTaskDialog.jsx
     ├── DetailedTimeline.jsx
     ├── TaskHealthIndicator.jsx
@@ -2867,9 +2972,9 @@ const [viewMode, setViewMode] = useState('list'); // or 'calendar'
 - Keyboard shortcuts (F for focus mode)
 - Auto-scroll to current time
 
-#### RescheduleModal.jsx
+#### RescheduleModal.jsx *(AI-Powered)*
 
-**Purpose:** Present rescheduling options when timer ends
+**Purpose:** AI-powered rescheduling interface that analyzes behavioral patterns and presents ranked recommendations when timer ends
 
 **Props:**
 ```javascript
@@ -2877,8 +2982,9 @@ const [viewMode, setViewMode] = useState('list'); // or 'calendar'
   task: object,              // Current task
   availability: object,      // User's time window
   existingTasks: array,      // All tasks for slot finding
+  elapsedSeconds: number,    // Seconds task has been running
   onComplete: function,      // Mark complete handler
-  onContinue: function,      // Add 1 min handler
+  onContinue: function,      // Smart continue handler (accepts suggestedMinutes)
   onLaterToday: function,    // Reschedule later handler
   onTomorrow: function,      // Move to tomorrow handler
   onBackToPool: function,    // Return to pool handler
@@ -2888,12 +2994,26 @@ const [viewMode, setViewMode] = useState('list'); // or 'calendar'
 }
 ```
 
+**AI Sub-Components:**
+- `ProbabilityMeter` - Horizontal bar showing completion probability (0-95%) with color gradient (red→yellow→green) and label (Very unlikely → Very likely)
+- `ProcrastinationBanner` - Warning banner for moderate+ severity with pattern descriptions and intervention suggestions
+- `AIRecommendationCard` - Highlighted card with green border for the top-ranked option, showing "AI" badge, reason text, and optional slot/day details
+- `WorkloadPreview` - Mini preview of best upcoming day (name, load%, free minutes) for tomorrow/reschedule context
+- `MomentumBadge` - Shows current in-day completion streak count to encourage maintaining momentum
+
 **Smart Features:**
-- Calculates next free slot for "Later Today"
-- Disables "Later Today" if no slots available
-- Shows attempt count warning if >= 2
-- Shows "Break Task" option if >= 3 attempts
-- Smart recommendations based on history
+- Runs `generateSmartRecommendation()` on modal open via useEffect
+- Shows AI badge on the top-ranked option
+- Smart continue duration (e.g., "+8min" based on history, not just +1min)
+- Procrastination banner for moderate/severe/chronic avoidance
+- Completion probability meter with factor breakdown
+- Expandable "View Analysis" panel showing:
+  - All completion probability factors with weights
+  - Full option ranking with score bars
+  - Category detection results
+- "Later Today" shows energy-scored optimal slot
+- "Tomorrow" shows best alternative day from workload analysis
+- "Break Task" appears with high visibility after chronic avoidance
 
 #### TaskHealthIndicator.jsx
 
@@ -3100,6 +3220,30 @@ Comprehensive health assessment (shown earlier)
 #### `findNextFreeSlot(duration, tasks, availability)`
 Smart slot finding (shown earlier)
 
+#### `scoreTaskHourFit(task, hour)` *(NEW - AI)*
+Scores how well a task fits a specific hour based on energy patterns, category-time preferences, and deadline urgency. Returns 0-100 score.
+```javascript
+// Combines three factors:
+// 1. User's historical completion rate for that hour (0-40 points)
+// 2. Category-time fit based on research heuristics (0-40 points)
+// 3. Deadline urgency bonus for earlier slots (0-20 points)
+```
+
+#### `getCategoryTimePreference(category, hour)` *(NEW - AI)*
+Returns research-based time preference score for a category at a given hour. Uses heuristics like: creative tasks peak 8-11am, coding peaks 9-11am and 2-3pm, admin tasks fit best 1-4pm, health/exercise best at 7-8am and 5-6pm.
+
+#### `optimizeTaskOrder(tasks, availability)` *(NEW - AI)*
+Reorders tasks by scoring each task at each possible hour using `scoreTaskHourFit()`, then assigning tasks to their highest-scoring hours. Returns energy-optimized task ordering.
+
+#### `smartPrioritize(tasks)` *(NEW - AI)*
+Enhanced task prioritization that goes beyond simple priority numbers. Considers deadline urgency, attempt count (procrastination signal), task duration (quick wins first for momentum), and carried-over status.
+
+#### `suggestOptimalSchedule(tasks, availability)` *(NEW - AI)*
+Generates a complete AI-optimized schedule by assigning tasks to their best available time slots. Uses `_findBestSlot()` which generates candidate slots in 15-minute increments and scores each by energy fit.
+
+#### `detectScheduleIssues(tasks, availability)` *(NEW - AI)*
+Scans the schedule for problems beyond simple conflicts. Detects: schedule overloads (>100% capacity), missing buffers between back-to-back tasks, chronically rescheduled tasks (5+ attempts), and deadline-at-risk tasks.
+
 ### analytics.js
 
 Analytics and learning functions:
@@ -3164,6 +3308,123 @@ const analytics = loadEnergyPatterns();
 return analytics.hourlyCompletionRates[hour] || 0.5;
 ```
 
+#### `suggestDurationWeighted(taskName)` *(NEW - AI)*
+Enhanced duration suggestion using exponentially weighted moving averages with recency bias. Recent completions count more than older ones, making suggestions adaptive to changing work patterns.
+```javascript
+// Weight formula: w(i) = alpha^(n-1-i), where alpha = 0.85
+// More recent entries have exponentially more influence
+// Falls back to regular suggestDuration if not enough data
+```
+
+#### `getCompletionMomentum()` *(NEW - AI)*
+Tracks how many tasks have been completed in a row today. Returns the current in-day completion streak. Used by the RescheduleModal's `MomentumBadge` component to encourage continuing the streak.
+
+#### `getEstimationBias()` *(NEW - AI)*
+Analyzes the last 20 completed tasks to detect systematic estimation patterns. Returns:
+- `bias`: 'under' | 'over' | 'balanced'
+- `averageRatio`: actual/estimated duration ratio
+- `suggestion`: Human-readable advice (e.g., "Try adding 30% buffer to estimates")
+
+#### `calculateProductivityScore(date)` *(NEW - AI)*
+Computes a 0-100 daily productivity score across 4 weighted factors:
+- **Completion rate** (0-40 points): Tasks completed / total tasks
+- **Duration accuracy** (0-25 points): How close estimates were to reality
+- **Low reschedule count** (0-20 points): Fewer reschedules = more productive
+- **On-time starts** (0-15 points): Tasks started within 15 minutes of scheduled time
+
+### smartReschedule.js *(NEW - AI Engine)*
+
+The core AI rescheduling engine with 10 interconnected subsystems. This module powers TimeFlow's behavioral intelligence by learning from user patterns, predicting outcomes, and generating personalized recommendations.
+
+**Storage Keys:**
+```javascript
+'timeflow-behavioral-profile'  // Running averages of user behavior
+'timeflow-reschedule-history'  // Last 500 rescheduling decisions with full context
+'timeflow-category-stats'      // Per-category aggregated statistics
+'timeflow-dow-stats'           // Per-day-of-week aggregated statistics
+'timeflow-procrastination-log' // Procrastination pattern data
+'timeflow-session-log'         // Last 200 focus session records
+```
+
+#### `categorizeTask(taskName)`
+Auto-categorizes tasks using keyword density analysis across 8 categories: coding, meetings, creative, email, admin, health, learning, personal. Returns primary/secondary category with confidence score (0-0.95).
+
+#### `recordRescheduleDecision({ task, option, hour, dayOfWeek, remainingMinutes, elapsedMinutes })`
+Records every rescheduling decision with full context. Updates three aggregated stat stores (category, day-of-week, behavioral profile) for pattern learning. Keeps last 500 entries.
+
+#### `detectProcrastination(task)`
+5-factor procrastination analysis returning severity (none/mild/moderate/severe/chronic), score (0-100), detected patterns, and suggested interventions:
+- **Factor 1 - Raw attempts** (0-35 pts): 7+ attempts = chronic avoidance
+- **Factor 2 - Category avoidance** (0-25 pts): Category-wide reschedule rate
+- **Factor 3 - Task-specific repetition** (0-20 pts): This task's specific reschedule rate
+- **Factor 4 - Day-of-week effect** (0-10 pts): Today's historical reschedule rate
+- **Factor 5 - Duration mismatch** (0-10 pts): Underestimation compared to historical data
+
+Interventions include: break_task, reduce_duration, eliminate (for 5+ attempts), adjust_duration.
+
+#### `predictCompletionProbability(task, availability)`
+8-factor weighted model predicting task completion probability (0.05-0.95):
+- **Base completion tendency** (weight: 3): Overall completion rate
+- **Attempt decay** (weight: 4): Each reschedule reduces probability by 18%
+- **Category success rate** (weight: 2): Category-specific completion rate
+- **Time-of-day energy** (weight: 2): Current hour's productivity rate
+- **Day-of-week performance** (weight: 1.5): Today's historical completion rate
+- **Deadline urgency boost** (weight: 2): Urgency increases motivation
+- **Duration realism** (weight: 1.5): How accurate the duration estimate is
+- **Carried-over penalty** (weight: 1): Carried tasks have ~40% completion value
+
+Returns probability, confidence, factor breakdown, and human label (Very likely/Likely/Uncertain/Unlikely/Very unlikely).
+
+#### `findScoredSlots(task, existingTasks, availability)`
+Finds all free time slots for a task and scores each by:
+- **Energy match** (0-25 pts): Hourly completion rate at slot time
+- **Category-time fit** (0-15 pts): Research-based category-hour heuristics
+- **Proximity** (0-10 pts): Sooner slots score higher for urgent tasks
+- **Buffer quality** (0-10 pts): Slots with breathing room before/after score higher
+
+Returns slots ranked by total score with reasons array.
+
+#### `estimateContinueDuration(task, elapsedSeconds)`
+Suggests realistic additional time instead of a flat +1 minute:
+- **High confidence**: Uses weighted historical average — "Usually done in ~45min, ~8min left"
+- **Moderate confidence**: Caps at 15 min — "Usually takes ~60min total, suggesting 15min more"
+- **Low confidence**: Fallback based on overrun amount (5/10/15 min tiers)
+
+#### `analyzeWeekdayWorkload(task, availability)`
+Scans the next 6 days and scores each by:
+- **Free capacity** (0-30 pts): How much room the task has
+- **Day-of-week completion rate** (0-15 pts): Historical performance
+- **Deadline proximity** (0-10 pts): Earlier days preferred if deadline exists
+- **Load balance** (-10 to +5 pts): Avoids overloaded days, prefers light days
+
+#### `generateSmartRecommendation({ task, availability, existingTasks, elapsedSeconds })`
+The master recommendation engine combining all signals. Scores each of the 7 options:
+- **Complete**: Base 40 + urgency bonuses (up to +40) + attempt bonuses + probability boost
+- **Continue**: Base 35 + duration confidence + "almost done" boost
+- **Later Today**: Base 30 + slot quality + urgency keep-today bonus + user preference
+- **Tomorrow**: Base 20 - urgency penalties + best-day alternative suggestion
+- **Back to Pool**: Base 15 - deadline penalty + chronic reschedule suitability
+- **Break Task**: Base 10 + procrastination severity boost (up to +35) + duration penalty
+- **Pick Time**: Base 10 (always available)
+
+Returns: `{ primary, ranked, confidence, analysis, summary }`
+
+#### `generatePatternInsights()`
+Produces 7 types of human-readable insights:
+1. Completion tendency (positive/concern based on rate)
+2. Most avoided category (pattern warning)
+3. Best and worst days of the week
+4. Preferred reschedule option (habit insight)
+5. Duration accuracy (under/over estimation)
+6. Peak productivity window (best hour + morning/afternoon/evening)
+7. Chronically procrastinated tasks (4+ reschedules)
+
+#### `trackSession({ task, completed, durationMinutes, outcome })`
+Records focus session data for trend analysis. Stores task name, category, completion status, duration, and temporal context. Keeps last 200 sessions.
+
+#### `getTodaySessionStats()`
+Returns today's session performance: total sessions, completed sessions, total focused minutes, completion rate, and current completion streak.
+
 ---
 
 ## User Workflows
@@ -3206,24 +3467,33 @@ return analytics.hourlyCompletionRates[hour] || 0.5;
 12. Next task ready to start
 ```
 
-### Workflow 3: Handling Delays
+### Workflow 3: Handling Delays (AI-Powered)
 
 ```
 1. Timer ends but task not done
-2. RescheduleModal shows
-3. User sees:
-   - Attempt count: "⚠️ This has been rescheduled 2 times"
-   - Smart suggestion: "💡 Recommended: Later today (3:00 PM)"
-4. Reviews options:
-   - Later Today: Shows "3:00 PM" (calculated slot)
-   - Tomorrow: Available
-   - Back to Pool: Available
-5. User picks "Later Today"
-6. Task jumps to 3:00 PM in timeline
-7. Attempt counter: 2 → 3
-8. Next time modal appears: "Break Task" option shows
-9. Health status: Warning → Critical (score now 35)
-10. Border color changes: Amber → closer to Red
+2. AI-powered RescheduleModal appears
+3. AI engine runs generateSmartRecommendation() analyzing:
+   - Completion probability (52% - "Uncertain")
+   - Procrastination level (moderate - 2 prior reschedules)
+   - Best available slot (3:00 PM, score: 82/100)
+   - Best upcoming day (Thursday - light workload)
+   - Momentum streak (3 tasks completed in a row)
+4. User sees:
+   - Completion probability meter: "52% - Uncertain"
+   - Procrastination banner: "Some avoidance building"
+   - AI recommendation: "⭐ AI Later today (3:00 PM)"
+     with reason: "Free slot at 3:00 PM - optimal time for creative tasks."
+   - All 7 options ranked by AI score with reasons
+5. Expandable "View Analysis" panel shows:
+   - Factor breakdown (8 factors with weights)
+   - Full option ranking with score bars
+   - Category: "creative" (confidence: 0.72)
+6. User picks AI-recommended "Later Today (3:00 PM)"
+7. Decision recorded to behavioral profile for future learning
+8. Session tracked for momentum/productivity scoring
+9. Attempt counter: 2 → 3
+10. Next time: "Break Task" option scores +35 from procrastination detection
+11. Health status recalculated with new attempt count
 ```
 
 ### Workflow 4: End of Day
@@ -3345,14 +3615,15 @@ TimeFlow/
 │   │   ├── shared/
 │   │   │   └── TaskTimer.jsx # Active task timer
 │   │   └── dialogs/
-│   │       ├── RescheduleModal.jsx
+│   │       ├── RescheduleModal.jsx  # AI-powered reschedule interface
 │   │       ├── EditTaskDialog.jsx
 │   │       ├── MoveToTodayDialog.jsx
 │   │       └── ReflectionViewer.jsx
 │   ├── utils/
 │   │   ├── storage.js       # localStorage helpers
-│   │   ├── scheduler.js     # Scheduling algorithms
-│   │   ├── analytics.js     # Learning & tracking
+│   │   ├── scheduler.js     # Scheduling algorithms + energy-aware optimization
+│   │   ├── analytics.js     # Learning, tracking & productivity scoring
+│   │   ├── smartReschedule.js # AI rescheduling engine (10 subsystems)
 │   │   └── haptics.js       # Haptic feedback utilities
 │   └── main.jsx             # Entry point
 ├── public/
@@ -3419,7 +3690,17 @@ npm run lint     # Run ESLint
 ### Completed Features ✅
 
 - ✅ Time-blocked scheduling
-- ✅ Intelligent rescheduling (7 options)
+- ✅ AI-powered intelligent rescheduling (7 options with ranked recommendations)
+- ✅ Completion probability prediction (8-factor weighted model)
+- ✅ Procrastination detection (5-level severity + interventions)
+- ✅ Behavioral pattern tracking and learning
+- ✅ Energy-based scheduling (category-time fit + hourly productivity scoring)
+- ✅ Smart continue duration estimation (weighted historical averages)
+- ✅ Workload balance analysis (6-day lookahead)
+- ✅ Task auto-categorization (8 categories with keyword density)
+- ✅ Pattern insights generator (peak hours, avoided categories, chronic tasks)
+- ✅ Session performance tracking
+- ✅ Advanced analytics (productivity score, estimation bias, completion momentum)
 - ✅ Task health assessment
 - ✅ Weekly Pool
 - ✅ Focus Mode
@@ -3446,8 +3727,6 @@ npm run lint     # Run ESLint
 - ⏳ Task dependencies
 - ⏳ Habit tracking
 - ⏳ Mood tracking
-- ⏳ Advanced analytics dashboard
-- ⏳ Energy-based scheduling
 - ⏳ Task batching suggestions
 - ⏳ Break time detection
 - ⏳ Flow state protection
@@ -3599,7 +3878,7 @@ Inspired by:
 
 ## Version History
 
-### v1.0.0 (Current)
+### v1.0.0
 - Initial release
 - Core scheduling features
 - Intelligent rescheduling
@@ -3608,11 +3887,26 @@ Inspired by:
 - Focus Mode
 - Mobile responsive
 
-### Upcoming v1.1.0
+### v1.1.0 (Current)
+- AI-powered rescheduling engine (smartReschedule.js - 10 subsystems)
+- 8-factor completion probability predictor
+- 5-level procrastination detection with interventions
+- Energy-aware optimal time slot scoring
+- Smart continue duration (weighted historical averages)
+- Workload balance analysis (6-day lookahead)
+- Task auto-categorization (8 categories)
+- Behavioral pattern tracking and learning
+- Pattern insights generator
+- Session performance tracking
+- Enhanced analytics (productivity score, estimation bias, completion momentum)
+- Enhanced scheduler (energy-aware optimization, smart prioritization, schedule issue detection)
+- Rewritten RescheduleModal with AI sub-components (ProbabilityMeter, ProcrastinationBanner, AIRecommendationCard, WorkloadPreview, MomentumBadge)
+
+### Upcoming v1.2.0
 - End-of-day reflection screen
-- Advanced analytics dashboard
 - Task dependencies
-- Energy-based scheduling
+- Habit tracking
+- Mood tracking
 
 ---
 

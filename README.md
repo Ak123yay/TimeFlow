@@ -26,15 +26,28 @@ Assign specific start times and durations to tasks. See your entire day visually
 ### 🔍 Search & Filter
 Quickly find tasks across your day with real-time search. Filter by task name or notes with instant results and 300ms debouncing for smooth performance. Available in Today view and Weekly Pool.
 
-### 🔄 Intelligent Rescheduling
-When a task timer ends and you're not done, choose from 7 smart options:
-- **Mark Complete** - Task is done
-- **Continue +1 min** - Need a bit more time
-- **Later Today** - Finds next free slot automatically
-- **Tomorrow** - Moves to tomorrow's schedule
-- **Back to Pool** - Returns to idea bucket (guilt-free)
-- **Pick Time** - Choose custom time
-- **Break Task** - Splits into smaller pieces (appears after 3+ delays)
+### 🔄 AI-Powered Intelligent Rescheduling
+When a task timer ends and you're not done, TimeFlow's AI engine analyzes your behavioral patterns, predicts completion probability, detects procrastination, and ranks all options by suitability:
+- **Mark Complete** - Task is done (boosted when deadline is urgent or completion probability is high)
+- **Continue +Xmin** - Smart duration suggestion based on historical data (not just +1 min)
+- **Later Today** - Finds and scores optimal time slots by energy patterns and category fit
+- **Tomorrow** - Moves to tomorrow's schedule (discouraged for urgent/overdue tasks)
+- **Back to Pool** - Returns to idea bucket (guilt-free deferral)
+- **Pick Time** - Choose custom time manually
+- **Break Task** - Splits into smaller pieces (strongly recommended after chronic avoidance)
+
+Each option shows an AI-generated reason explaining why it's recommended, and the top pick gets an "AI" badge.
+
+### 🧠 AI Rescheduling Engine
+A multi-module behavioral intelligence system that learns from every decision you make:
+- **Completion Probability Predictor** - 8-factor weighted model predicting whether you'll finish a task (base tendency, attempt decay, category rate, time-of-day energy, day-of-week performance, deadline urgency, duration realism, carried-over penalty)
+- **Procrastination Detector** - 5-factor severity analysis (none/mild/moderate/severe/chronic) with actionable interventions
+- **Optimal Time Slot Scorer** - Ranks available slots by hourly productivity patterns, category-time fit, deadline urgency, and buffer quality
+- **Smart Continue Duration** - Suggests realistic additional time based on weighted historical averages instead of a flat +1 minute
+- **Workload Balance Analyzer** - Scans the next 6 days to find the best day to reschedule tasks based on free capacity and completion rates
+- **Behavioral Pattern Tracker** - Records every rescheduling decision with full context (hour, day, category, elapsed time, attempts) for ongoing learning
+- **Pattern Insights Generator** - Produces human-readable insights about your productivity patterns (peak hours, avoided categories, chronic tasks, estimation accuracy)
+- **Task Categorizer** - Keyword density analysis across 8 categories (coding, meetings, creative, email, admin, health, learning, personal) with confidence scoring
 
 ### ↩️ Flexible Task Management
 - **Toggle completion status** - Accidentally marked complete? Click again to uncheck
@@ -46,8 +59,11 @@ When a task timer ends and you're not done, choose from 7 smart options:
 Learn from your task patterns with personalized analytics:
 - **Duration Accuracy** - See your time estimation accuracy with trends (improving/stable/declining)
 - **Best Hours** - Discover your top 3 most productive hours based on completion rates
-- **Smart Suggestions** - Get duration recommendations for frequent tasks based on your history
-- **Category Insights** - Track patterns across different task types
+- **Smart Suggestions** - Get duration recommendations using exponentially weighted moving averages with recency bias
+- **Category Insights** - Track patterns across 8 auto-detected task categories
+- **Estimation Bias Detection** - Identifies systematic over- or under-estimation tendencies
+- **Completion Momentum** - Tracks in-day streaks to boost motivation
+- **Daily Productivity Score** - 0-100 composite score across completion rate, duration accuracy, reschedule count, and on-time starts
 
 ### 📱 PWA & Offline Support
 Install TimeFlow as a full app with true offline capabilities:
@@ -145,8 +161,10 @@ TimeFlow prevents common mistakes:
 |-----------------|----------|
 | Endless lists | Time-blocked schedule |
 | No capacity awareness | Visual overflow warnings |
-| Manual reschedule decisions | 7 smart options |
-| No pattern learning | Duration accuracy insights & smart suggestions |
+| Manual reschedule decisions | AI-powered recommendation engine with 7 ranked options |
+| No pattern learning | Behavioral intelligence with procrastination detection |
+| Fixed "+5 min" extensions | Smart continue duration based on historical data |
+| No slot intelligence | Energy-aware optimal time slot scoring |
 | Task deletion = failure | Back to Pool = low-pressure deferral |
 | Toxic streaks | Gentle streaks with grace periods |
 | Generic design | Nature-themed calm productivity |
@@ -155,6 +173,7 @@ TimeFlow prevents common mistakes:
 | Browser bookmark | Installable PWA with offline support |
 | Manual task carry-over | Automatic at your start time |
 | No search | Real-time search with debouncing |
+| No self-awareness | Completion probability predictions + pattern insights |
 
 ## Perfect For
 
@@ -179,11 +198,18 @@ TimeFlow embraces **calm productivity** over hustle culture:
 
 ## Quick Stats
 
-- **7 rescheduling options** intelligently suggested
+- **AI rescheduling engine** - 10 subsystems with 1500+ lines of behavioral intelligence
+- **8-factor completion probability** predictor with confidence scoring
+- **5-level procrastination detection** (none/mild/moderate/severe/chronic) with interventions
+- **Energy-aware slot scoring** using hourly productivity patterns and category-time fit
+- **Smart continue duration** using exponentially weighted historical averages
+- **Workload balance analysis** across 6 upcoming days
+- **7 rescheduling options** ranked by AI with personalized reasons
+- **8 auto-detected task categories** (coding, meetings, creative, email, admin, health, learning, personal)
 - **3-tier health system** (healthy, warning, critical)
 - **Real-time search** with 300ms debouncing in Today and Pool views
 - **Insights dashboard** with duration accuracy, best hours, and smart suggestions
-- **PWA support** - 713KB precached, offline-first with service worker
+- **PWA support** - 742KB precached, offline-first with service worker
 - **Automatic carry-over** at your configured start time
 - **Toggle completion** - Uncheck tasks if marked by mistake
 - **Daily + Monthly calendars** - Daily view in Today, monthly in Week
