@@ -14,6 +14,7 @@ import {
   suggestDuration
 } from "../utils/analytics";
 import { updateStreak, markMeaningfulAction, loadStreak } from "../utils/streaks";
+import { recordRescheduleDecision, trackSession } from "../utils/smartReschedule";
 import {
   requestNotificationPermission,
   scheduleAllTaskNotifications,
@@ -926,6 +927,23 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
     trackCompletionByHour(taskToSave);
     trackRescheduleOption('complete');
 
+    // SMART RESCHEDULE: Record decision for pattern learning
+    const now = new Date();
+    recordRescheduleDecision({
+      task: completedTask,
+      option: 'complete',
+      hour: now.getHours(),
+      dayOfWeek: now.getDay(),
+      remainingMinutes: 0,
+      elapsedMinutes: actualDuration,
+    });
+    trackSession({
+      task: completedTask,
+      completed: true,
+      durationMinutes: actualDuration,
+      outcome: 'complete',
+    });
+
     // STREAK: Mark meaningful action when completing a task
     markMeaningfulAction();
     const updatedStreak = updateStreak();
@@ -944,17 +962,36 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
     }
   };
 
-  // NEW: Handler for continuing task (+1 min)
-  const handleContinue = () => {
-    const remainingMinutes = Math.ceil(secondsLeft / 60);
+  // NEW: Handler for continuing task (smart duration from AI)
+  const handleContinue = (suggestedMinutes) => {
+    const task = tasks.find(t => t.id === activeTaskId);
+    const addMinutes = suggestedMinutes || 1;
+    const addSeconds = addMinutes * 60;
+    const remainingMinutes = Math.ceil(secondsLeft / 60) + addMinutes;
     setTasks(prev => prev.map(t =>
       t.id === activeTaskId ? { ...t, remaining: remainingMinutes } : t
     ));
-    setSecondsLeft(60);
+    setSecondsLeft(addSeconds);
     setShowRescheduleModal(false);
 
     // ANALYTICS: Track option selection
     trackRescheduleOption('continue');
+
+    // SMART RESCHEDULE: Record decision for pattern learning
+    if (task) {
+      const now = new Date();
+      const elapsed = task.startedAt
+        ? Math.round((Date.now() - new Date(task.startedAt).getTime()) / (1000 * 60))
+        : 0;
+      recordRescheduleDecision({
+        task,
+        option: 'continue',
+        hour: now.getHours(),
+        dayOfWeek: now.getDay(),
+        remainingMinutes: addMinutes,
+        elapsedMinutes: elapsed,
+      });
+    }
 
     // Resume timer
     clearInterval(timerRef.current);
@@ -984,6 +1021,26 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
 
     // ANALYTICS: Track option selection
     trackRescheduleOption('later_today');
+
+    // SMART RESCHEDULE: Record decision for pattern learning
+    const now = new Date();
+    const elapsed = task.startedAt
+      ? Math.round((Date.now() - new Date(task.startedAt).getTime()) / (1000 * 60))
+      : 0;
+    recordRescheduleDecision({
+      task,
+      option: 'later_today',
+      hour: now.getHours(),
+      dayOfWeek: now.getDay(),
+      remainingMinutes: task.remaining || task.duration,
+      elapsedMinutes: elapsed,
+    });
+    trackSession({
+      task,
+      completed: false,
+      durationMinutes: elapsed,
+      outcome: 'later_today',
+    });
 
     // Stop timer and close modal
     clearInterval(timerRef.current);
@@ -1022,6 +1079,26 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
     // ANALYTICS: Track option selection
     trackRescheduleOption('tomorrow');
 
+    // SMART RESCHEDULE: Record decision for pattern learning
+    const nowDate = new Date();
+    const elapsedTomorrow = task.startedAt
+      ? Math.round((Date.now() - new Date(task.startedAt).getTime()) / (1000 * 60))
+      : 0;
+    recordRescheduleDecision({
+      task,
+      option: 'tomorrow',
+      hour: nowDate.getHours(),
+      dayOfWeek: nowDate.getDay(),
+      remainingMinutes: task.remaining || task.duration,
+      elapsedMinutes: elapsedTomorrow,
+    });
+    trackSession({
+      task,
+      completed: false,
+      durationMinutes: elapsedTomorrow,
+      outcome: 'tomorrow',
+    });
+
     clearInterval(timerRef.current);
     setActiveTaskId(null);
     setSecondsLeft(0);
@@ -1049,6 +1126,26 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
     // ANALYTICS: Track option selection
     trackRescheduleOption('back_to_pool');
 
+    // SMART RESCHEDULE: Record decision for pattern learning
+    const nowPool = new Date();
+    const elapsedPool = task.startedAt
+      ? Math.round((Date.now() - new Date(task.startedAt).getTime()) / (1000 * 60))
+      : 0;
+    recordRescheduleDecision({
+      task,
+      option: 'back_to_pool',
+      hour: nowPool.getHours(),
+      dayOfWeek: nowPool.getDay(),
+      remainingMinutes: task.remaining || task.duration,
+      elapsedMinutes: elapsedPool,
+    });
+    trackSession({
+      task,
+      completed: false,
+      durationMinutes: elapsedPool,
+      outcome: 'back_to_pool',
+    });
+
     // Stop timer and close modal
     clearInterval(timerRef.current);
     setActiveTaskId(null);
@@ -1068,6 +1165,20 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
 
     // ANALYTICS: Track option selection
     trackRescheduleOption('pick_time');
+
+    // SMART RESCHEDULE: Record decision for pattern learning
+    const nowPick = new Date();
+    const elapsedPick = task.startedAt
+      ? Math.round((Date.now() - new Date(task.startedAt).getTime()) / (1000 * 60))
+      : 0;
+    recordRescheduleDecision({
+      task,
+      option: 'pick_time',
+      hour: nowPick.getHours(),
+      dayOfWeek: nowPick.getDay(),
+      remainingMinutes: task.remaining || task.duration,
+      elapsedMinutes: elapsedPick,
+    });
 
     // Open edit dialog
     setEditingTask(task);
@@ -1133,6 +1244,26 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
 
     // ANALYTICS: Track option selection
     trackRescheduleOption('break_task');
+
+    // SMART RESCHEDULE: Record decision for pattern learning
+    const nowBreak = new Date();
+    const elapsedBreak = task.startedAt
+      ? Math.round((Date.now() - new Date(task.startedAt).getTime()) / (1000 * 60))
+      : 0;
+    recordRescheduleDecision({
+      task,
+      option: 'break_task',
+      hour: nowBreak.getHours(),
+      dayOfWeek: nowBreak.getDay(),
+      remainingMinutes: task.remaining || task.duration,
+      elapsedMinutes: elapsedBreak,
+    });
+    trackSession({
+      task,
+      completed: false,
+      durationMinutes: elapsedBreak,
+      outcome: 'break_task',
+    });
 
     clearInterval(timerRef.current);
     setActiveTaskId(null);

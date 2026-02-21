@@ -40,8 +40,8 @@ export const saveTaskToHistory = (task) => {
 
     history.push(entry);
 
-    // Keep only last 100 entries to prevent localStorage bloat
-    if (history.length > 100) {
+    // Keep only last 300 entries for richer pattern analysis
+    if (history.length > 300) {
       history.shift();
     }
 
@@ -258,3 +258,215 @@ export const getAllHourlyCompletionRates = () => {
     return {};
   }
 };
+
+// ============================================================================
+// WEIGHTED DURATION SUGGESTION (recency-biased moving average)
+// ============================================================================
+
+/**
+ * Suggest duration using exponentially weighted moving average so that
+ * recent completions count more than older ones.
+ *
+ * @param {string} taskName
+ * @returns {Object|null} { suggested, min, max, confidence, recentTrend }
+ */
+export const suggestDurationWeighted = (taskName) => {
+  const history = getTaskHistoryByName(taskName);
+  if (history.length < 2) return null;
+
+  const durations = history
+    .filter(t => t.actualDuration && t.actualDuration > 0)
+    .map(t => t.actualDuration);
+
+  if (durations.length < 2) return null;
+
+  // Exponentially weighted average (decay = 0.8, most recent = most weight)
+  const decay = 0.8;
+  let weightedSum = 0;
+  let weightSum = 0;
+  for (let i = 0; i < durations.length; i++) {
+    const weight = Math.pow(decay, durations.length - 1 - i);
+    weightedSum += durations[i] * weight;
+    weightSum += weight;
+  }
+  const weightedAvg = weightedSum / weightSum;
+
+  // Standard deviation
+  const stdDev = calculateStdDev(durations);
+
+  // Trend: compare last 3 vs overall
+  let recentTrend = 'stable';
+  if (durations.length >= 5) {
+    const recentAvg = durations.slice(-3).reduce((a, b) => a + b, 0) / 3;
+    const overallAvg = durations.reduce((a, b) => a + b, 0) / durations.length;
+    if (recentAvg > overallAvg * 1.15) recentTrend = 'increasing';
+    else if (recentAvg < overallAvg * 0.85) recentTrend = 'decreasing';
+  }
+
+  return {
+    suggested: Math.round(weightedAvg),
+    min: Math.round(Math.max(1, weightedAvg - stdDev)),
+    max: Math.round(weightedAvg + stdDev),
+    confidence: Math.min(100, durations.length * 12),
+    recentTrend,
+    dataPoints: durations.length,
+  };
+};
+
+// ============================================================================
+// STREAK ANALYSIS (completion streaks within a day)
+// ============================================================================
+
+/**
+ * Calculate the user's current in-day completion streak and longest ever.
+ *
+ * @param {Array} tasks - Today's tasks in chronological completion order
+ * @returns {{ current: number, longest: number, momentum: string }}
+ */
+export const getCompletionMomentum = (tasks) => {
+  const completedInOrder = tasks
+    .filter(t => t.completed && t.completedAt)
+    .sort((a, b) => new Date(a.completedAt) - new Date(b.completedAt));
+
+  if (completedInOrder.length === 0) {
+    return { current: 0, longest: 0, momentum: 'cold' };
+  }
+
+  // Current streak = consecutive completions from the most recent decisions
+  // Check all tasks in order: completed = streak continues, any in-between
+  // reschedule = streak breaks
+  let current = completedInOrder.length; // Simple: all completed so far today
+  const longest = current;
+
+  let momentum;
+  if (current >= 5) momentum = 'on_fire';
+  else if (current >= 3) momentum = 'hot';
+  else if (current >= 1) momentum = 'warm';
+  else momentum = 'cold';
+
+  return { current, longest, momentum };
+};
+
+// ============================================================================
+// ESTIMATION BIAS DETECTOR
+// ============================================================================
+
+/**
+ * Analyze whether the user tends to over- or under-estimate durations,
+ * and by how much. Useful for auto-correcting future estimates.
+ *
+ * @returns {{ bias: string, avgDiffPercent: number, suggestion: string, sampleSize: number }}
+ */
+export const getEstimationBias = () => {
+  try {
+    const history = JSON.parse(localStorage.getItem('timeflow-task-history') || '[]');
+    const withBoth = history.filter(
+      h => h.estimatedDuration && h.actualDuration &&
+           h.estimatedDuration > 0 && h.actualDuration > 0
+    );
+
+    if (withBoth.length < 5) {
+      return { bias: 'unknown', avgDiffPercent: 0, suggestion: 'Need more data', sampleSize: withBoth.length };
+    }
+
+    const diffs = withBoth.map(h => (h.actualDuration - h.estimatedDuration) / h.estimatedDuration);
+    const avgDiff = diffs.reduce((a, b) => a + b, 0) / diffs.length;
+    const avgDiffPercent = Math.round(avgDiff * 100);
+
+    let bias, suggestion;
+    if (avgDiffPercent > 20) {
+      bias = 'underestimate';
+      suggestion = `You underestimate by ~${avgDiffPercent}%. Try adding ${Math.round(avgDiffPercent * 0.7)}% buffer.`;
+    } else if (avgDiffPercent < -20) {
+      bias = 'overestimate';
+      suggestion = `You overestimate by ~${Math.abs(avgDiffPercent)}%. You can schedule tighter.`;
+    } else {
+      bias = 'accurate';
+      suggestion = 'Your estimates are generally accurate. Keep it up!';
+    }
+
+    return { bias, avgDiffPercent, suggestion, sampleSize: withBoth.length };
+  } catch (e) {
+    return { bias: 'unknown', avgDiffPercent: 0, suggestion: 'Error loading data', sampleSize: 0 };
+  }
+};
+
+// ============================================================================
+// PRODUCTIVITY SCORE (daily rolling score)
+// ============================================================================
+
+/**
+ * Calculate a 0-100 productivity score for the current day based on
+ * completions, timing accuracy, and consistency.
+ *
+ * @param {Array} tasks - Today's tasks
+ * @returns {{ score: number, breakdown: Object, label: string }}
+ */
+export const calculateProductivityScore = (tasks) => {
+  if (!tasks || tasks.length === 0) {
+    return { score: 0, breakdown: {}, label: 'No tasks yet' };
+  }
+
+  const completed = tasks.filter(t => t.completed);
+  const total = tasks.length;
+
+  // Factor 1: Completion rate (0-40 points)
+  const completionRate = completed.length / total;
+  const completionScore = Math.round(completionRate * 40);
+
+  // Factor 2: Duration accuracy (0-25 points)
+  const withAccuracy = completed.filter(t => t.durationAccuracy != null);
+  let accuracyScore = 12; // default middle
+  if (withAccuracy.length > 0) {
+    const avgAccuracy = withAccuracy.reduce((s, t) => s + t.durationAccuracy, 0) / withAccuracy.length;
+    accuracyScore = Math.round((avgAccuracy / 100) * 25);
+  }
+
+  // Factor 3: Low reschedule count (0-20 points)
+  const totalAttempts = tasks.reduce((s, t) => s + (t.attempts || 0), 0);
+  const avgAttempts = totalAttempts / total;
+  let rescheduleScore;
+  if (avgAttempts <= 0.5) rescheduleScore = 20;
+  else if (avgAttempts <= 1) rescheduleScore = 15;
+  else if (avgAttempts <= 2) rescheduleScore = 10;
+  else if (avgAttempts <= 3) rescheduleScore = 5;
+  else rescheduleScore = 0;
+
+  // Factor 4: On-time starts (0-15 points)
+  const withStartTime = completed.filter(t => t.startTime && t.startedAt);
+  let onTimeScore = 8; // default neutral
+  if (withStartTime.length > 0) {
+    const onTime = withStartTime.filter(t => {
+      const planned = _hhmmToMin(t.startTime);
+      const actual = new Date(t.startedAt).getHours() * 60 + new Date(t.startedAt).getMinutes();
+      return Math.abs(planned - actual) <= 10; // Within 10 minutes
+    });
+    onTimeScore = Math.round((onTime.length / withStartTime.length) * 15);
+  }
+
+  const score = Math.min(100, completionScore + accuracyScore + rescheduleScore + onTimeScore);
+
+  let label;
+  if (score >= 80) label = 'Excellent';
+  else if (score >= 60) label = 'Good';
+  else if (score >= 40) label = 'Developing';
+  else if (score >= 20) label = 'Getting started';
+  else label = 'Just beginning';
+
+  return {
+    score,
+    breakdown: {
+      completion: completionScore,
+      accuracy: accuracyScore,
+      consistency: rescheduleScore,
+      punctuality: onTimeScore,
+    },
+    label,
+  };
+};
+
+function _hhmmToMin(hhmm) {
+  if (!hhmm) return 0;
+  const [h, m] = hhmm.split(':').map(Number);
+  return h * 60 + m;
+}

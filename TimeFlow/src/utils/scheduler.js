@@ -502,3 +502,439 @@ export const scheduler = {
   getTaskHealth,
   optimize: (schedule) => schedule
 };
+
+// ============================================================================
+// ENERGY-AWARE INTELLIGENT SCHEDULING
+// ============================================================================
+
+import { getAllHourlyCompletionRates, getTaskCategory } from './analytics';
+import {
+  categorizeTask,
+  predictCompletionProbability,
+} from './smartReschedule';
+
+/**
+ * Score how well a task fits into a given hour based on the user's historical
+ * energy/completion rates and the task's category.
+ *
+ * @param {Object} task - Task to evaluate
+ * @param {number} hour - Hour of day (0-23)
+ * @returns {{ score: number, reasons: string[] }}
+ */
+export const scoreTaskHourFit = (task, hour) => {
+  const reasons = [];
+  let score = 50; // neutral baseline
+
+  // Energy pattern match
+  const hourlyRates = getAllHourlyCompletionRates();
+  const hourKey = String(hour).padStart(2, '0');
+  const completionRate = hourlyRates[hourKey];
+
+  if (completionRate !== undefined) {
+    if (completionRate >= 0.75) {
+      score += 25;
+      reasons.push(`Peak productivity at ${hour}:00 (${Math.round(completionRate * 100)}%)`);
+    } else if (completionRate >= 0.5) {
+      score += 12;
+      reasons.push(`Good productivity at ${hour}:00`);
+    } else if (completionRate < 0.3) {
+      score -= 15;
+      reasons.push(`Low completion rate at ${hour}:00 (${Math.round(completionRate * 100)}%)`);
+    }
+  }
+
+  // Category-time fit
+  const category = categorizeTask(task.name);
+  const categoryTimeFit = getCategoryTimePreference(category.primary, hour);
+  score += categoryTimeFit.points;
+  if (categoryTimeFit.reason) {
+    reasons.push(categoryTimeFit.reason);
+  }
+
+  // Deadline urgency: urgent tasks should go in high-energy slots
+  const urgency = getDeadlineUrgency(task);
+  if (urgency && (urgency.level === 'overdue' || urgency.level === 'today')) {
+    if (completionRate !== undefined && completionRate >= 0.6) {
+      score += 10;
+      reasons.push('Urgent task in high-energy slot');
+    }
+  }
+
+  // Task duration vs remaining energy: long tasks need high-energy hours
+  const duration = task.remaining || task.duration || 30;
+  if (duration >= 60) {
+    if (completionRate !== undefined && completionRate >= 0.6) {
+      score += 8;
+      reasons.push('Long task placed in high-energy window');
+    } else if (completionRate !== undefined && completionRate < 0.4) {
+      score -= 10;
+      reasons.push('Long task in low-energy window');
+    }
+  }
+
+  return {
+    score: Math.max(0, Math.min(100, score)),
+    reasons,
+  };
+};
+
+/**
+ * Get category-time preference score for a task category at a given hour.
+ * Based on common productivity research (creative work in morning, admin in afternoon, etc.)
+ *
+ * @param {string} category - Task category
+ * @param {number} hour - Hour of day
+ * @returns {{ points: number, reason: string|null }}
+ */
+export const getCategoryTimePreference = (category, hour) => {
+  const preferences = {
+    creative: {
+      peak: [8, 9, 10, 11],
+      good: [14, 15],
+      bad:  [16, 17, 18, 19],
+      peakReason: 'Creative tasks do best in the morning',
+    },
+    coding: {
+      peak: [9, 10, 11, 14, 15],
+      good: [8, 16],
+      bad:  [12, 13, 17, 18],
+      peakReason: 'Deep work tasks peak mid-morning & early afternoon',
+    },
+    meetings: {
+      peak: [10, 11, 14, 15],
+      good: [9, 16],
+      bad:  [8, 12, 17, 18],
+      peakReason: 'Meetings fit well in late morning & early afternoon',
+    },
+    email: {
+      peak: [8, 9, 16, 17],
+      good: [12, 13],
+      bad:  [10, 11, 14, 15],
+      peakReason: 'Email batching works best early morning or late afternoon',
+    },
+    admin: {
+      peak: [13, 14, 15, 16],
+      good: [11, 12],
+      bad:  [8, 9, 10],
+      peakReason: 'Admin tasks fit low-energy afternoon slots',
+    },
+    health: {
+      peak: [7, 8, 12, 17, 18],
+      good: [6, 13],
+      bad:  [9, 10, 14, 15, 16],
+      peakReason: 'Exercise/health breaks are great transitions',
+    },
+    learning: {
+      peak: [8, 9, 10, 19, 20],
+      good: [14, 15],
+      bad:  [12, 13, 16, 17],
+      peakReason: 'Learning works best when mind is fresh',
+    },
+    personal: {
+      peak: [12, 13, 17, 18],
+      good: [8, 9],
+      bad:  [10, 11, 14, 15],
+      peakReason: 'Personal errands fit lunch or end of day',
+    },
+  };
+
+  const prefs = preferences[category];
+  if (!prefs) return { points: 0, reason: null };
+
+  if (prefs.peak.includes(hour)) {
+    return { points: 15, reason: prefs.peakReason };
+  }
+  if (prefs.good.includes(hour)) {
+    return { points: 8, reason: null };
+  }
+  if (prefs.bad.includes(hour)) {
+    return { points: -8, reason: `${category} tasks are less effective at ${hour}:00` };
+  }
+  return { points: 0, reason: null };
+};
+
+/**
+ * Sort tasks into an energy-optimized order for the day. Places demanding
+ * tasks in high-energy hours and routine tasks in low-energy hours.
+ *
+ * @param {Array} tasks - Unordered tasks for the day
+ * @param {Object} availability - { start: "HH:MM", end: "HH:MM" }
+ * @returns {Array} Tasks reordered for optimal energy alignment
+ */
+export const optimizeTaskOrder = (tasks, availability) => {
+  if (!availability || tasks.length <= 1) return tasks;
+
+  const startM = hhmmToMinutes(availability.start);
+  const hourlyRates = getAllHourlyCompletionRates();
+
+  // Only reorder tasks without explicit start times
+  const fixed = tasks.filter(t => t.startTime && !t.completed);
+  const flexible = tasks.filter(t => !t.startTime && !t.completed);
+  const completed = tasks.filter(t => t.completed);
+
+  if (flexible.length <= 1) return tasks;
+
+  // Score each flexible task in each possible hour
+  const scored = flexible.map(task => {
+    const category = categorizeTask(task.name);
+    const urgency = getDeadlineUrgency(task);
+    const duration = task.remaining || task.duration || 30;
+
+    // Base priority for ordering
+    let basePriority = 0;
+    if (urgency?.level === 'overdue') basePriority = 100;
+    else if (urgency?.level === 'today') basePriority = 80;
+    else if (urgency?.level === 'tomorrow') basePriority = 60;
+    else if (task.carriedOver) basePriority = 50;
+
+    // Does this task need high energy?
+    const needsHighEnergy = duration >= 45 || category.primary === 'creative' || category.primary === 'coding' || category.primary === 'learning';
+
+    return {
+      ...task,
+      _basePriority: basePriority,
+      _needsHighEnergy: needsHighEnergy,
+      _category: category.primary,
+    };
+  });
+
+  // Find peak and low-energy hours from user data
+  const hourEntries = Object.entries(hourlyRates)
+    .map(([h, rate]) => ({ hour: parseInt(h), rate }))
+    .sort((a, b) => b.rate - a.rate);
+
+  const peakHours = hourEntries.slice(0, 4).map(e => e.hour);
+
+  // Sort: urgent first, then high-energy-need tasks (for peak hours), then rest
+  scored.sort((a, b) => {
+    // Urgent tasks always first
+    if (a._basePriority !== b._basePriority) return b._basePriority - a._basePriority;
+    // High-energy tasks next (they'll fill peak hours)
+    if (a._needsHighEnergy !== b._needsHighEnergy) return b._needsHighEnergy ? 1 : -1;
+    // Then by priority
+    return (b.priority || 3) - (a.priority || 3);
+  });
+
+  // Clean up internal fields
+  const reordered = scored.map(({ _basePriority, _needsHighEnergy, _category, ...task }) => task);
+
+  return [...completed, ...fixed, ...reordered];
+};
+
+/**
+ * Enhanced task prioritization that factors in energy, category, and
+ * procrastination patterns on top of the base priority logic.
+ *
+ * @param {Array} tasks - Tasks to sort
+ * @param {Object} availability - User availability
+ * @returns {Array} Tasks sorted by smart priority
+ */
+export const smartPrioritize = (tasks, availability) => {
+  if (!tasks || tasks.length === 0) return [];
+
+  const startM = availability ? hhmmToMinutes(availability.start) : 0;
+
+  return [...tasks].sort((a, b) => {
+    // 1. Urgency (overdue/today deadlines)
+    const aUrg = getDeadlineUrgency(a);
+    const bUrg = getDeadlineUrgency(b);
+    const urgencyOrder = { overdue: 5, today: 4, tomorrow: 3, soon: 2, upcoming: 1 };
+    const aUrgScore = aUrg ? (urgencyOrder[aUrg.level] || 0) : 0;
+    const bUrgScore = bUrg ? (urgencyOrder[bUrg.level] || 0) : 0;
+    if (aUrgScore !== bUrgScore) return bUrgScore - aUrgScore;
+
+    // 2. Carried-over tasks
+    const aCarried = a.carriedOver ? 1 : 0;
+    const bCarried = b.carriedOver ? 1 : 0;
+    if (aCarried !== bCarried) return bCarried - aCarried;
+
+    // 3. High-attempt tasks (chronic procrastination = higher priority)
+    const aAttempts = a.attempts || 0;
+    const bAttempts = b.attempts || 0;
+    if (aAttempts >= 3 && bAttempts < 3) return -1;
+    if (bAttempts >= 3 && aAttempts < 3) return 1;
+
+    // 4. Explicit priority
+    const aPri = a.priority || 3;
+    const bPri = b.priority || 3;
+    if (aPri !== bPri) return bPri - aPri;
+
+    // 5. Shorter tasks first (quick wins build momentum)
+    const aDur = a.remaining || a.duration || 30;
+    const bDur = b.remaining || b.duration || 30;
+    if (Math.abs(aDur - bDur) > 15) return aDur - bDur;
+
+    // 6. Creation time
+    return (a.id || 0) - (b.id || 0);
+  });
+};
+
+/**
+ * Suggest an optimized schedule for a set of tasks. Places each task
+ * in its best time slot considering energy, category, conflicts, and urgency.
+ *
+ * @param {Array} tasks - Tasks to schedule (without start times)
+ * @param {Array} fixedTasks - Tasks already scheduled (with start times)
+ * @param {Object} availability - { start: "HH:MM", end: "HH:MM" }
+ * @returns {Array} Tasks with suggested startTime assignments
+ */
+export const suggestOptimalSchedule = (tasks, fixedTasks, availability) => {
+  if (!availability || tasks.length === 0) return tasks;
+
+  const startM = hhmmToMinutes(availability.start);
+  const endM = hhmmToMinutes(availability.end);
+
+  // Build occupied time ranges from fixed tasks
+  const occupied = fixedTasks
+    .filter(t => t.startTime && !t.completed)
+    .map(t => ({
+      start: hhmmToMinutes(t.startTime),
+      end: hhmmToMinutes(t.startTime) + (t.remaining || t.duration || 30),
+    }))
+    .sort((a, b) => a.start - b.start);
+
+  // Prioritize tasks for scheduling
+  const prioritized = smartPrioritize(tasks, availability);
+
+  const scheduled = [];
+  const usedRanges = [...occupied];
+
+  for (const task of prioritized) {
+    const duration = task.remaining || task.duration || 30;
+
+    // Find best available slot
+    const bestSlot = _findBestSlot(task, duration, usedRanges, startM, endM);
+
+    if (bestSlot) {
+      scheduled.push({
+        ...task,
+        startTime: minutesToHHMM(bestSlot.start),
+        _suggestedSlot: true,
+        _slotScore: bestSlot.score,
+      });
+      usedRanges.push({ start: bestSlot.start, end: bestSlot.start + duration });
+      usedRanges.sort((a, b) => a.start - b.start);
+    } else {
+      // No slot found, leave unscheduled
+      scheduled.push(task);
+    }
+  }
+
+  return scheduled;
+};
+
+/**
+ * Find the best time slot for a task considering energy and category fit.
+ */
+function _findBestSlot(task, duration, usedRanges, dayStart, dayEnd) {
+  const now = new Date();
+  const currentM = now.getHours() * 60 + now.getMinutes();
+  const searchStart = Math.max(dayStart, currentM + 5);
+
+  // Generate candidate slots in 15-minute increments
+  const candidates = [];
+
+  for (let start = searchStart; start + duration <= dayEnd; start += 15) {
+    // Check for conflicts with used ranges
+    const end = start + duration;
+    const hasConflict = usedRanges.some(
+      r => start < r.end && end > r.start
+    );
+
+    if (!hasConflict) {
+      const hour = Math.floor(start / 60);
+      const fit = scoreTaskHourFit(task, hour);
+      candidates.push({
+        start,
+        end,
+        score: fit.score,
+        reasons: fit.reasons,
+      });
+    }
+  }
+
+  if (candidates.length === 0) return null;
+
+  // Return highest-scoring slot
+  candidates.sort((a, b) => b.score - a.score);
+  return candidates[0];
+}
+
+/**
+ * Detect if today's schedule has problematic patterns and suggest fixes.
+ *
+ * @param {Array} tasks - Today's tasks
+ * @param {Object} availability - User availability
+ * @returns {Array<{ type: string, message: string, severity: string, fix: Object|null }>}
+ */
+export const detectScheduleIssues = (tasks, availability) => {
+  const issues = [];
+  if (!tasks || tasks.length === 0 || !availability) return issues;
+
+  const activeTasks = tasks.filter(t => !t.completed);
+  const startM = hhmmToMinutes(availability.start);
+  const endM = hhmmToMinutes(availability.end);
+  const totalCapacity = endM - startM;
+
+  // Issue 1: Overloaded schedule
+  const totalLoad = activeTasks.reduce((s, t) => s + (t.remaining || t.duration || 0), 0);
+  if (totalLoad > totalCapacity) {
+    const overBy = totalLoad - totalCapacity;
+    issues.push({
+      type: 'overload',
+      message: `Schedule is overloaded by ${overBy} minutes. Consider moving ${Math.ceil(overBy / 30)} task(s) to another day.`,
+      severity: overBy > 60 ? 'critical' : 'warning',
+      fix: { action: 'move_tasks', minutes: overBy },
+    });
+  }
+
+  // Issue 2: No buffer between tasks
+  const scheduled = activeTasks
+    .filter(t => t.startTime)
+    .sort((a, b) => hhmmToMinutes(a.startTime) - hhmmToMinutes(b.startTime));
+
+  for (let i = 0; i < scheduled.length - 1; i++) {
+    const current = scheduled[i];
+    const next = scheduled[i + 1];
+    const currentEnd = hhmmToMinutes(current.startTime) + (current.remaining || current.duration || 0);
+    const nextStart = hhmmToMinutes(next.startTime);
+    const buffer = nextStart - currentEnd;
+
+    if (buffer >= 0 && buffer < 5) {
+      issues.push({
+        type: 'no_buffer',
+        message: `No break between "${current.name}" and "${next.name}". Add a 5-10min buffer.`,
+        severity: 'info',
+        fix: { action: 'add_buffer', task1: current.id, task2: next.id },
+      });
+    }
+  }
+
+  // Issue 3: Chronically rescheduled tasks
+  activeTasks.forEach(task => {
+    if ((task.attempts || 0) >= 4) {
+      issues.push({
+        type: 'chronic_reschedule',
+        message: `"${task.name}" rescheduled ${task.attempts} times. Consider breaking it down or removing it.`,
+        severity: 'warning',
+        fix: { action: 'break_task', taskId: task.id },
+      });
+    }
+  });
+
+  // Issue 4: Long tasks in late slots
+  scheduled.forEach(task => {
+    const duration = task.remaining || task.duration || 0;
+    const startMin = hhmmToMinutes(task.startTime);
+    if (duration >= 60 && (endM - startMin) < duration + 30) {
+      issues.push({
+        type: 'late_long_task',
+        message: `"${task.name}" (${duration}min) is scheduled near end of day. It may overflow.`,
+        severity: 'info',
+        fix: { action: 'move_earlier', taskId: task.id },
+      });
+    }
+  });
+
+  return issues;
+};
