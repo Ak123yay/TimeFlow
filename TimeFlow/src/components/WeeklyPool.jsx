@@ -158,12 +158,6 @@ export default function WeeklyPool({ onNavigateToToday }) {
           />
         )}
 
-        {/* SearchBar */}
-        <SearchBar
-          onSearch={setSearchQuery}
-          placeholder="Search pool tasks..."
-        />
-
         {/* Add Task Form */}
         <div style={{
           background: isDark ? '#242B24' : '#fff', borderRadius: '14px', padding: '14px',
@@ -245,6 +239,12 @@ export default function WeeklyPool({ onNavigateToToday }) {
             + Add to Pool
           </button>
         </div>
+
+        {/* SearchBar */}
+        <SearchBar
+          onSearch={setSearchQuery}
+          placeholder="Search pool tasks..."
+        />
 
         {/* Pool Tasks List */}
         {filterTasksBySearch(poolTasks).length === 0 ? (
