@@ -1331,16 +1331,9 @@ input:focus-visible {
     font-weight: 700 !important;
   }
 
-  /* Override the fixed-position child padding rule */
+  /* Sheet layout — inner sections handle their own padding */
   .reschedule-modal {
-    padding: 20px !important;
-    max-width: calc(100vw - 24px) !important;
-  }
-
-  /* Grid buttons should use rounded rect, not pill */
-  .reschedule-modal .btn.ghost {
-    border-radius: 12px !important;
-    min-height: unset !important;
-    padding: 10px 8px !important;
+    padding: 0 !important;
+    max-width: 100% !important;
   }
 }
