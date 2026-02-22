@@ -1,11 +1,234 @@
-import { useState, useEffect } from "react";
-import { getDeadlineUrgency } from "../../utils/scheduler";
+import { useState, useEffect, useMemo } from "react";
+import { findNextFreeSlot, getDeadlineUrgency } from "../../utils/scheduler";
 import { getRescheduleOptionFrequencies } from "../../utils/analytics";
 import {
   generateSmartRecommendation,
+  detectProcrastination,
+  predictCompletionProbability,
+  findScoredSlots,
+  estimateContinueDuration,
+  analyzeWeekdayWorkload,
   categorizeTask,
+  getTodaySessionStats,
 } from "../../utils/smartReschedule";
 import "../../App.css";
+
+// ============================================================================
+// SUB-COMPONENTS
+// ============================================================================
+
+/** Compact probability meter */
+function ProbabilityMeter({ probability, label, confidence }) {
+  const pct = Math.round(probability * 100);
+  const color = pct >= 60 ? '#4CAF50' : pct >= 40 ? '#FF9800' : '#F44336';
+  const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+
+  return (
+    <div style={{
+      display: 'flex', alignItems: 'center', gap: 10,
+      padding: '8px 12px', borderRadius: 10,
+      background: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.03)',
+      marginBottom: 10,
+    }}>
+      {/* Mini bar */}
+      <div style={{
+        width: 60, height: 6, borderRadius: 3,
+        background: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)',
+        overflow: 'hidden', flexShrink: 0,
+      }}>
+        <div style={{
+          width: `${pct}%`, height: '100%', borderRadius: 3,
+          background: color, transition: 'width 0.5s ease',
+        }} />
+      </div>
+      <div style={{ flex: 1 }}>
+        <span style={{
+          fontSize: 12, fontWeight: 700,
+          color: isDark ? '#E8F0E8' : '#1A1A1A',
+        }}>
+          {pct}% {label}
+        </span>
+        {confidence < 0.5 && (
+          <span style={{
+            fontSize: 10, color: isDark ? '#666' : '#999',
+            marginLeft: 6,
+          }}>
+            (learning)
+          </span>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/** Procrastination warning banner */
+function ProcrastinationBanner({ analysis }) {
+  if (analysis.severity === 'none' || analysis.severity === 'mild') return null;
+  const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+
+  const severityConfig = {
+    moderate: { bg: 'rgba(255,165,0,0.1)', border: 'rgba(255,165,0,0.3)', icon: '🔄', color: '#d97706' },
+    severe:   { bg: 'rgba(244,67,54,0.08)', border: 'rgba(244,67,54,0.3)', icon: '⚡', color: '#ef4444' },
+    chronic:  { bg: 'rgba(244,67,54,0.12)', border: 'rgba(244,67,54,0.4)', icon: '🚫', color: '#dc2626' },
+  };
+
+  const config = severityConfig[analysis.severity] || severityConfig.moderate;
+
+  return (
+    <div style={{
+      background: config.bg,
+      border: `1px solid ${config.border}`,
+      borderRadius: 10, padding: '8px 12px',
+      marginBottom: 10, fontSize: 12,
+      animation: 'fadeIn 0.3s ease-out',
+    }}>
+      <div style={{
+        fontWeight: 700, color: config.color,
+        display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4,
+      }}>
+        <span>{config.icon}</span>
+        <span>
+          {analysis.severity === 'chronic' ? 'Chronic Avoidance' :
+           analysis.severity === 'severe' ? 'Strong Avoidance' :
+           'Building Avoidance'}
+        </span>
+        <span style={{
+          fontSize: 9, fontWeight: 600, padding: '1px 5px',
+          background: `${config.color}22`, borderRadius: 3,
+          color: config.color,
+        }}>
+          {analysis.score}/100
+        </span>
+      </div>
+      {analysis.patterns.slice(0, 2).map((p, i) => (
+        <div key={i} style={{
+          fontSize: 11, color: isDark ? '#9CA59C' : '#666',
+          lineHeight: 1.4, paddingLeft: 4,
+        }}>
+          {p}
+        </div>
+      ))}
+      {analysis.interventions.length > 0 && (
+        <div style={{
+          marginTop: 4, fontSize: 11, fontWeight: 600,
+          color: isDark ? '#8BC98B' : '#3B6E3B',
+        }}>
+          Tip: {analysis.interventions[0].label}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/** AI recommendation card with ranked options */
+function AIRecommendationCard({ recommendation }) {
+  if (!recommendation) return null;
+  const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+  const { primary, confidence, summary } = recommendation;
+
+  const confColor = confidence === 'high' ? '#4CAF50' : confidence === 'moderate' ? '#FF9800' : '#9E9E9E';
+  const confLabel = confidence === 'high' ? 'HIGH' : confidence === 'moderate' ? 'MODERATE' : 'LOW';
+
+  return (
+    <div style={{
+      background: isDark
+        ? 'linear-gradient(135deg, rgba(111,175,111,0.12), rgba(59,110,59,0.06))'
+        : 'linear-gradient(135deg, rgba(111,175,111,0.15), rgba(59,110,59,0.08))',
+      border: `1px solid ${isDark ? 'rgba(111,175,111,0.2)' : 'rgba(59,110,59,0.2)'}`,
+      borderRadius: 12, padding: '10px 14px',
+      marginBottom: 12, animation: 'fadeIn 0.4s ease-out',
+    }}>
+      <div style={{
+        display: 'flex', alignItems: 'center', gap: 6,
+        marginBottom: 6,
+      }}>
+        <span style={{ fontSize: 14 }}>{primary.icon}</span>
+        <span style={{
+          fontSize: 13, fontWeight: 700,
+          color: isDark ? '#8BC98B' : '#2E6B2E',
+        }}>
+          AI Recommendation
+        </span>
+        <span style={{
+          fontSize: 9, fontWeight: 700, padding: '1px 6px',
+          background: `${confColor}22`, color: confColor,
+          borderRadius: 4, letterSpacing: 0.5,
+        }}>
+          {confLabel}
+        </span>
+        {primary.tag && (
+          <span style={{
+            fontSize: 9, fontWeight: 700, padding: '1px 6px',
+            background: 'rgba(244,67,54,0.15)', color: '#ef4444',
+            borderRadius: 4,
+          }}>
+            {primary.tag}
+          </span>
+        )}
+      </div>
+      <div style={{
+        fontSize: 12, lineHeight: 1.5,
+        color: isDark ? '#B8C8B8' : '#4B6B4B',
+      }}>
+        {summary}
+      </div>
+    </div>
+  );
+}
+
+/** Workload preview for tomorrow/best day */
+function WorkloadPreview({ bestDay }) {
+  if (!bestDay) return null;
+  const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+
+  return (
+    <div style={{
+      fontSize: 10, color: isDark ? '#777' : '#999',
+      display: 'flex', alignItems: 'center', gap: 4, marginTop: 2,
+    }}>
+      <span>{bestDay.dayName}:</span>
+      <span>{bestDay.taskCount} tasks</span>
+      <span>·</span>
+      <span>{bestDay.freeMinutes}min free</span>
+      <div style={{
+        width: 30, height: 3, borderRadius: 2,
+        background: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)',
+        overflow: 'hidden',
+      }}>
+        <div style={{
+          width: `${bestDay.loadPercent}%`, height: '100%',
+          borderRadius: 2,
+          background: bestDay.loadPercent > 80 ? '#F44336' : bestDay.loadPercent > 50 ? '#FF9800' : '#4CAF50',
+        }} />
+      </div>
+    </div>
+  );
+}
+
+/** Session momentum badge */
+function MomentumBadge({ tasks }) {
+  const completedToday = (tasks || []).filter(t => t.completed).length;
+  if (completedToday === 0) return null;
+  const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+
+  let label, color;
+  if (completedToday >= 5) { label = 'On fire!'; color = '#F44336'; }
+  else if (completedToday >= 3) { label = 'Hot streak'; color = '#FF9800'; }
+  else { label = `${completedToday} done today`; color = '#4CAF50'; }
+
+  return (
+    <span style={{
+      fontSize: 10, fontWeight: 600,
+      padding: '2px 8px', borderRadius: 99,
+      background: `${color}18`, color,
+      display: 'inline-flex', alignItems: 'center', gap: 3,
+    }}>
+      <span style={{ fontSize: 8 }}>●</span>
+      {label}
+    </span>
+  );
+}
+
 
 // ============================================================================
 // MAIN COMPONENT
@@ -29,20 +252,24 @@ export default function RescheduleModal({
 
   const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
 
+  // Run full AI analysis when modal opens
   useEffect(() => {
     if (!task) return;
+
     try {
       const elapsed = task.startedAt
         ? Math.round((Date.now() - new Date(task.startedAt).getTime()) / 1000)
         : (task.duration || 30) * 60;
+
       const rec = generateSmartRecommendation({
-        task, availability,
+        task,
+        availability,
         existingTasks: existingTasks || [],
         elapsedSeconds: elapsed,
       });
       setAiRecommendation(rec);
     } catch (e) {
-      console.error('Smart recommendation failed', e);
+      console.error('Smart recommendation failed, using fallback', e);
       setAiRecommendation(null);
     }
   }, [task, availability, existingTasks]);
@@ -54,461 +281,526 @@ export default function RescheduleModal({
   const urgency = getDeadlineUrgency(task);
   const category = categorizeTask(task.name);
 
+  // Extract AI analysis data
   const procrastination = aiRecommendation?.analysis?.procrastination;
   const completionProb = aiRecommendation?.analysis?.completionProbability;
   const bestSlot = aiRecommendation?.analysis?.bestSlot;
   const bestDay = aiRecommendation?.analysis?.bestDay;
   const continueDuration = aiRecommendation?.analysis?.continueDuration;
   const rankedOptions = aiRecommendation?.ranked || [];
-  const topOption = aiRecommendation?.primary?.option;
 
-  const completedToday = (existingTasks || []).filter(t => t.completed).length;
+  // Find specific option scores for button highlighting
+  const getOptionScore = (option) => {
+    const found = rankedOptions.find(o => o.option === option);
+    return found ? found.score : 0;
+  };
+
+  const isTopRecommended = (option) =>
+    aiRecommendation?.primary?.option === option;
 
   const showBreakTask = attempts >= 2 ||
     (task.duration || 0) >= 60 ||
     (procrastination && procrastination.severity !== 'none');
 
-  // Colors
-  const bg = isDark ? '#1E251E' : '#fff';
-  const surface = isDark ? '#252D25' : '#F7FBF7';
-  const border = isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.07)';
-  const textPrimary = isDark ? '#E8F0E8' : '#111';
-  const textMuted = isDark ? '#7A8F7A' : '#8A9A8A';
-  const green = isDark ? '#6FAF6F' : '#3B6E3B';
-  const greenBg = isDark ? 'rgba(111,175,111,0.12)' : 'rgba(59,110,59,0.07)';
-
-  // Urgency accent
-  const urgentLevel = urgency?.level;
-  const showUrgency = urgentLevel === 'overdue' || urgentLevel === 'today' || urgentLevel === 'tomorrow';
-
   return (
     <div style={{
-      position: 'fixed', inset: 0,
-      background: 'rgba(0,0,0,0.45)',
-      backdropFilter: 'blur(6px)',
-      display: 'flex', alignItems: 'center', justifyContent: 'center',
-      zIndex: 9999, animation: 'fadeIn 0.15s ease-out',
-      padding: '12px',
+      position: "fixed", inset: 0,
+      background: "rgba(0,0,0,0.4)",
+      backdropFilter: "blur(4px)",
+      display: "flex", alignItems: "center", justifyContent: "center",
+      zIndex: 9999, animation: "fadeIn 0.2s ease-out",
     }}>
-      <div
-        className="reschedule-modal"
-        style={{
-          background: bg,
-          borderRadius: 24,
-          width: '100%', maxWidth: 420,
-          maxHeight: '92vh', overflowY: 'auto',
-          boxShadow: isDark
-            ? '0 32px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.06)'
-            : '0 32px 80px rgba(0,0,0,0.2), 0 0 0 1px rgba(0,0,0,0.06)',
-          animation: 'scaleIn 0.25s cubic-bezier(0.34,1.56,0.64,1)',
-        }}
-      >
-        {/* ── HEADER ────────────────────────────────── */}
+      <div className="reschedule-modal" style={{
+        background: isDark ? "#242B24" : "#fff",
+        padding: 20, borderRadius: 20,
+        width: "92%", maxWidth: 480,
+        textAlign: "center",
+        boxShadow: isDark
+          ? "0 30px 80px rgba(0,0,0,0.5)"
+          : "0 30px 80px rgba(0,0,0,0.25)",
+        animation: "scaleIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)",
+        maxHeight: '90vh', overflowY: 'auto',
+      }}>
+        {/* Header */}
         <div style={{
-          padding: '20px 20px 0',
-          textAlign: 'center',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          gap: 8, marginBottom: 6,
         }}>
-          {/* urgency strip */}
-          {showUrgency && (
-            <div style={{
-              display: 'inline-flex', alignItems: 'center', gap: 5,
-              padding: '4px 10px', borderRadius: 99,
-              background: urgentLevel === 'overdue' ? 'rgba(220,38,38,0.12)' : 'rgba(234,88,12,0.1)',
-              color: urgentLevel === 'overdue' ? '#dc2626' : '#ea580c',
-              fontSize: 12, fontWeight: 700, marginBottom: 10,
-            }}>
-              {urgentLevel === 'overdue' ? '🚨' : '⏰'}
-              {urgency.message}
-            </div>
-          )}
-
-          {/* Title + momentum */}
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, marginBottom: 6 }}>
-            <div style={{ fontSize: 20, fontWeight: 800, color: textPrimary }}>
-              Time's up!
-            </div>
-            {completedToday >= 1 && (
-              <span style={{
-                fontSize: 11, fontWeight: 700, padding: '2px 8px', borderRadius: 99,
-                background: completedToday >= 5 ? 'rgba(244,67,54,0.12)' : completedToday >= 3 ? 'rgba(255,152,0,0.12)' : 'rgba(76,175,80,0.1)',
-                color: completedToday >= 5 ? '#dc2626' : completedToday >= 3 ? '#d97706' : '#3B8C3B',
-              }}>
-                {completedToday >= 5 ? '🔥 On fire' : completedToday >= 3 ? '⚡ Hot streak' : `✓ ${completedToday} done`}
-              </span>
-            )}
-          </div>
-
-          {/* Task name */}
           <div style={{
-            fontSize: 16, fontWeight: 700,
-            color: green, marginBottom: 6,
-            lineHeight: 1.3,
+            fontSize: 22, fontWeight: 900,
+            color: isDark ? "#E8F0E8" : "#123a12",
           }}>
-            "{task.name}"
+            Task finished?
           </div>
-
-          {/* Meta row */}
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, flexWrap: 'wrap', marginBottom: 16 }}>
-            {category.primary !== 'other' && (
-              <span style={{
-                fontSize: 11, fontWeight: 600, padding: '2px 8px', borderRadius: 99,
-                background: greenBg, color: green,
-              }}>
-                {category.primary}
-              </span>
-            )}
-            <span style={{ fontSize: 12, color: textMuted }}>
-              {remaining} min remaining
-            </span>
-            {attempts >= 2 && (
-              <span style={{
-                fontSize: 11, fontWeight: 600, padding: '2px 8px', borderRadius: 99,
-                background: 'rgba(255,152,0,0.1)', color: '#d97706',
-              }}>
-                ⚠️ {attempts}× rescheduled
-              </span>
-            )}
-          </div>
-
-          {/* AI hint bar */}
-          {topOption && (
-            <div style={{
-              display: 'flex', alignItems: 'center', gap: 8,
-              padding: '8px 12px', borderRadius: 12,
-              background: greenBg,
-              border: `1px solid ${isDark ? 'rgba(111,175,111,0.2)' : 'rgba(59,110,59,0.15)'}`,
-              marginBottom: 16, textAlign: 'left',
-            }}>
-              <span style={{
-                fontSize: 10, fontWeight: 800, padding: '2px 5px',
-                background: green, color: '#fff', borderRadius: 4,
-                letterSpacing: 0.5, flexShrink: 0,
-              }}>AI</span>
-              <span style={{ fontSize: 12, color: isDark ? '#A8C8A8' : '#3B6B3B', lineHeight: 1.4 }}>
-                {aiRecommendation?.summary || `Suggests: ${topOption.replace(/_/g, ' ')}`}
-              </span>
-            </div>
-          )}
+          <MomentumBadge tasks={existingTasks} />
         </div>
 
-        {/* ── BUTTONS ───────────────────────────────── */}
-        <div style={{ padding: '0 14px 8px' }}>
+        <p style={{
+          fontSize: 15, fontWeight: 600,
+          color: isDark ? "#8BC98B" : "#3B6E3B",
+          marginBottom: 4,
+        }}>
+          "{task.name}"
+        </p>
 
-          {/* Mark complete — full width primary */}
+        {/* Category tag */}
+        {category.primary !== 'other' && (
+          <span style={{
+            fontSize: 10, fontWeight: 600,
+            padding: '2px 8px', borderRadius: 99,
+            background: isDark ? 'rgba(111,175,111,0.15)' : 'rgba(111,175,111,0.12)',
+            color: isDark ? '#8BC98B' : '#4B7B4B',
+            display: 'inline-block', marginBottom: 8,
+          }}>
+            {category.primary}
+          </span>
+        )}
+
+        {/* Deadline Urgency Warning */}
+        {urgency && (urgency.level === 'overdue' || urgency.level === 'today' || urgency.level === 'tomorrow') && (
+          <div style={{
+            background: urgency.level === 'overdue'
+              ? "linear-gradient(135deg, rgba(220,38,38,0.15), rgba(185,28,28,0.08))"
+              : urgency.level === 'today'
+              ? "linear-gradient(135deg, rgba(234,88,12,0.15), rgba(234,88,12,0.08))"
+              : "linear-gradient(135deg, rgba(245,158,11,0.15), rgba(245,158,11,0.08))",
+            border: `2px solid ${urgency.color}`,
+            borderRadius: 12, padding: "10px 14px",
+            marginBottom: 10, fontSize: 13, fontWeight: 700,
+            color: urgency.color,
+            display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
+            animation: urgency.level === 'overdue' || urgency.level === 'today'
+              ? "focusPulse 2s ease-in-out infinite"
+              : "fadeIn 0.3s ease-out",
+          }}>
+            {urgency.level === 'overdue' ? '🚨' : urgency.level === 'today' ? '⏰' : '📅'}
+            <span>{urgency.message}</span>
+          </div>
+        )}
+
+        {/* Completion Probability */}
+        {completionProb && (
+          <ProbabilityMeter
+            probability={completionProb.probability}
+            label={completionProb.label}
+            confidence={completionProb.confidence}
+          />
+        )}
+
+        {/* AI Recommendation Card */}
+        <AIRecommendationCard recommendation={aiRecommendation} />
+
+        {/* Procrastination Banner */}
+        {procrastination && <ProcrastinationBanner analysis={procrastination} />}
+
+        {/* Reschedule count warning */}
+        {attempts >= 2 && !procrastination?.severity?.match(/severe|chronic/) && (
+          <div style={{
+            background: "linear-gradient(135deg, rgba(255,165,0,0.12), rgba(255,165,0,0.06))",
+            border: "1px solid rgba(255,165,0,0.25)",
+            borderRadius: 10, padding: "6px 12px",
+            marginBottom: 10, fontSize: 12, fontWeight: 600,
+            color: "#d97706",
+            display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
+          }}>
+            ⚠️ Rescheduled {attempts} time{attempts > 1 ? 's' : ''}
+          </div>
+        )}
+
+        {/* Time remaining */}
+        <div style={{
+          fontSize: 13, color: isDark ? '#9CA59C' : '#6B8E6B',
+          marginBottom: 14,
+        }}>
+          {remaining} minutes remaining
+        </div>
+
+        {/* ===================== ACTION BUTTONS ===================== */}
+
+        {/* Primary: Mark complete */}
+        <button
+          onClick={onComplete}
+          className="btn primary"
+          style={{
+            width: "100%", marginBottom: 12,
+            fontSize: 15, fontWeight: 700,
+            position: 'relative',
+            ...(isTopRecommended('complete') && {
+              boxShadow: '0 0 0 2px rgba(76,175,80,0.4), 0 4px 12px rgba(76,175,80,0.15)',
+            }),
+          }}
+        >
+          ✓ Mark complete
+          {isTopRecommended('complete') && (
+            <span style={{
+              position: 'absolute', top: -6, right: -6,
+              fontSize: 9, fontWeight: 700, padding: '2px 6px',
+              background: '#4CAF50', color: '#fff',
+              borderRadius: 6, boxShadow: '0 1px 4px rgba(0,0,0,0.2)',
+            }}>
+              AI
+            </span>
+          )}
+        </button>
+
+        {/* Grid of secondary options */}
+        <div style={{
+          display: "grid", gridTemplateColumns: "1fr 1fr",
+          gap: 8, marginBottom: 8, overflow: 'visible',
+        }}>
+          {/* Continue */}
           <button
-            onClick={onComplete}
-            style={{
-              width: '100%', height: 52,
-              borderRadius: 14,
-              background: topOption === 'complete'
-                ? 'linear-gradient(135deg, #4CAF50, #2E7D32)'
-                : `linear-gradient(135deg, ${isDark ? '#3B6E3B' : '#3B6E3B'}, ${isDark ? '#6FAF6F' : '#6FAF6F'})`,
-              color: '#fff',
-              border: 'none',
-              fontSize: 16, fontWeight: 800,
-              cursor: 'pointer',
-              marginBottom: 10,
-              position: 'relative',
-              boxShadow: topOption === 'complete'
-                ? '0 4px 16px rgba(76,175,80,0.35)'
-                : '0 4px 16px rgba(59,110,59,0.2)',
-              transition: 'transform 0.1s, box-shadow 0.1s',
+            onClick={() => {
+              if (continueDuration && continueDuration.suggestedMinutes > 1) {
+                // Pass suggested minutes through the continue handler
+                onContinue(continueDuration.suggestedMinutes);
+              } else {
+                onContinue(1);
+              }
             }}
-            onMouseDown={e => e.currentTarget.style.transform = 'scale(0.98)'}
-            onMouseUp={e => e.currentTarget.style.transform = 'scale(1)'}
+            className="btn ghost"
+            style={{
+              fontSize: 13, position: 'relative',
+              borderRadius: 12,
+              display: 'flex', flexDirection: 'column',
+              alignItems: 'center', justifyContent: 'center',
+              minHeight: 64, padding: '10px 8px',
+              ...(isTopRecommended('continue') && {
+                border: '2px solid rgba(76,175,80,0.4)',
+              }),
+            }}
           >
-            ✓ Mark complete
-            {topOption === 'complete' && (
+            ⏱️ Continue
+            <div style={{ fontSize: 10, opacity: 0.7 }}>
+              {continueDuration
+                ? `+${continueDuration.suggestedMinutes}min`
+                : '+1 min'}
+            </div>
+            {continueDuration && continueDuration.confidence !== 'low' && (
+              <div style={{
+                fontSize: 9, opacity: 0.6, marginTop: 1,
+                maxWidth: '100%', overflow: 'hidden',
+                textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+              }}>
+                {continueDuration.reason.substring(0, 40)}
+              </div>
+            )}
+            {isTopRecommended('continue') && (
               <span style={{
                 position: 'absolute', top: -5, right: -5,
-                fontSize: 9, fontWeight: 800, padding: '2px 5px',
-                background: '#fff', color: '#2E7D32',
-                borderRadius: 6,
-              }}>AI ✦</span>
+                fontSize: 8, fontWeight: 700, padding: '1px 4px',
+                background: '#4CAF50', color: '#fff',
+                borderRadius: 4,
+              }}>AI</span>
             )}
           </button>
 
-          {/* 2×2 grid */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 8 }}>
-
-            {/* Continue */}
-            <GridButton
-              onClick={() => onContinue(continueDuration?.suggestedMinutes > 1 ? continueDuration.suggestedMinutes : 1)}
-              isTop={topOption === 'continue'}
-              isDark={isDark}
-              emoji="⏱️"
-              label="Keep going"
-              hint={continueDuration ? `+${continueDuration.suggestedMinutes} min` : '+1 min'}
-            />
-
-            {/* Later today */}
-            <GridButton
-              onClick={() => bestSlot && onLaterToday(bestSlot)}
-              isTop={topOption === 'later_today'}
-              isDark={isDark}
-              disabled={!bestSlot}
-              emoji="🕐"
-              label="Later today"
-              hint={bestSlot ? `${bestSlot.startTime}${bestSlot.score >= 70 ? ' ★' : ''}` : 'No slots'}
-            />
-
-            {/* Tomorrow */}
-            <GridButton
-              onClick={onTomorrow}
-              isTop={topOption === 'tomorrow'}
-              isDark={isDark}
-              emoji="📅"
-              label="Tomorrow"
-              hint={urgentLevel === 'overdue' || urgentLevel === 'today' ? '⚠️ not ideal' : 'morning'}
-              warn={urgentLevel === 'overdue' || urgentLevel === 'today'}
-            />
-
-            {/* Back to pool */}
-            <GridButton
-              onClick={onBackToPool}
-              isTop={topOption === 'back_to_pool'}
-              isDark={isDark}
-              emoji="🌊"
-              label="Back to Pool"
-              hint="for later"
-            />
-          </div>
-
-          {/* Tertiary row */}
-          <div style={{ display: 'flex', gap: 8, marginBottom: 4 }}>
-            <TertiaryButton onClick={onPickTime} isDark={isDark}>
-              🎯 Pick a time
-            </TertiaryButton>
-            {showBreakTask && (
-              <TertiaryButton
-                onClick={onBreakTask}
-                isDark={isDark}
-                isTop={topOption === 'break_task'}
-                warn
-              >
-                🔨 Break it up
-              </TertiaryButton>
+          {/* Later today */}
+          <button
+            onClick={() => {
+              if (bestSlot) {
+                onLaterToday(bestSlot);
+              }
+            }}
+            disabled={!bestSlot}
+            className="btn ghost"
+            title={!bestSlot ? "No free time left today" : `Best slot: ${bestSlot.startTime} (score: ${bestSlot.score})`}
+            style={{
+              fontSize: 13, position: 'relative',
+              borderRadius: 12,
+              display: 'flex', flexDirection: 'column',
+              alignItems: 'center', justifyContent: 'center',
+              minHeight: 64, padding: '10px 8px',
+              opacity: !bestSlot ? 0.5 : 1,
+              cursor: !bestSlot ? "not-allowed" : "pointer",
+              ...(isTopRecommended('later_today') && {
+                border: '2px solid rgba(76,175,80,0.4)',
+              }),
+            }}
+          >
+            🕐 Later today
+            {bestSlot && (
+              <div style={{ fontSize: 10, opacity: 0.7 }}>
+                {bestSlot.startTime}
+                {bestSlot.score >= 70 && ' ★'}
+              </div>
             )}
-          </div>
+            {bestSlot && bestSlot.reasons.length > 0 && (
+              <div style={{
+                fontSize: 9, opacity: 0.6, marginTop: 1,
+                maxWidth: '100%', overflow: 'hidden',
+                textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+              }}>
+                {bestSlot.reasons[0]}
+              </div>
+            )}
+            {isTopRecommended('later_today') && (
+              <span style={{
+                position: 'absolute', top: -5, right: -5,
+                fontSize: 8, fontWeight: 700, padding: '1px 4px',
+                background: '#4CAF50', color: '#fff',
+                borderRadius: 4,
+              }}>AI</span>
+            )}
+          </button>
+
+          {/* Tomorrow */}
+          <button
+            onClick={onTomorrow}
+            className="btn ghost"
+            title={urgency && (urgency.level === 'overdue' || urgency.level === 'today')
+              ? `Warning: ${urgency.message}`
+              : "Move to tomorrow"}
+            style={{
+              fontSize: 13, position: 'relative',
+              borderRadius: 12,
+              display: 'flex', flexDirection: 'column',
+              alignItems: 'center', justifyContent: 'center',
+              minHeight: 64, padding: '10px 8px',
+              ...(urgency && (urgency.level === 'overdue' || urgency.level === 'today') && {
+                border: '1px solid rgba(245,158,11,0.5)',
+                background: 'linear-gradient(135deg, rgba(245,158,11,0.08), rgba(245,158,11,0.04))',
+              }),
+              ...(isTopRecommended('tomorrow') && {
+                border: '2px solid rgba(76,175,80,0.4)',
+              }),
+            }}
+          >
+            📅 Tomorrow
+            {urgency && (urgency.level === 'overdue' || urgency.level === 'today') ? (
+              <div style={{ fontSize: 10, opacity: 0.8, color: '#d97706' }}>⚠️ not ideal</div>
+            ) : (
+              <div style={{ fontSize: 10, opacity: 0.7 }}>morning</div>
+            )}
+            <WorkloadPreview bestDay={bestDay} />
+            {isTopRecommended('tomorrow') && (
+              <span style={{
+                position: 'absolute', top: -5, right: -5,
+                fontSize: 8, fontWeight: 700, padding: '1px 4px',
+                background: '#4CAF50', color: '#fff',
+                borderRadius: 4,
+              }}>AI</span>
+            )}
+          </button>
+
+          {/* Back to Pool */}
+          <button
+            onClick={onBackToPool}
+            className="btn ghost"
+            style={{
+              fontSize: 13, position: 'relative',
+              borderRadius: 12,
+              display: 'flex', flexDirection: 'column',
+              alignItems: 'center', justifyContent: 'center',
+              minHeight: 64, padding: '10px 8px',
+              ...(isTopRecommended('back_to_pool') && {
+                border: '2px solid rgba(76,175,80,0.4)',
+              }),
+            }}
+          >
+            🌊 Back to Pool
+            <div style={{ fontSize: 10, opacity: 0.7 }}>for later</div>
+            {isTopRecommended('back_to_pool') && (
+              <span style={{
+                position: 'absolute', top: -5, right: -5,
+                fontSize: 8, fontWeight: 700, padding: '1px 4px',
+                background: '#4CAF50', color: '#fff',
+                borderRadius: 4,
+              }}>AI</span>
+            )}
+          </button>
         </div>
 
-        {/* ── FOOTER ────────────────────────────────── */}
+        {/* Secondary actions row: Pick Time + Break Task */}
         <div style={{
-          padding: '8px 14px 16px',
-          borderTop: `1px solid ${border}`,
-          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          display: 'flex', gap: 8, marginBottom: 10,
         }}>
           <button
-            onClick={() => setShowDetails(v => !v)}
+            onClick={onPickTime}
             style={{
-              background: 'none', border: 'none',
-              color: textMuted, fontSize: 12, cursor: 'pointer',
-              display: 'flex', alignItems: 'center', gap: 4,
-              padding: '4px 0',
+              flex: 1, padding: '10px 14px',
+              borderRadius: 12,
+              border: `1.5px solid ${isDark ? 'rgba(255,255,255,0.1)' : 'rgba(59,110,59,0.15)'}`,
+              background: isDark ? 'rgba(255,255,255,0.04)' : 'rgba(59,110,59,0.04)',
+              color: isDark ? '#9CA59C' : '#4B6B4B',
+              fontSize: 13, fontWeight: 600,
+              cursor: 'pointer', transition: 'all 0.2s ease',
             }}
           >
-            {showDetails ? '▾' : '▸'} AI analysis
+            🎯 Pick time
           </button>
-          <button
-            onClick={onClose}
-            style={{
-              background: 'none', border: 'none',
-              color: textMuted, fontSize: 13, cursor: 'pointer',
-              padding: '4px 0',
-              transition: 'color 0.15s',
-            }}
-            onMouseEnter={e => e.currentTarget.style.color = textPrimary}
-            onMouseLeave={e => e.currentTarget.style.color = textMuted}
-          >
-            Cancel
-          </button>
+
+          {showBreakTask && (
+            <button
+              onClick={onBreakTask}
+              style={{
+                flex: 1, padding: '10px 14px',
+                borderRadius: 12,
+                border: isTopRecommended('break_task')
+                  ? '2px solid rgba(76,175,80,0.4)'
+                  : '1.5px dashed rgba(245,158,11,0.4)',
+                background: isTopRecommended('break_task')
+                  ? (isDark ? 'rgba(76,175,80,0.1)' : 'rgba(76,175,80,0.06)')
+                  : (isDark ? 'rgba(255,165,0,0.08)' : 'rgba(255,165,0,0.05)'),
+                color: isTopRecommended('break_task')
+                  ? (isDark ? '#8BC98B' : '#2E6B2E')
+                  : '#d97706',
+                fontSize: 13, fontWeight: 600,
+                cursor: 'pointer', transition: 'all 0.2s ease',
+                position: 'relative',
+              }}
+            >
+              🔨 Break task
+              {procrastination && procrastination.interventions.length > 0 && (
+                <span style={{ fontSize: 9, opacity: 0.6, display: 'block', marginTop: 2 }}>
+                  {procrastination.interventions[0].reason.substring(0, 35)}
+                </span>
+              )}
+              {isTopRecommended('break_task') && (
+                <span style={{
+                  position: 'absolute', top: -5, right: -5,
+                  fontSize: 8, fontWeight: 700, padding: '1px 4px',
+                  background: '#4CAF50', color: '#fff',
+                  borderRadius: 4,
+                }}>AI</span>
+              )}
+            </button>
+          )}
         </div>
 
-        {/* ── DETAILS PANEL ─────────────────────────── */}
+        {/* Details toggle */}
+        <button
+          onClick={() => setShowDetails(!showDetails)}
+          style={{
+            background: 'transparent', border: 'none',
+            color: isDark ? '#666' : '#999',
+            cursor: 'pointer', fontSize: 11,
+            display: 'flex', alignItems: 'center',
+            justifyContent: 'center', gap: 4,
+            width: '100%', padding: '4px 0',
+            marginBottom: showDetails ? 8 : 0,
+          }}
+        >
+          {showDetails ? '▾ Hide analysis' : '▸ Show AI analysis'}
+        </button>
+
+        {/* Expanded analysis details */}
         {showDetails && (
           <div style={{
-            margin: '0 14px 16px',
-            padding: 14,
-            background: isDark ? 'rgba(0,0,0,0.2)' : 'rgba(0,0,0,0.025)',
-            borderRadius: 12,
+            background: isDark ? 'rgba(0,0,0,0.15)' : 'rgba(0,0,0,0.02)',
+            borderRadius: 10, padding: 12,
+            marginBottom: 10, textAlign: 'left',
             animation: 'fadeIn 0.2s ease-out',
           }}>
-            {/* Completion probability */}
-            {completionProb && (
-              <div style={{ marginBottom: 12 }}>
-                <div style={{ fontSize: 11, fontWeight: 700, color: green, marginBottom: 6 }}>
-                  Completion Probability
+            {/* Completion factors */}
+            {completionProb && completionProb.factors.length > 0 && (
+              <div style={{ marginBottom: 10 }}>
+                <div style={{
+                  fontSize: 11, fontWeight: 700,
+                  color: isDark ? '#8BC98B' : '#3B6E3B',
+                  marginBottom: 6,
+                }}>
+                  Completion Factors
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                  <div style={{
-                    flex: 1, height: 6, borderRadius: 3,
-                    background: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)',
-                    overflow: 'hidden',
+                {completionProb.factors.map((f, i) => (
+                  <div key={i} style={{
+                    display: 'flex', alignItems: 'center', gap: 8,
+                    marginBottom: 4,
                   }}>
                     <div style={{
-                      width: `${Math.round(completionProb.probability * 100)}%`,
-                      height: '100%', borderRadius: 3,
-                      background: completionProb.probability >= 0.6 ? '#4CAF50' : completionProb.probability >= 0.4 ? '#FF9800' : '#F44336',
-                      transition: 'width 0.5s ease',
-                    }} />
-                  </div>
-                  <span style={{ fontSize: 12, fontWeight: 700, color: textPrimary, flexShrink: 0 }}>
-                    {Math.round(completionProb.probability * 100)}% — {completionProb.label}
-                  </span>
-                </div>
-                {completionProb.factors?.slice(0, 4).map((f, i) => (
-                  <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 5 }}>
-                    <div style={{
-                      width: 28, height: 3, borderRadius: 2,
-                      background: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.05)',
+                      width: 36, height: 4, borderRadius: 2,
+                      background: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)',
                       overflow: 'hidden', flexShrink: 0,
                     }}>
                       <div style={{
-                        width: `${Math.round(f.value * 100)}%`, height: '100%', borderRadius: 2,
+                        width: `${Math.round(f.value * 100)}%`,
+                        height: '100%', borderRadius: 2,
                         background: f.value >= 0.6 ? '#4CAF50' : f.value >= 0.4 ? '#FF9800' : '#F44336',
                       }} />
                     </div>
-                    <span style={{ fontSize: 10, color: textMuted }}>{f.name}: {f.description}</span>
+                    <span style={{
+                      fontSize: 10, color: isDark ? '#999' : '#666',
+                      flex: 1,
+                    }}>
+                      {f.name}: {f.description}
+                    </span>
                   </div>
                 ))}
               </div>
             )}
 
-            {/* Procrastination */}
-            {procrastination && procrastination.severity !== 'none' && procrastination.severity !== 'mild' && (
-              <div style={{
-                padding: '8px 10px', borderRadius: 8, marginBottom: 10,
-                background: procrastination.severity === 'chronic' ? 'rgba(220,38,38,0.08)' : 'rgba(255,152,0,0.08)',
-                border: `1px solid ${procrastination.severity === 'chronic' ? 'rgba(220,38,38,0.2)' : 'rgba(255,152,0,0.2)'}`,
-              }}>
-                <div style={{ fontSize: 11, fontWeight: 700, color: procrastination.severity === 'chronic' ? '#dc2626' : '#d97706', marginBottom: 3 }}>
-                  {procrastination.severity === 'chronic' ? '🚫 Chronic Avoidance' : procrastination.severity === 'severe' ? '⚡ Strong Avoidance' : '🔄 Building Avoidance'}
-                  <span style={{ fontWeight: 400, opacity: 0.7, marginLeft: 5 }}>{procrastination.score}/100</span>
-                </div>
-                {procrastination.interventions[0] && (
-                  <div style={{ fontSize: 10, color: green }}>Tip: {procrastination.interventions[0].label}</div>
-                )}
-              </div>
-            )}
-
-            {/* Option ranking */}
+            {/* Ranked options */}
             {rankedOptions.length > 0 && (
               <div>
-                <div style={{ fontSize: 11, fontWeight: 700, color: green, marginBottom: 6 }}>
+                <div style={{
+                  fontSize: 11, fontWeight: 700,
+                  color: isDark ? '#8BC98B' : '#3B6E3B',
+                  marginBottom: 6,
+                }}>
                   Option Ranking
                 </div>
                 {rankedOptions.slice(0, 5).map((opt, i) => (
-                  <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-                    <span style={{ fontSize: 12, width: 18 }}>{opt.icon}</span>
+                  <div key={i} style={{
+                    display: 'flex', alignItems: 'center', gap: 8,
+                    marginBottom: 4, padding: '3px 0',
+                    opacity: i === 0 ? 1 : 0.7,
+                  }}>
+                    <span style={{ fontSize: 12, width: 20 }}>{opt.icon}</span>
                     <div style={{
                       flex: 1, height: 4, borderRadius: 2,
-                      background: isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.05)',
+                      background: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)',
                       overflow: 'hidden',
                     }}>
                       <div style={{
-                        width: `${opt.score}%`, height: '100%', borderRadius: 2,
-                        background: i === 0 ? '#4CAF50' : isDark ? '#444' : '#bbb',
+                        width: `${opt.score}%`, height: '100%',
+                        borderRadius: 2,
+                        background: i === 0 ? '#4CAF50' : isDark ? '#555' : '#999',
                         transition: 'width 0.5s ease',
                       }} />
                     </div>
-                    <span style={{ fontSize: 10, color: textMuted, minWidth: 24, textAlign: 'right', fontWeight: i === 0 ? 700 : 400 }}>
+                    <span style={{
+                      fontSize: 10, fontWeight: i === 0 ? 700 : 400,
+                      color: isDark ? '#999' : '#666',
+                      minWidth: 26, textAlign: 'right',
+                    }}>
                       {opt.score}
                     </span>
                   </div>
                 ))}
               </div>
             )}
+
+            {/* Category & session stats */}
+            <div style={{
+              marginTop: 8, fontSize: 10,
+              color: isDark ? '#666' : '#aaa',
+              display: 'flex', gap: 12, flexWrap: 'wrap',
+            }}>
+              {category.primary !== 'other' && (
+                <span>Category: {category.primary} ({Math.round(category.confidence * 100)}%)</span>
+              )}
+              {procrastination && (
+                <span>Avoidance: {procrastination.severity} ({procrastination.score}/100)</span>
+              )}
+            </div>
           </div>
         )}
+
+        {/* Cancel */}
+        <button
+          onClick={onClose}
+          style={{
+            marginTop: 4, background: "transparent",
+            border: "none", color: isDark ? '#555' : "#666",
+            cursor: "pointer", fontSize: 13,
+            transition: "color 0.2s",
+          }}
+          onMouseEnter={(e) => e.currentTarget.style.color = isDark ? '#999' : '#333'}
+          onMouseLeave={(e) => e.currentTarget.style.color = isDark ? '#555' : '#666'}
+        >
+          Cancel
+        </button>
       </div>
     </div>
-  );
-}
-
-// ── Sub-components ────────────────────────────────────────────────────────────
-
-function GridButton({ onClick, isTop, isDark, disabled, emoji, label, hint, warn }) {
-  const green = isDark ? '#6FAF6F' : '#3B6E3B';
-  const base = isDark ? '#252D25' : '#F4F9F4';
-  const borderColor = isTop
-    ? `rgba(76,175,80,0.45)`
-    : warn
-    ? 'rgba(245,158,11,0.3)'
-    : isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.08)';
-
-  return (
-    <button
-      onClick={onClick}
-      disabled={disabled}
-      style={{
-        background: isTop
-          ? (isDark ? 'rgba(76,175,80,0.1)' : 'rgba(76,175,80,0.07)')
-          : base,
-        border: `1.5px solid ${borderColor}`,
-        borderRadius: 14,
-        padding: '12px 8px',
-        display: 'flex', flexDirection: 'column',
-        alignItems: 'center', justifyContent: 'center',
-        gap: 3, minHeight: 72,
-        cursor: disabled ? 'not-allowed' : 'pointer',
-        opacity: disabled ? 0.45 : 1,
-        position: 'relative',
-        transition: 'transform 0.1s, box-shadow 0.1s',
-        boxShadow: isTop ? '0 0 0 1px rgba(76,175,80,0.2)' : 'none',
-      }}
-      onMouseDown={e => { if (!disabled) e.currentTarget.style.transform = 'scale(0.96)'; }}
-      onMouseUp={e => { e.currentTarget.style.transform = 'scale(1)'; }}
-    >
-      <span style={{ fontSize: 22, lineHeight: 1 }}>{emoji}</span>
-      <span style={{ fontSize: 13, fontWeight: 700, color: isDark ? '#E8F0E8' : '#1A1A1A', lineHeight: 1.2 }}>
-        {label}
-      </span>
-      <span style={{
-        fontSize: 11, lineHeight: 1.2,
-        color: warn ? '#d97706' : isDark ? '#7A8F7A' : '#8A9A8A',
-      }}>
-        {hint}
-      </span>
-      {isTop && (
-        <span style={{
-          position: 'absolute', top: -6, right: -6,
-          fontSize: 9, fontWeight: 800, padding: '2px 5px',
-          background: '#4CAF50', color: '#fff',
-          borderRadius: 5, boxShadow: '0 1px 4px rgba(76,175,80,0.4)',
-        }}>AI ✦</span>
-      )}
-    </button>
-  );
-}
-
-function TertiaryButton({ onClick, isDark, isTop, warn, children }) {
-  return (
-    <button
-      onClick={onClick}
-      style={{
-        flex: 1, height: 40,
-        borderRadius: 10,
-        border: isTop
-          ? '1.5px solid rgba(76,175,80,0.4)'
-          : warn
-          ? '1.5px dashed rgba(245,158,11,0.35)'
-          : `1.5px solid ${isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)'}`,
-        background: isTop
-          ? (isDark ? 'rgba(76,175,80,0.08)' : 'rgba(76,175,80,0.05)')
-          : isDark ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)',
-        color: isTop
-          ? (isDark ? '#8BC98B' : '#2E6B2E')
-          : warn
-          ? '#d97706'
-          : isDark ? '#7A8F7A' : '#6B8A6B',
-        fontSize: 13, fontWeight: 600,
-        cursor: 'pointer',
-        transition: 'transform 0.1s',
-      }}
-      onMouseDown={e => e.currentTarget.style.transform = 'scale(0.97)'}
-      onMouseUp={e => e.currentTarget.style.transform = 'scale(1)'}
-    >
-      {children}
-    </button>
   );
 }
