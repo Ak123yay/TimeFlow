@@ -21,7 +21,12 @@ export default function Insights({ onNavigate }) {
 
   useEffect(() => {
     // Calculate accuracy stats from task history
-    const history = JSON.parse(localStorage.getItem('timeflow-task-history') || '[]');
+    let history = [];
+    try {
+      history = JSON.parse(localStorage.getItem('timeflow-task-history') || '[]');
+    } catch (e) {
+      console.warn('Failed to parse task history:', e);
+    }
 
     if (history.length > 0) {
       // Filter out entries with invalid duration data
@@ -50,7 +55,12 @@ export default function Insights({ onNavigate }) {
     }
 
     // Get energy patterns
-    const energyPatternsData = JSON.parse(localStorage.getItem('timeflow-energy-patterns') || '{}');
+    let energyPatternsData = {};
+    try {
+      energyPatternsData = JSON.parse(localStorage.getItem('timeflow-energy-patterns') || '{}');
+    } catch (e) {
+      console.warn('Failed to parse energy patterns:', e);
+    }
 
     if (energyPatternsData.hourlyCompletionRates) {
       const hourlyRates = getAllHourlyCompletionRates();

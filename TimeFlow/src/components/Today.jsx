@@ -484,6 +484,7 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
     if (alreadyLoaded) return;
 
     // Check if current time is past availability start time
+    if (!availability?.start) return;
     const now = new Date();
     const currentMinutes = now.getHours() * 60 + now.getMinutes();
     const [startHour, startMin] = availability.start.split(':').map(Number);
@@ -533,6 +534,7 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
       if (alreadyLoaded) return;
 
       // Check if current time is past availability start time
+      if (!availability?.start) return;
       const now = new Date();
       const currentMinutes = now.getHours() * 60 + now.getMinutes();
       const [startHour, startMin] = availability.start.split(':').map(Number);

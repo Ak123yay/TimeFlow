@@ -201,10 +201,12 @@ export default function App() {
       ) : !setupDone ? (
         <Setup onDone={() => setSetupDone(true)} />
       ) : currentView === 'reflection' ? (
-        <DayReflection
-          todayDate={new Date().toISOString().slice(0, 10)}
-          onComplete={showToday}
-        />
+        <ErrorBoundary>
+          <DayReflection
+            todayDate={new Date().toISOString().slice(0, 10)}
+            onComplete={showToday}
+          />
+        </ErrorBoundary>
       ) : currentView === 'week' ? (
         <ErrorBoundary>
           <Suspense fallback={<LoadingFallback />}>
@@ -218,23 +220,29 @@ export default function App() {
           </Suspense>
         </ErrorBoundary>
       ) : currentView === 'streak' ? (
-        <Streak onNavigate={(view) => {
-          if (view === 'today') showToday();
-          else if (view === 'week') showWeek();
-          else if (view === 'pool') showPool();
-          else if (view === 'stats') showReflection();
-        }} />
-      ) : currentView === 'insights' ? (
-        <Suspense fallback={<LoadingFallback />}>
-          <Insights onNavigate={(view) => {
+        <ErrorBoundary>
+          <Streak onNavigate={(view) => {
             if (view === 'today') showToday();
             else if (view === 'week') showWeek();
             else if (view === 'pool') showPool();
-            else if (view === 'streak') showStreak();
+            else if (view === 'stats') showReflection();
           }} />
-        </Suspense>
+        </ErrorBoundary>
+      ) : currentView === 'insights' ? (
+        <ErrorBoundary>
+          <Suspense fallback={<LoadingFallback />}>
+            <Insights onNavigate={(view) => {
+              if (view === 'today') showToday();
+              else if (view === 'week') showWeek();
+              else if (view === 'pool') showPool();
+              else if (view === 'streak') showStreak();
+            }} />
+          </Suspense>
+        </ErrorBoundary>
       ) : (
-        <Today onEndDay={showReflection} onShowWeek={showWeek} onShowPool={showPool} />
+        <ErrorBoundary>
+          <Today onEndDay={showReflection} onShowWeek={showWeek} onShowPool={showPool} />
+        </ErrorBoundary>
       )}
 
       {/* PWA Install Prompt */}
