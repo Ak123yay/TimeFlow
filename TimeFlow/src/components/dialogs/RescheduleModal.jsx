@@ -191,34 +191,34 @@ export default function RescheduleModal({
               </div>
             </div>
 
-            {/* title block */}
-            <div style={{ marginBottom: 10 }}>
-              <div style={{ fontSize: 11, fontWeight: 600, color: mutedCol, letterSpacing: 0.4, textTransform: 'uppercase', marginBottom: 3 }}>
-                Time's up
+            {/* title block + meta chips inline */}
+            <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 10, marginBottom: aiRec?.summary ? 14 : 20 }}>
+              <div>
+                <div style={{ fontSize: 11, fontWeight: 600, color: mutedCol, letterSpacing: 0.4, textTransform: 'uppercase', marginBottom: 3 }}>
+                  Time's up
+                </div>
+                <div style={{
+                  fontSize: isMobile ? 20 : 22, fontWeight: 900,
+                  color: titleCol, lineHeight: 1.25, wordBreak: 'break-word',
+                }}>
+                  {task.name}
+                </div>
               </div>
-              <div style={{
-                fontSize: isMobile ? 20 : 22, fontWeight: 900,
-                color: titleCol, lineHeight: 1.25, wordBreak: 'break-word',
-              }}>
-                {task.name}
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 5, flexShrink: 0, paddingTop: 2 }}>
+                <span style={{ fontSize: 12, fontWeight: 600, color: mutedCol, background: chipBg, padding: '3px 9px', borderRadius: 7 }}>
+                  {remaining} min left
+                </span>
+                {attempts >= 2 && (
+                  <span style={{ fontSize: 12, fontWeight: 600, background: 'rgba(245,158,11,0.1)', color: '#b45309', padding: '3px 9px', borderRadius: 7 }}>
+                    ↩ {attempts}× rescheduled
+                  </span>
+                )}
+                {category.primary !== 'other' && (
+                  <span style={{ fontSize: 12, fontWeight: 600, color: labelCol, background: isDark ? 'rgba(111,175,111,0.12)' : 'rgba(59,110,59,0.07)', padding: '3px 9px', borderRadius: 7 }}>
+                    {category.primary}
+                  </span>
+                )}
               </div>
-            </div>
-
-            {/* meta chips */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: aiRec?.summary ? 14 : 20, flexWrap: 'wrap' }}>
-              <span style={{ fontSize: 12, fontWeight: 600, color: mutedCol, background: chipBg, padding: '3px 9px', borderRadius: 7 }}>
-                {remaining} min left
-              </span>
-              {attempts >= 2 && (
-                <span style={{ fontSize: 12, fontWeight: 600, background: 'rgba(245,158,11,0.1)', color: '#b45309', padding: '3px 9px', borderRadius: 7 }}>
-                  ↩ {attempts}× rescheduled
-                </span>
-              )}
-              {category.primary !== 'other' && (
-                <span style={{ fontSize: 12, fontWeight: 600, color: labelCol, background: isDark ? 'rgba(111,175,111,0.12)' : 'rgba(59,110,59,0.07)', padding: '3px 9px', borderRadius: 7 }}>
-                  {category.primary}
-                </span>
-              )}
             </div>
 
             {/* AI hint bar */}
