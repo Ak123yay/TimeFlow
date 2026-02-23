@@ -4,6 +4,7 @@ import MobileLayout from './mobile/MobileLayout';
 import FirstTimeTooltip from './FirstTimeTooltip';
 import { hasSeenTooltip, markTooltipSeen, TOOLTIP_CONTENT } from "../utils/firstTimeTooltips";
 import { haptic } from "../utils/haptics";
+import { useDarkMode } from "../utils/useDarkMode";
 import "../App.css";
 
 function LeafIcon({ className = "", size = 18, fill = "#3B6E3B" }) {
@@ -82,7 +83,6 @@ export default function DayReflection({ todayDate, onComplete }) {
   ];
 
   if (isMobile) {
-    const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
     return (
       <MobileLayout showBottomNav={true} onNavigate={(tab) => {
         haptic.light();
@@ -147,7 +147,7 @@ export default function DayReflection({ todayDate, onComplete }) {
             </div>
             <div style={{ textAlign: 'center' }}>
               <div style={{ fontSize: '18px', fontWeight: 800, color: '#3B6E3B' }}>
-                {Math.floor(completedTime/60)}h {completedTime%60}m
+                {Math.floor(completedTime / 60)}h {completedTime % 60}m
               </div>
               <div style={{ fontSize: '10px', color: isDark ? '#9CA59C' : '#8E8E93', marginTop: '2px' }}>Time</div>
             </div>
@@ -386,7 +386,7 @@ export default function DayReflection({ todayDate, onComplete }) {
             </div>
             <div style={{ textAlign: "center" }}>
               <div style={{ fontSize: "32px", fontWeight: "900", color: "#3B6E3B" }}>
-                {Math.floor(completedTime/60)}h {completedTime%60}m
+                {Math.floor(completedTime / 60)}h {completedTime % 60}m
               </div>
               <div style={{ fontSize: "13px", color: "#6B8E6B", marginTop: "4px" }}>Time Spent</div>
             </div>

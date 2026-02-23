@@ -11,7 +11,48 @@ import Onboarding from "./components/Onboarding";
 import InstallPrompt from "./components/InstallPrompt";
 import { loadAvailability } from "./utils/storage";
 import { getTimePeriod } from "./utils/timeUtils";
+import { useDarkMode } from "./utils/useDarkMode";
 import "./App.css";
+
+// Error view used by the class component above (wraps in hook-aware functional comp)
+function ErrorFallback() {
+  const isDark = useDarkMode();
+  return (
+    <div style={{
+      minHeight: '100dvh',
+      display: 'flex',
+      flexDirection: 'column',
+      justifyContent: 'center',
+      alignItems: 'center',
+      padding: '20px',
+      background: isDark ? '#1A1F1A' : '#F8F8F8',
+      color: isDark ? '#E8F0E8' : '#1A1A1A'
+    }}>
+      <div style={{ fontSize: '48px', marginBottom: '16px' }}>⚠️</div>
+      <div style={{ fontSize: '18px', fontWeight: 600, marginBottom: '8px' }}>
+        Something went wrong
+      </div>
+      <div style={{ fontSize: '14px', color: isDark ? '#9CA59C' : '#8E8E93', marginBottom: '24px' }}>
+        Try refreshing the page
+      </div>
+      <button
+        onClick={() => window.location.reload()}
+        style={{
+          padding: '12px 24px',
+          background: '#3B6E3B',
+          color: 'white',
+          border: 'none',
+          borderRadius: '8px',
+          fontSize: '14px',
+          fontWeight: 600,
+          cursor: 'pointer'
+        }}
+      >
+        Refresh Page
+      </button>
+    </div>
+  );
+}
 
 // Error Boundary Component
 class ErrorBoundary extends React.Component {
@@ -30,42 +71,7 @@ class ErrorBoundary extends React.Component {
 
   render() {
     if (this.state.hasError) {
-      const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-      return (
-        <div style={{
-          minHeight: '100dvh',
-          display: 'flex',
-          flexDirection: 'column',
-          justifyContent: 'center',
-          alignItems: 'center',
-          padding: '20px',
-          background: isDark ? '#1A1F1A' : '#F8F8F8',
-          color: isDark ? '#E8F0E8' : '#1A1A1A'
-        }}>
-          <div style={{ fontSize: '48px', marginBottom: '16px' }}>⚠️</div>
-          <div style={{ fontSize: '18px', fontWeight: 600, marginBottom: '8px' }}>
-            Something went wrong
-          </div>
-          <div style={{ fontSize: '14px', color: isDark ? '#9CA59C' : '#8E8E93', marginBottom: '24px' }}>
-            Try refreshing the page
-          </div>
-          <button
-            onClick={() => window.location.reload()}
-            style={{
-              padding: '12px 24px',
-              background: '#3B6E3B',
-              color: 'white',
-              border: 'none',
-              borderRadius: '8px',
-              fontSize: '14px',
-              fontWeight: 600,
-              cursor: 'pointer'
-            }}
-          >
-            Refresh Page
-          </button>
-        </div>
-      );
+      return <ErrorFallback />;
     }
 
     return this.props.children;
@@ -74,7 +80,7 @@ class ErrorBoundary extends React.Component {
 
 // Loading fallback component for lazy-loaded routes
 function LoadingFallback() {
-  const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+  const isDark = useDarkMode();
 
   return (
     <div style={{

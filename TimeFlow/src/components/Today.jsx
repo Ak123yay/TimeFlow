@@ -4,6 +4,7 @@ import { rescheduleUnfinishedTasks, detectConflicts, calculateOverflow, getDeadl
 import { hhmmToMinutes, minutesToHHMM, getTodayString, formatDuration } from "../utils/timeUtils";
 import { getCached, setCached, flushNow } from "../utils/storageCache";
 import { haptic } from "../utils/haptics";
+import { useDarkMode } from "../utils/useDarkMode";
 import TaskHealthIndicator from "./TaskHealthIndicator";
 import {
   saveTaskToHistory,
@@ -254,6 +255,7 @@ function MobileSortableTask({ task, isActive, children }) {
 }
 
 export default function Today({ onEndDay, onShowWeek, onShowPool }) {
+  const isDark = useDarkMode();
   const availability = loadAvailability();
 
   // Mobile detection
@@ -897,13 +899,13 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
     setTasks(prev => prev.map(t =>
       t.id === activeTaskId
         ? {
-            ...t,
-            completed: true,
-            remaining: 0,
-            completedAt,
-            actualDuration,
-            durationAccuracy
-          }
+          ...t,
+          completed: true,
+          remaining: 0,
+          completedAt,
+          actualDuration,
+          durationAccuracy
+        }
         : t
     ));
     haptic.success(); // Haptic feedback on task completion
@@ -1011,13 +1013,13 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
     setTasks(prev => prev.map(t =>
       t.id === activeTaskId
         ? {
-            ...t,
-            startTime: slot.startTime,
-            scheduledFor: new Date(`${getTodayString()}T${slot.startTime}`).toISOString(),
-            attempts: (t.attempts || 0) + 1,
-            lastRescheduled: new Date().toISOString(),
-            rescheduledReasons: [...(t.rescheduledReasons || []), 'later_today']
-          }
+          ...t,
+          startTime: slot.startTime,
+          scheduledFor: new Date(`${getTodayString()}T${slot.startTime}`).toISOString(),
+          attempts: (t.attempts || 0) + 1,
+          lastRescheduled: new Date().toISOString(),
+          rescheduledReasons: [...(t.rescheduledReasons || []), 'later_today']
+        }
         : t
     ));
 
@@ -1284,7 +1286,7 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
     if (activeTaskId === task.id) {
       const mm = Math.floor(secondsLeft / 60);
       const ss = secondsLeft % 60;
-      return `${String(mm).padStart(2,"0")}:${String(ss).padStart(2,"0")} left`;
+      return `${String(mm).padStart(2, "0")}:${String(ss).padStart(2, "0")} left`;
     }
     if (task.completed) return "done";
     return `${task.duration} min`;
@@ -1303,8 +1305,7 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
 
   // ==================== MOBILE RENDER ====================
   if (isMobile) {
-    // Detect system color scheme for mobile
-    const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    // Detect system color scheme for mobile (removed static check, using hook from top level)
 
     const handleMobileNav = (tab) => {
       haptic.light();
@@ -1373,623 +1374,623 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
       >
         <MobileLayout showBottomNav={!activeTaskId} onNavigate={handleMobileNav}>
 
-        {/* ---- Header ---- */}
-        {!activeTask ? (
-          <>
-            {/* Top: date + greeting + avatar + toggles */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px', marginTop: '12px' }}>
-              <div>
-                <p style={{ fontSize: '11px', color: isDark ? '#6B9E6B' : '#6B8C73', margin: 0, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.8px' }}>{dateStr}</p>
-                <h1 style={{ fontSize: '22px', fontWeight: 800, color: isDark ? '#E8F0E8' : '#1A1A1A', margin: '2px 0 0', letterSpacing: '-0.5px' }}>{greeting}</h1>
+          {/* ---- Header ---- */}
+          {!activeTask ? (
+            <>
+              {/* Top: date + greeting + avatar + toggles */}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px', marginTop: '12px' }}>
+                <div>
+                  <p style={{ fontSize: '11px', color: isDark ? '#6B9E6B' : '#6B8C73', margin: 0, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.8px' }}>{dateStr}</p>
+                  <h1 style={{ fontSize: '22px', fontWeight: 800, color: isDark ? '#E8F0E8' : '#1A1A1A', margin: '2px 0 0', letterSpacing: '-0.5px' }}>{greeting}</h1>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  <button onClick={() => setViewMode(viewMode === 'list' ? 'calendar' : 'list')} style={{ width: '30px', height: '30px', borderRadius: '10px', border: 'none', background: viewMode === 'calendar' ? '#3B6E3B' : (isDark ? '#1A1F1A' : '#F0F0F0'), color: viewMode === 'calendar' ? '#fff' : (isDark ? '#9CA59C' : '#8E8E93'), fontSize: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', touchAction: 'manipulation', transition: 'all 0.2s ease', opacity: viewMode === 'calendar' ? 1 : 0.6 }} aria-label="Toggle calendar">📅</button>
+                  <button onClick={toggleFocusMode} style={{ width: '30px', height: '30px', borderRadius: '10px', border: 'none', background: focusModeEnabled ? '#3B6E3B' : (isDark ? '#1A1F1A' : '#F0F0F0'), color: focusModeEnabled ? '#fff' : (isDark ? '#9CA59C' : '#8E8E93'), fontSize: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', touchAction: 'manipulation', transition: 'all 0.2s ease', opacity: focusModeEnabled ? 1 : 0.6 }} aria-label="Focus mode">{focusModeEnabled ? '🎯' : '👁️'}</button>
+                  <button onClick={toggleNotifications} style={{ width: '30px', height: '30px', borderRadius: '10px', border: 'none', background: notificationsEnabled ? '#3B6E3B' : (isDark ? '#1A1F1A' : '#F0F0F0'), color: notificationsEnabled ? '#fff' : (isDark ? '#9CA59C' : '#8E8E93'), fontSize: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', touchAction: 'manipulation', transition: 'all 0.2s ease', opacity: notificationsEnabled ? 1 : 0.6 }} aria-label="Task notifications">{notificationsEnabled ? '🔔' : '🔕'}</button>
+                  <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: 'linear-gradient(135deg, #3B6E3B, #6FAF6F)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '16px', marginLeft: '4px', flexShrink: 0, boxShadow: '0 2px 8px rgba(59,110,59,0.3)' }}>🌿</div>
+                </div>
               </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                <button onClick={() => setViewMode(viewMode === 'list' ? 'calendar' : 'list')} style={{ width: '30px', height: '30px', borderRadius: '10px', border: 'none', background: viewMode === 'calendar' ? '#3B6E3B' : (isDark ? '#1A1F1A' : '#F0F0F0'), color: viewMode === 'calendar' ? '#fff' : (isDark ? '#9CA59C' : '#8E8E93'), fontSize: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', touchAction: 'manipulation', transition: 'all 0.2s ease', opacity: viewMode === 'calendar' ? 1 : 0.6 }} aria-label="Toggle calendar">📅</button>
-                <button onClick={toggleFocusMode} style={{ width: '30px', height: '30px', borderRadius: '10px', border: 'none', background: focusModeEnabled ? '#3B6E3B' : (isDark ? '#1A1F1A' : '#F0F0F0'), color: focusModeEnabled ? '#fff' : (isDark ? '#9CA59C' : '#8E8E93'), fontSize: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', touchAction: 'manipulation', transition: 'all 0.2s ease', opacity: focusModeEnabled ? 1 : 0.6 }} aria-label="Focus mode">{focusModeEnabled ? '🎯' : '👁️'}</button>
-                <button onClick={toggleNotifications} style={{ width: '30px', height: '30px', borderRadius: '10px', border: 'none', background: notificationsEnabled ? '#3B6E3B' : (isDark ? '#1A1F1A' : '#F0F0F0'), color: notificationsEnabled ? '#fff' : (isDark ? '#9CA59C' : '#8E8E93'), fontSize: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', touchAction: 'manipulation', transition: 'all 0.2s ease', opacity: notificationsEnabled ? 1 : 0.6 }} aria-label="Task notifications">{notificationsEnabled ? '🔔' : '🔕'}</button>
-                <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: 'linear-gradient(135deg, #3B6E3B, #6FAF6F)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '16px', marginLeft: '4px', flexShrink: 0, boxShadow: '0 2px 8px rgba(59,110,59,0.3)' }}>🌿</div>
-              </div>
-            </div>
 
-            {/* Progress card */}
-            {tasks.length > 0 && (
-              <div style={{ background: isDark ? '#242B24' : '#fff', borderRadius: '16px', padding: '14px 16px', marginBottom: '12px', boxShadow: isDark ? '0 1px 8px rgba(0,0,0,0.3)' : '0 2px 12px rgba(0,0,0,0.06)', display: 'flex', alignItems: 'center', gap: '14px', border: isDark ? 'none' : '1px solid rgba(0,0,0,0.04)' }}>
-                <div style={{ flex: 1 }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                    <span style={{ fontSize: '13px', fontWeight: 700, color: isDark ? '#E8F0E8' : '#1A1A1A' }}>{completedCount}/{tasks.length} tasks done</span>
-                    <span style={{ fontSize: '11px', fontWeight: 600, color: isDark ? '#9CA59C' : '#8E8E93' }}>{capacityPercent}% capacity</span>
+              {/* Progress card */}
+              {tasks.length > 0 && (
+                <div style={{ background: isDark ? '#242B24' : '#fff', borderRadius: '16px', padding: '14px 16px', marginBottom: '12px', boxShadow: isDark ? '0 1px 8px rgba(0,0,0,0.3)' : '0 2px 12px rgba(0,0,0,0.06)', display: 'flex', alignItems: 'center', gap: '14px', border: isDark ? 'none' : '1px solid rgba(0,0,0,0.04)' }}>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                      <span style={{ fontSize: '13px', fontWeight: 700, color: isDark ? '#E8F0E8' : '#1A1A1A' }}>{completedCount}/{tasks.length} tasks done</span>
+                      <span style={{ fontSize: '11px', fontWeight: 600, color: isDark ? '#9CA59C' : '#8E8E93' }}>{capacityPercent}% capacity</span>
+                    </div>
+                    <div style={{ height: '7px', background: isDark ? 'rgba(107,123,107,0.3)' : '#F0F0F0', borderRadius: '99px', overflow: 'hidden' }}>
+                      <div style={{ height: '100%', width: `${progressPercent}%`, background: progressPercent === 100 ? '#10b981' : '#3B6E3B', borderRadius: '99px', transition: 'width 0.6s ease' }} />
+                    </div>
                   </div>
-                  <div style={{ height: '7px', background: isDark ? 'rgba(107,123,107,0.3)' : '#F0F0F0', borderRadius: '99px', overflow: 'hidden' }}>
-                    <div style={{ height: '100%', width: `${progressPercent}%`, background: progressPercent === 100 ? '#10b981' : '#3B6E3B', borderRadius: '99px', transition: 'width 0.6s ease' }} />
-                  </div>
-                </div>
-                <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: isDark ? 'rgba(59,110,59,0.2)' : 'rgba(59,110,59,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '18px', flexShrink: 0 }}>🌿</div>
-              </div>
-            )}
-
-            {/* Horizontal Timeline */}
-            {scheduledTaskHours.size > 0 && (
-              <div style={{ background: isDark ? '#242B24' : '#fff', borderRadius: '16px', padding: '14px 16px', marginBottom: '12px', boxShadow: isDark ? '0 1px 8px rgba(0,0,0,0.3)' : '0 2px 12px rgba(0,0,0,0.06)', border: isDark ? 'none' : '1px solid rgba(0,0,0,0.04)' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-                  <span style={{ fontSize: '13px', fontWeight: 700, color: isDark ? '#E8F0E8' : '#1A1A1A' }}>Timeline</span>
-                  <span style={{ fontSize: '10px', fontWeight: 700, color: '#3B6E3B', background: isDark ? 'rgba(59,110,59,0.2)' : 'rgba(59,110,59,0.1)', padding: '2px 8px', borderRadius: '6px' }}>
-                    Now: {new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}
-                  </span>
-                </div>
-                <div style={{ overflowX: 'auto', msOverflowStyle: 'none', scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch' }}>
-                  <div style={{ display: 'flex', gap: '20px', minWidth: 'max-content', alignItems: 'flex-end', height: '52px', paddingBottom: '2px' }}>
-                    {timeMarkers.map((marker, i) => (
-                      <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '5px' }}>
-                        <div style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                          <div style={{ width: marker.isCurrent ? '5px' : '3px', height: marker.isCurrent ? '32px' : marker.hasTask ? '22px' : '12px', borderRadius: '99px', background: marker.isCurrent ? '#3B6E3B' : marker.hasTask ? (isDark ? 'rgba(111,175,111,0.5)' : 'rgba(59,110,59,0.35)') : (isDark ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.1)'), transition: 'height 0.3s ease' }} />
-                          {marker.isCurrent && <div style={{ position: 'absolute', width: '10px', height: '10px', borderRadius: '50%', background: '#fff', border: '2.5px solid #3B6E3B', boxShadow: '0 0 6px rgba(59,110,59,0.4)' }} />}
-                        </div>
-                        <span style={{ fontSize: '10px', fontWeight: marker.isCurrent ? 700 : 500, color: marker.isCurrent ? '#3B6E3B' : (isDark ? '#9CA59C' : '#8E8E93'), whiteSpace: 'nowrap' }}>{marker.label}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Streak */}
-            {streak && streak.current > 0 && (
-              <div style={{ marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                <span style={{ fontSize: '14px' }}>🌿</span>
-                <span style={{ fontSize: '11px', fontWeight: 600, color: '#3B6E3B' }}>{streak.current} day streak</span>
-              </div>
-            )}
-          </>
-        ) : (
-          /* Active Timer Hero */
-          <div style={{
-            background: isDark ? '#242B24' : '#fff', borderRadius: '16px', padding: '16px',
-            marginBottom: '12px', boxShadow: isDark ? '0 1px 8px rgba(0,0,0,0.3)' : '0 1px 8px rgba(0,0,0,0.05)'
-          }}>
-          <TaskTimerComponent
-              activeTask={activeTask}
-              secondsLeft={secondsLeft}
-              totalSeconds={activeInitialSecRef.current}
-              onFinishEarly={openFinishPrompt}
-              onPauseResume={handlePauseResume}
-              onCancel={handleCancelTask}
-              isPaused={isPaused}
-            />
-          </div>
-        )}
-
-        {/* ---- First-Time Tooltip ---- */}
-        {showTooltip && (
-          <FirstTimeTooltip
-            title={TOOLTIP_CONTENT.today.title}
-            description={TOOLTIP_CONTENT.today.description}
-            icon={TOOLTIP_CONTENT.today.icon}
-            onDismiss={() => {
-              setShowTooltip(false);
-              markTooltipSeen('today');
-            }}
-          />
-        )}
-
-        {/* ---- Stat Pills ---- */}
-        {!activeTask && tasks.length > 0 && !(focusModeEnabled && activeTaskId) && (
-          <div style={{ display: 'flex', gap: '8px', marginBottom: '14px' }}>
-            {[
-              { label: `${Math.floor(totalMinutes/60)}h ${totalMinutes%60}m`, sub: 'Scheduled' },
-              { label: `${Math.floor(Math.abs(freeTime)/60)}h ${Math.abs(freeTime)%60}m`, sub: overflowing ? 'Overflow' : 'Free', warn: overflowing },
-              { label: `${tasks.length}`, sub: 'Tasks' }
-            ].map((pill, i) => (
-              <div key={i} style={{
-                flex: 1, padding: '10px 8px',
-                background: pill.warn ? 'rgba(220,38,38,0.05)' : (isDark ? '#242B24' : '#fff'),
-                borderRadius: '12px', boxShadow: isDark ? '0 1px 4px rgba(0,0,0,0.2)' : '0 1px 4px rgba(0,0,0,0.04)',
-                textAlign: 'center'
-              }}>
-                <div style={{ fontSize: '14px', fontWeight: 700, color: pill.warn ? '#DC2626' : (isDark ? '#E8F0E8' : '#1A1A1A') }}>{pill.label}</div>
-                <div style={{ fontSize: '10px', color: pill.warn ? '#DC2626' : (isDark ? '#9CA59C' : '#8E8E93'), fontWeight: 500, marginTop: '1px' }}>{pill.sub}</div>
-              </div>
-            ))}
-          </div>
-        )}
-
-        {/* ---- Overflow Warning ---- */}
-        {overflowing && !activeTask && !(focusModeEnabled && activeTaskId) && (
-          <div style={{
-            padding: '10px 14px', marginBottom: '12px', borderRadius: '10px',
-            background: overflowData.severity === 'critical' ? 'rgba(220,38,38,0.06)' : 'rgba(245,158,11,0.06)',
-            display: 'flex', alignItems: 'center', gap: '8px',
-            fontSize: '12px', fontWeight: 600,
-            color: overflowData.severity === 'critical' ? '#DC2626' : '#D97706'
-          }}>
-            <span>{overflowData.severity === 'critical' ? '🔴' : '🟡'}</span>
-            <span>Schedule overflows by {Math.floor(Math.abs(freeTime)/60)}h {Math.abs(freeTime)%60}m</span>
-          </div>
-        )}
-
-        {/* ---- Focus Mode Indicator ---- */}
-        {focusModeEnabled && (
-          <div style={{
-            padding: '8px 12px', marginBottom: '12px', borderRadius: '10px',
-            background: 'rgba(59,110,59,0.06)', textAlign: 'center',
-            fontSize: '12px', fontWeight: 600, color: '#3B6E3B'
-          }}>
-            🎯 Focus Mode {!activeTaskId && '• Hiding completed tasks'}
-          </div>
-        )}
-
-        {/* ---- Task List / Calendar View ---- */}
-        {viewMode === 'calendar' ? (
-          <DailyCalendar />
-        ) : tasks.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: '40px 20px' }}>
-            <div style={{ fontSize: '36px', marginBottom: '12px' }}>🌱</div>
-            <p style={{ fontSize: '15px', fontWeight: 600, color: isDark ? '#E8F0E8' : '#1A1A1A', margin: '0 0 4px' }}>Start your day</p>
-            <p style={{ fontSize: '13px', color: isDark ? '#9CA59C' : '#8E8E93', margin: 0 }}>Tap + to add your first task</p>
-          </div>
-        ) : (
-          <div>
-            {/* SearchBar */}
-            <SearchBar
-              onSearch={setSearchQuery}
-              placeholder="Search today's tasks..."
-            />
-
-            {/* Carried Over */}
-            {filterForFocus(filterTasksBySearch(carriedTasks)).length > 0 && (
-              <div style={{ marginBottom: '14px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px', paddingLeft: '2px' }}>
-                  <span style={{ fontSize: '11px', fontWeight: 800, color: '#D97706', textTransform: 'uppercase', letterSpacing: '0.8px' }}>
-                    Carried Over
-                  </span>
-                  <span style={{ fontSize: '10px', fontWeight: 700, background: 'rgba(217,119,6,0.12)', color: '#D97706', padding: '2px 7px', borderRadius: '99px' }}>
-                    {filterForFocus(filterTasksBySearch(carriedTasks)).length}
-                  </span>
-                </div>
-                <SortableContext
-                  items={filterForFocus(filterTasksBySearch(carriedTasks)).map(t => t.id)}
-                  strategy={verticalListSortingStrategy}
-                >
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                    {filterForFocus(filterTasksBySearch(carriedTasks)).map((task, i) => (
-                      <MobileSortableTask key={task.id} task={task} isActive={activeTaskId === task.id}>
-                        <TaskCard
-                          task={{
-                            ...task, position: i + 1,
-                            startTime: minutesToHHMM(task.start),
-                            endTime: minutesToHHMM(task.end),
-                            conflicts: hasConflict(task.id)
-                          }}
-                          isActive={activeTaskId === task.id}
-                          isUpNext={task.id === upNextTaskId}
-                          onStart={() => startTask(task)}
-                          onComplete={() => {
-                        const isCurrentlyCompleted = task.completed;
-
-                        if (isCurrentlyCompleted) {
-                          // Uncomplete the task
-                          haptic.light();
-                          setTasks(prev => prev.map(t =>
-                            t.id === task.id ? { ...t, completed: false, remaining: task.duration, completedAt: null } : t
-                          ));
-
-                          // If uncompleting a carried task, mark it as incomplete in original date
-                          if (task.carriedOver && task.originalDate) {
-                            const originalTasks = loadTasksForDate(task.originalDate);
-                            const updatedOriginalTasks = originalTasks.map(t =>
-                              t.name === task.name ? { ...t, completed: false, remaining: t.duration } : t
-                            );
-                            saveTasksForDate(task.originalDate, updatedOriginalTasks);
-                          }
-                        } else {
-                          // Complete the task
-                          haptic.success();
-
-                          const completedAt = new Date().toISOString();
-                          const startedAt = task.startedAt || task.scheduledFor || completedAt;
-                          const actualDuration = Math.round((new Date(completedAt) - new Date(startedAt)) / (1000 * 60));
-                          const durationAccuracy = calculateDurationAccuracy(
-                            task.estimatedDuration || task.duration,
-                            actualDuration
-                          );
-
-                          setTasks(prev => prev.map(t =>
-                            t.id === task.id ? {
-                              ...t,
-                              completed: true,
-                              remaining: 0,
-                              completedAt,
-                              actualDuration,
-                              durationAccuracy
-                            } : t
-                          ));
-
-                          // Save analytics
-                          const taskToSave = {
-                            ...task,
-                            completedAt,
-                            actualDuration,
-                            durationAccuracy
-                          };
-                          saveTaskToHistory(taskToSave);
-                          trackCompletionByHour(taskToSave);
-                          trackRescheduleOption('complete');
-
-                          // If completing a carried task, mark it as completed in original date
-                          if (task.carriedOver && task.originalDate) {
-                            const originalTasks = loadTasksForDate(task.originalDate);
-                            const updatedOriginalTasks = originalTasks.map(t =>
-                              t.name === task.name ? { ...t, completed: true, remaining: 0 } : t
-                            );
-                            saveTasksForDate(task.originalDate, updatedOriginalTasks);
-                          }
-
-                          setShowCelebration('task');
-                          setTimeout(() => setShowCelebration(null), 3000);
-                        }
-                      }}
-                      onDelete={() => deleteTask(task.id)}
-                      onEdit={() => handleEditTask(task)}
-                      showSwipeActions={activeTaskId !== task.id}
-                    />
-                      </MobileSortableTask>
-                  ))}
-                </div>
-                </SortableContext>
-              </div>
-            )}
-
-            {/* Today's Tasks */}
-            {filterForFocus(filterTasksBySearch(todayTasks)).length > 0 && (
-              <div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px', paddingLeft: '2px' }}>
-                  <span style={{ fontSize: '11px', fontWeight: 800, color: isDark ? '#E8F0E8' : '#1A1A1A', textTransform: 'uppercase', letterSpacing: '0.8px' }}>
-                    Today
-                  </span>
-                  <span style={{ fontSize: '10px', fontWeight: 700, background: 'rgba(59,110,59,0.1)', color: '#3B6E3B', padding: '2px 7px', borderRadius: '99px' }}>
-                    {filterForFocus(filterTasksBySearch(todayTasks)).length}
-                  </span>
-                </div>
-                <SortableContext
-                  items={filterForFocus(filterTasksBySearch(todayTasks)).map(t => t.id)}
-                  strategy={verticalListSortingStrategy}
-                >
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                    {filterForFocus(filterTasksBySearch(todayTasks)).map((task, i) => (
-                      <MobileSortableTask key={task.id} task={task} isActive={activeTaskId === task.id}>
-                        <TaskCard
-                          task={{
-                            ...task, position: i + 1,
-                            startTime: minutesToHHMM(task.start),
-                            endTime: minutesToHHMM(task.end),
-                            conflicts: hasConflict(task.id)
-                          }}
-                          isActive={activeTaskId === task.id}
-                          isUpNext={task.id === upNextTaskId}
-                          onStart={() => startTask(task)}
-                          onComplete={() => {
-                        const isCurrentlyCompleted = task.completed;
-
-                        if (isCurrentlyCompleted) {
-                          // Uncomplete the task
-                          haptic.light();
-                          setTasks(prev => prev.map(t =>
-                            t.id === task.id ? { ...t, completed: false, remaining: task.duration, completedAt: null } : t
-                          ));
-
-                          // If uncompleting a carried task, mark it as incomplete in original date
-                          if (task.carriedOver && task.originalDate) {
-                            const originalTasks = loadTasksForDate(task.originalDate);
-                            const updatedOriginalTasks = originalTasks.map(t =>
-                              t.name === task.name ? { ...t, completed: false, remaining: t.duration } : t
-                            );
-                            saveTasksForDate(task.originalDate, updatedOriginalTasks);
-                          }
-                        } else {
-                          // Complete the task
-                          haptic.success();
-
-                          const completedAt = new Date().toISOString();
-                          const startedAt = task.startedAt || task.scheduledFor || completedAt;
-                          const actualDuration = Math.round((new Date(completedAt) - new Date(startedAt)) / (1000 * 60));
-                          const durationAccuracy = calculateDurationAccuracy(
-                            task.estimatedDuration || task.duration,
-                            actualDuration
-                          );
-
-                          setTasks(prev => prev.map(t =>
-                            t.id === task.id ? {
-                              ...t,
-                              completed: true,
-                              remaining: 0,
-                              completedAt,
-                              actualDuration,
-                              durationAccuracy
-                            } : t
-                          ));
-
-                          // Save analytics
-                          const taskToSave = {
-                            ...task,
-                            completedAt,
-                            actualDuration,
-                            durationAccuracy
-                          };
-                          saveTaskToHistory(taskToSave);
-                          trackCompletionByHour(taskToSave);
-                          trackRescheduleOption('complete');
-
-                          // If completing a carried task, mark it as completed in original date
-                          if (task.carriedOver && task.originalDate) {
-                            const originalTasks = loadTasksForDate(task.originalDate);
-                            const updatedOriginalTasks = originalTasks.map(t =>
-                              t.name === task.name ? { ...t, completed: true, remaining: 0 } : t
-                            );
-                            saveTasksForDate(task.originalDate, updatedOriginalTasks);
-                          }
-
-                          setShowCelebration('task');
-                          setTimeout(() => setShowCelebration(null), 3000);
-                        }
-                      }}
-                      onDelete={() => deleteTask(task.id)}
-                      onEdit={() => handleEditTask(task)}
-                      showSwipeActions={activeTaskId !== task.id}
-                    />
-                      </MobileSortableTask>
-                  ))}
-                </div>
-                </SortableContext>
-              </div>
-            )}
-
-            {/* All tasks hidden/complete message */}
-            {filterForFocus(carriedTasks).length === 0 && filterForFocus(todayTasks).length === 0 && (
-              <div style={{ textAlign: 'center', padding: '40px 20px' }}>
-                <div style={{ fontSize: '36px', marginBottom: '12px' }}>✨</div>
-                <p style={{ fontSize: '15px', fontWeight: 600, color: isDark ? '#E8F0E8' : '#1A1A1A', margin: '0 0 4px' }}>
-                  All complete!
-                </p>
-                <p style={{ fontSize: '13px', color: isDark ? '#9CA59C' : '#8E8E93', margin: 0 }}>
-                  {focusModeEnabled ? 'Toggle focus mode off to see completed tasks' : 'Great job finishing your tasks'}
-                </p>
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* ---- FAB ---- */}
-        {!activeTask && !(focusModeEnabled && activeTaskId) && (
-          <button
-            type="button"
-            onClick={() => { setShowAddSheet(true); haptic.medium(); }}
-            style={{
-              position: 'fixed', bottom: '80px', right: '20px',
-              width: '52px', height: '52px', borderRadius: '50%',
-              background: '#3B6E3B', color: '#fff', border: 'none',
-              fontSize: '26px', fontWeight: 300, lineHeight: 1,
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              boxShadow: '0 4px 14px rgba(59,110,59,0.35), 0 8px 28px rgba(59,110,59,0.2)',
-              cursor: 'pointer', touchAction: 'manipulation',
-              WebkitTapHighlightColor: 'transparent', zIndex: 150
-            }}
-            aria-label="Add task"
-          >+</button>
-        )}
-
-        {/* ---- Add Task Bottom Sheet ---- */}
-        {showAddSheet && (
-          <>
-            <div onClick={() => setShowAddSheet(false)} style={{
-              position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.3)',
-              backdropFilter: 'blur(4px)', WebkitBackdropFilter: 'blur(4px)', zIndex: 1000
-            }} />
-            <div style={{
-              position: 'fixed', bottom: 'calc(56px + env(safe-area-inset-bottom))', left: 0, right: 0,
-              background: isDark ? '#242B24' : '#fff', borderRadius: '18px 18px 0 0',
-              padding: '14px 18px 20px',
-              zIndex: 1001, boxShadow: isDark ? '0 -4px 20px rgba(0,0,0,0.5)' : '0 -4px 20px rgba(0,0,0,0.1)',
-              maxHeight: 'calc(80vh - 56px - env(safe-area-inset-bottom))', overflowY: 'auto', animation: 'slideUp 0.3s ease-out'
-            }}>
-              <div style={{ width: '32px', height: '4px', background: isDark ? '#6B7B6B' : '#D1D5DB', borderRadius: '99px', margin: '0 auto 12px' }} />
-              <h3 style={{ fontSize: '16px', fontWeight: 700, color: isDark ? '#E8F0E8' : '#1A1A1A', margin: '0 0 12px', textAlign: 'center' }}>New Task</h3>
-
-              {/* Name */}
-              <input
-                type="text" value={taskName} onChange={(e) => setTaskName(e.target.value)}
-                placeholder="What needs to be done?"
-                style={{
-                  width: '100%',
-                  height: '44px',
-                  boxSizing: 'border-box',
-                  fontSize: '16px',
-                  padding: '0 14px',
-                  border: `1.5px solid ${isDark ? '#6B7B6B' : '#E5E5E5'}`,
-                  borderRadius: '10px',
-                  background: isDark ? '#1A1F1A' : '#FAFAFA',
-                  color: isDark ? '#E8F0E8' : '#1A1A1A',
-                  outline: 'none',
-                  marginBottom: '10px'
-                }}
-                onFocus={(e) => e.target.style.borderColor = '#3B6E3B'}
-                onBlur={(e) => e.target.style.borderColor = isDark ? '#6B7B6B' : '#E5E5E5'}
-              />
-
-              {/* Time + Duration row */}
-              <div style={{ display: 'flex', gap: '8px', marginBottom: '10px' }}>
-                <div style={{ flex: 1 }}>
-                  <label style={{ fontSize: '11px', fontWeight: 600, color: isDark ? '#9CA59C' : '#8E8E93', marginBottom: '6px', display: 'block' }}>Start</label>
-                  <div style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    height: '44px',
-                    border: `1.5px solid ${isDark ? '#6B7B6B' : '#E5E5E5'}`,
-                    borderRadius: '10px',
-                    background: isDark ? '#1A1F1A' : '#FAFAFA',
-                    padding: '0 12px',
-                    boxSizing: 'border-box'
-                  }}>
-                    <input type="time" value={taskStartTime} onChange={(e) => setTaskStartTime(e.target.value)}
-                      style={{
-                        fontSize: '16px',
-                        padding: 0,
-                        border: 'none',
-                        outline: 'none',
-                        flex: 1,
-                        background: 'transparent',
-                        color: isDark ? '#E8F0E8' : '#1A1A1A',
-                        width: '100%',
-                        height: '100%'
-                      }}
-                    />
-                  </div>
-                </div>
-                <div style={{ flex: 1 }}>
-                  <label style={{ fontSize: '11px', fontWeight: 600, color: isDark ? '#9CA59C' : '#8E8E93', marginBottom: '6px', display: 'block' }}>Duration</label>
-                  <div style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    height: '44px',
-                    border: `1.5px solid ${isDark ? '#6B7B6B' : '#E5E5E5'}`,
-                    borderRadius: '10px',
-                    background: isDark ? '#1A1F1A' : '#FAFAFA',
-                    padding: '0 12px',
-                    boxSizing: 'border-box'
-                  }}>
-                    <input type="number" value={taskDuration} onChange={(e) => setTaskDuration(e.target.value)}
-                      placeholder="30" min="1"
-                      style={{
-                        fontSize: '16px',
-                        padding: 0,
-                        border: 'none',
-                        outline: 'none',
-                        flex: 1,
-                        background: 'transparent',
-                        color: isDark ? '#E8F0E8' : '#1A1A1A',
-                        textAlign: 'center',
-                        width: '100%',
-                        height: '100%'
-                      }}
-                    />
-                    <span style={{ color: isDark ? '#9CA59C' : '#8E8E93', fontSize: '12px', fontWeight: 500, marginLeft: '4px', flexShrink: 0 }}>min</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Deadline */}
-              <div style={{ marginBottom: '10px' }}>
-                <label style={{ fontSize: '11px', fontWeight: 600, color: isDark ? '#9CA59C' : '#8E8E93', marginBottom: '6px', display: 'block' }}>Deadline (optional)</label>
-                <div style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  height: '44px',
-                  border: `1.5px solid ${isDark ? '#6B7B6B' : '#E5E5E5'}`,
-                  borderRadius: '10px',
-                  background: isDark ? '#1A1F1A' : '#FAFAFA',
-                  padding: '0 12px',
-                  boxSizing: 'border-box',
-                  gap: '8px'
-                }}>
-                  <input type="date" value={taskDeadline} onChange={(e) => setTaskDeadline(e.target.value)}
-                    style={{
-                      fontSize: '16px',
-                      padding: 0,
-                      border: 'none',
-                      outline: 'none',
-                      flex: 1,
-                      background: 'transparent',
-                      color: isDark ? '#E8F0E8' : '#1A1A1A',
-                      width: '100%',
-                      height: '100%'
-                    }}
-                  />
-                  {taskDeadline && (
-                    <button
-                      onClick={() => setTaskDeadline('')}
-                      style={{
-                        width: '20px',
-                        height: '20px',
-                        borderRadius: '50%',
-                        background: '#D1D5DB',
-                        color: '#fff',
-                        border: 'none',
-                        fontSize: '12px',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        cursor: 'pointer',
-                        flexShrink: 0,
-                        padding: 0,
-                        lineHeight: 1
-                      }}
-                      aria-label="Clear deadline"
-                    >×</button>
-                  )}
-                </div>
-              </div>
-
-              {/* Duration Suggestion */}
-              {durationSuggestion && !taskDuration && (
-                <div style={{
-                  display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                  padding: '8px 12px', marginBottom: '10px', background: '#F5FAF5', borderRadius: '8px'
-                }}>
-                  <span style={{ fontSize: '12px', fontWeight: 500, color: '#3B6E3B' }}>Usually {durationSuggestion.suggested} min</span>
-                  <button type="button" onClick={() => setTaskDuration(durationSuggestion.suggested.toString())}
-                    style={{ padding: '4px 12px', borderRadius: '6px', border: 'none', background: '#3B6E3B', color: '#fff', fontSize: '11px', fontWeight: 600, cursor: 'pointer', touchAction: 'manipulation' }}>
-                    Use
-                  </button>
+                  <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: isDark ? 'rgba(59,110,59,0.2)' : 'rgba(59,110,59,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '18px', flexShrink: 0 }}>🌿</div>
                 </div>
               )}
 
-              {/* Presets */}
-              <div style={{ display: 'flex', gap: '6px', marginBottom: '12px', flexWrap: 'wrap' }}>
-                {[{n:"Break",d:15},{n:"Meeting",d:30},{n:"Deep Work",d:90},{n:"Email",d:20}].map(p => (
-                  <button type="button" key={p.n} onClick={() => { setTaskName(p.n); setTaskDuration(p.d.toString()); haptic.light(); }}
-                    style={{ padding: '6px 12px', borderRadius: '99px', border: `1px solid ${isDark ? '#6B7B6B' : '#E5E5E5'}`, background: isDark ? '#1A1F1A' : '#fff', color: isDark ? '#E8F0E8' : '#1A1A1A', fontSize: '12px', fontWeight: 500, cursor: 'pointer', touchAction: 'manipulation' }}>
-                    {p.n} · {p.d}m
-                  </button>
-                ))}
-              </div>
+              {/* Horizontal Timeline */}
+              {scheduledTaskHours.size > 0 && (
+                <div style={{ background: isDark ? '#242B24' : '#fff', borderRadius: '16px', padding: '14px 16px', marginBottom: '12px', boxShadow: isDark ? '0 1px 8px rgba(0,0,0,0.3)' : '0 2px 12px rgba(0,0,0,0.06)', border: isDark ? 'none' : '1px solid rgba(0,0,0,0.04)' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                    <span style={{ fontSize: '13px', fontWeight: 700, color: isDark ? '#E8F0E8' : '#1A1A1A' }}>Timeline</span>
+                    <span style={{ fontSize: '10px', fontWeight: 700, color: '#3B6E3B', background: isDark ? 'rgba(59,110,59,0.2)' : 'rgba(59,110,59,0.1)', padding: '2px 8px', borderRadius: '6px' }}>
+                      Now: {new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}
+                    </span>
+                  </div>
+                  <div style={{ overflowX: 'auto', msOverflowStyle: 'none', scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch' }}>
+                    <div style={{ display: 'flex', gap: '20px', minWidth: 'max-content', alignItems: 'flex-end', height: '52px', paddingBottom: '2px' }}>
+                      {timeMarkers.map((marker, i) => (
+                        <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '5px' }}>
+                          <div style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            <div style={{ width: marker.isCurrent ? '5px' : '3px', height: marker.isCurrent ? '32px' : marker.hasTask ? '22px' : '12px', borderRadius: '99px', background: marker.isCurrent ? '#3B6E3B' : marker.hasTask ? (isDark ? 'rgba(111,175,111,0.5)' : 'rgba(59,110,59,0.35)') : (isDark ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.1)'), transition: 'height 0.3s ease' }} />
+                            {marker.isCurrent && <div style={{ position: 'absolute', width: '10px', height: '10px', borderRadius: '50%', background: '#fff', border: '2.5px solid #3B6E3B', boxShadow: '0 0 6px rgba(59,110,59,0.4)' }} />}
+                          </div>
+                          <span style={{ fontSize: '10px', fontWeight: marker.isCurrent ? 700 : 500, color: marker.isCurrent ? '#3B6E3B' : (isDark ? '#9CA59C' : '#8E8E93'), whiteSpace: 'nowrap' }}>{marker.label}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
 
-              {/* Add Button */}
-              <button type="button" onClick={() => { addTask(); setShowAddSheet(false); }}
-                style={{ width: '100%', padding: '14px', borderRadius: '12px', background: '#3B6E3B', color: '#fff', fontSize: '15px', fontWeight: 700, border: 'none', cursor: 'pointer', touchAction: 'manipulation' }}>
-                Add Task
-              </button>
+              {/* Streak */}
+              {streak && streak.current > 0 && (
+                <div style={{ marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  <span style={{ fontSize: '14px' }}>🌿</span>
+                  <span style={{ fontSize: '11px', fontWeight: 600, color: '#3B6E3B' }}>{streak.current} day streak</span>
+                </div>
+              )}
+            </>
+          ) : (
+            /* Active Timer Hero */
+            <div style={{
+              background: isDark ? '#242B24' : '#fff', borderRadius: '16px', padding: '16px',
+              marginBottom: '12px', boxShadow: isDark ? '0 1px 8px rgba(0,0,0,0.3)' : '0 1px 8px rgba(0,0,0,0.05)'
+            }}>
+              <TaskTimerComponent
+                activeTask={activeTask}
+                secondsLeft={secondsLeft}
+                totalSeconds={activeInitialSecRef.current}
+                onFinishEarly={openFinishPrompt}
+                onPauseResume={handlePauseResume}
+                onCancel={handleCancelTask}
+                isPaused={isPaused}
+              />
             </div>
-          </>
-        )}
+          )}
 
-        {/* ---- Modals ---- */}
-        <Suspense fallback={<div />}>
-          {showRescheduleModal && activeTask && (
-            <RescheduleModal
-              task={activeTask}
-              availability={availability}
-              existingTasks={taskBlocks}
-              onComplete={handleComplete}
-              onContinue={handleContinue}
-              onLaterToday={handleLaterToday}
-              onTomorrow={handleTomorrow}
-              onBackToPool={handleBackToPool}
-              onPickTime={handlePickTime}
-              onBreakTask={handleBreakTask}
-              onClose={() => setShowRescheduleModal(false)}
+          {/* ---- First-Time Tooltip ---- */}
+          {showTooltip && (
+            <FirstTimeTooltip
+              title={TOOLTIP_CONTENT.today.title}
+              description={TOOLTIP_CONTENT.today.description}
+              icon={TOOLTIP_CONTENT.today.icon}
+              onDismiss={() => {
+                setShowTooltip(false);
+                markTooltipSeen('today');
+              }}
             />
           )}
 
-          {showEditDialog && editingTask && (
-            <EditTaskDialog
-              task={editingTask}
-              onSave={handleSaveEditedTask}
-              onClose={() => { setShowEditDialog(false); setEditingTask(null); }}
-            />
+          {/* ---- Stat Pills ---- */}
+          {!activeTask && tasks.length > 0 && !(focusModeEnabled && activeTaskId) && (
+            <div style={{ display: 'flex', gap: '8px', marginBottom: '14px' }}>
+              {[
+                { label: `${Math.floor(totalMinutes / 60)}h ${totalMinutes % 60}m`, sub: 'Scheduled' },
+                { label: `${Math.floor(Math.abs(freeTime) / 60)}h ${Math.abs(freeTime) % 60}m`, sub: overflowing ? 'Overflow' : 'Free', warn: overflowing },
+                { label: `${tasks.length}`, sub: 'Tasks' }
+              ].map((pill, i) => (
+                <div key={i} style={{
+                  flex: 1, padding: '10px 8px',
+                  background: pill.warn ? 'rgba(220,38,38,0.05)' : (isDark ? '#242B24' : '#fff'),
+                  borderRadius: '12px', boxShadow: isDark ? '0 1px 4px rgba(0,0,0,0.2)' : '0 1px 4px rgba(0,0,0,0.04)',
+                  textAlign: 'center'
+                }}>
+                  <div style={{ fontSize: '14px', fontWeight: 700, color: pill.warn ? '#DC2626' : (isDark ? '#E8F0E8' : '#1A1A1A') }}>{pill.label}</div>
+                  <div style={{ fontSize: '10px', color: pill.warn ? '#DC2626' : (isDark ? '#9CA59C' : '#8E8E93'), fontWeight: 500, marginTop: '1px' }}>{pill.sub}</div>
+                </div>
+              ))}
+            </div>
           )}
-        </Suspense>
 
-        {showCelebration && (
-          <Celebration type={showCelebration} onComplete={() => setShowCelebration(null)} />
-        )}
-      </MobileLayout>
+          {/* ---- Overflow Warning ---- */}
+          {overflowing && !activeTask && !(focusModeEnabled && activeTaskId) && (
+            <div style={{
+              padding: '10px 14px', marginBottom: '12px', borderRadius: '10px',
+              background: overflowData.severity === 'critical' ? 'rgba(220,38,38,0.06)' : 'rgba(245,158,11,0.06)',
+              display: 'flex', alignItems: 'center', gap: '8px',
+              fontSize: '12px', fontWeight: 600,
+              color: overflowData.severity === 'critical' ? '#DC2626' : '#D97706'
+            }}>
+              <span>{overflowData.severity === 'critical' ? '🔴' : '🟡'}</span>
+              <span>Schedule overflows by {Math.floor(Math.abs(freeTime) / 60)}h {Math.abs(freeTime) % 60}m</span>
+            </div>
+          )}
+
+          {/* ---- Focus Mode Indicator ---- */}
+          {focusModeEnabled && (
+            <div style={{
+              padding: '8px 12px', marginBottom: '12px', borderRadius: '10px',
+              background: 'rgba(59,110,59,0.06)', textAlign: 'center',
+              fontSize: '12px', fontWeight: 600, color: '#3B6E3B'
+            }}>
+              🎯 Focus Mode {!activeTaskId && '• Hiding completed tasks'}
+            </div>
+          )}
+
+          {/* ---- Task List / Calendar View ---- */}
+          {viewMode === 'calendar' ? (
+            <DailyCalendar />
+          ) : tasks.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: '40px 20px' }}>
+              <div style={{ fontSize: '36px', marginBottom: '12px' }}>🌱</div>
+              <p style={{ fontSize: '15px', fontWeight: 600, color: isDark ? '#E8F0E8' : '#1A1A1A', margin: '0 0 4px' }}>Start your day</p>
+              <p style={{ fontSize: '13px', color: isDark ? '#9CA59C' : '#8E8E93', margin: 0 }}>Tap + to add your first task</p>
+            </div>
+          ) : (
+            <div>
+              {/* SearchBar */}
+              <SearchBar
+                onSearch={setSearchQuery}
+                placeholder="Search today's tasks..."
+              />
+
+              {/* Carried Over */}
+              {filterForFocus(filterTasksBySearch(carriedTasks)).length > 0 && (
+                <div style={{ marginBottom: '14px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px', paddingLeft: '2px' }}>
+                    <span style={{ fontSize: '11px', fontWeight: 800, color: '#D97706', textTransform: 'uppercase', letterSpacing: '0.8px' }}>
+                      Carried Over
+                    </span>
+                    <span style={{ fontSize: '10px', fontWeight: 700, background: 'rgba(217,119,6,0.12)', color: '#D97706', padding: '2px 7px', borderRadius: '99px' }}>
+                      {filterForFocus(filterTasksBySearch(carriedTasks)).length}
+                    </span>
+                  </div>
+                  <SortableContext
+                    items={filterForFocus(filterTasksBySearch(carriedTasks)).map(t => t.id)}
+                    strategy={verticalListSortingStrategy}
+                  >
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                      {filterForFocus(filterTasksBySearch(carriedTasks)).map((task, i) => (
+                        <MobileSortableTask key={task.id} task={task} isActive={activeTaskId === task.id}>
+                          <TaskCard
+                            task={{
+                              ...task, position: i + 1,
+                              startTime: minutesToHHMM(task.start),
+                              endTime: minutesToHHMM(task.end),
+                              conflicts: hasConflict(task.id)
+                            }}
+                            isActive={activeTaskId === task.id}
+                            isUpNext={task.id === upNextTaskId}
+                            onStart={() => startTask(task)}
+                            onComplete={() => {
+                              const isCurrentlyCompleted = task.completed;
+
+                              if (isCurrentlyCompleted) {
+                                // Uncomplete the task
+                                haptic.light();
+                                setTasks(prev => prev.map(t =>
+                                  t.id === task.id ? { ...t, completed: false, remaining: task.duration, completedAt: null } : t
+                                ));
+
+                                // If uncompleting a carried task, mark it as incomplete in original date
+                                if (task.carriedOver && task.originalDate) {
+                                  const originalTasks = loadTasksForDate(task.originalDate);
+                                  const updatedOriginalTasks = originalTasks.map(t =>
+                                    t.name === task.name ? { ...t, completed: false, remaining: t.duration } : t
+                                  );
+                                  saveTasksForDate(task.originalDate, updatedOriginalTasks);
+                                }
+                              } else {
+                                // Complete the task
+                                haptic.success();
+
+                                const completedAt = new Date().toISOString();
+                                const startedAt = task.startedAt || task.scheduledFor || completedAt;
+                                const actualDuration = Math.round((new Date(completedAt) - new Date(startedAt)) / (1000 * 60));
+                                const durationAccuracy = calculateDurationAccuracy(
+                                  task.estimatedDuration || task.duration,
+                                  actualDuration
+                                );
+
+                                setTasks(prev => prev.map(t =>
+                                  t.id === task.id ? {
+                                    ...t,
+                                    completed: true,
+                                    remaining: 0,
+                                    completedAt,
+                                    actualDuration,
+                                    durationAccuracy
+                                  } : t
+                                ));
+
+                                // Save analytics
+                                const taskToSave = {
+                                  ...task,
+                                  completedAt,
+                                  actualDuration,
+                                  durationAccuracy
+                                };
+                                saveTaskToHistory(taskToSave);
+                                trackCompletionByHour(taskToSave);
+                                trackRescheduleOption('complete');
+
+                                // If completing a carried task, mark it as completed in original date
+                                if (task.carriedOver && task.originalDate) {
+                                  const originalTasks = loadTasksForDate(task.originalDate);
+                                  const updatedOriginalTasks = originalTasks.map(t =>
+                                    t.name === task.name ? { ...t, completed: true, remaining: 0 } : t
+                                  );
+                                  saveTasksForDate(task.originalDate, updatedOriginalTasks);
+                                }
+
+                                setShowCelebration('task');
+                                setTimeout(() => setShowCelebration(null), 3000);
+                              }
+                            }}
+                            onDelete={() => deleteTask(task.id)}
+                            onEdit={() => handleEditTask(task)}
+                            showSwipeActions={activeTaskId !== task.id}
+                          />
+                        </MobileSortableTask>
+                      ))}
+                    </div>
+                  </SortableContext>
+                </div>
+              )}
+
+              {/* Today's Tasks */}
+              {filterForFocus(filterTasksBySearch(todayTasks)).length > 0 && (
+                <div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px', paddingLeft: '2px' }}>
+                    <span style={{ fontSize: '11px', fontWeight: 800, color: isDark ? '#E8F0E8' : '#1A1A1A', textTransform: 'uppercase', letterSpacing: '0.8px' }}>
+                      Today
+                    </span>
+                    <span style={{ fontSize: '10px', fontWeight: 700, background: 'rgba(59,110,59,0.1)', color: '#3B6E3B', padding: '2px 7px', borderRadius: '99px' }}>
+                      {filterForFocus(filterTasksBySearch(todayTasks)).length}
+                    </span>
+                  </div>
+                  <SortableContext
+                    items={filterForFocus(filterTasksBySearch(todayTasks)).map(t => t.id)}
+                    strategy={verticalListSortingStrategy}
+                  >
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                      {filterForFocus(filterTasksBySearch(todayTasks)).map((task, i) => (
+                        <MobileSortableTask key={task.id} task={task} isActive={activeTaskId === task.id}>
+                          <TaskCard
+                            task={{
+                              ...task, position: i + 1,
+                              startTime: minutesToHHMM(task.start),
+                              endTime: minutesToHHMM(task.end),
+                              conflicts: hasConflict(task.id)
+                            }}
+                            isActive={activeTaskId === task.id}
+                            isUpNext={task.id === upNextTaskId}
+                            onStart={() => startTask(task)}
+                            onComplete={() => {
+                              const isCurrentlyCompleted = task.completed;
+
+                              if (isCurrentlyCompleted) {
+                                // Uncomplete the task
+                                haptic.light();
+                                setTasks(prev => prev.map(t =>
+                                  t.id === task.id ? { ...t, completed: false, remaining: task.duration, completedAt: null } : t
+                                ));
+
+                                // If uncompleting a carried task, mark it as incomplete in original date
+                                if (task.carriedOver && task.originalDate) {
+                                  const originalTasks = loadTasksForDate(task.originalDate);
+                                  const updatedOriginalTasks = originalTasks.map(t =>
+                                    t.name === task.name ? { ...t, completed: false, remaining: t.duration } : t
+                                  );
+                                  saveTasksForDate(task.originalDate, updatedOriginalTasks);
+                                }
+                              } else {
+                                // Complete the task
+                                haptic.success();
+
+                                const completedAt = new Date().toISOString();
+                                const startedAt = task.startedAt || task.scheduledFor || completedAt;
+                                const actualDuration = Math.round((new Date(completedAt) - new Date(startedAt)) / (1000 * 60));
+                                const durationAccuracy = calculateDurationAccuracy(
+                                  task.estimatedDuration || task.duration,
+                                  actualDuration
+                                );
+
+                                setTasks(prev => prev.map(t =>
+                                  t.id === task.id ? {
+                                    ...t,
+                                    completed: true,
+                                    remaining: 0,
+                                    completedAt,
+                                    actualDuration,
+                                    durationAccuracy
+                                  } : t
+                                ));
+
+                                // Save analytics
+                                const taskToSave = {
+                                  ...task,
+                                  completedAt,
+                                  actualDuration,
+                                  durationAccuracy
+                                };
+                                saveTaskToHistory(taskToSave);
+                                trackCompletionByHour(taskToSave);
+                                trackRescheduleOption('complete');
+
+                                // If completing a carried task, mark it as completed in original date
+                                if (task.carriedOver && task.originalDate) {
+                                  const originalTasks = loadTasksForDate(task.originalDate);
+                                  const updatedOriginalTasks = originalTasks.map(t =>
+                                    t.name === task.name ? { ...t, completed: true, remaining: 0 } : t
+                                  );
+                                  saveTasksForDate(task.originalDate, updatedOriginalTasks);
+                                }
+
+                                setShowCelebration('task');
+                                setTimeout(() => setShowCelebration(null), 3000);
+                              }
+                            }}
+                            onDelete={() => deleteTask(task.id)}
+                            onEdit={() => handleEditTask(task)}
+                            showSwipeActions={activeTaskId !== task.id}
+                          />
+                        </MobileSortableTask>
+                      ))}
+                    </div>
+                  </SortableContext>
+                </div>
+              )}
+
+              {/* All tasks hidden/complete message */}
+              {filterForFocus(carriedTasks).length === 0 && filterForFocus(todayTasks).length === 0 && (
+                <div style={{ textAlign: 'center', padding: '40px 20px' }}>
+                  <div style={{ fontSize: '36px', marginBottom: '12px' }}>✨</div>
+                  <p style={{ fontSize: '15px', fontWeight: 600, color: isDark ? '#E8F0E8' : '#1A1A1A', margin: '0 0 4px' }}>
+                    All complete!
+                  </p>
+                  <p style={{ fontSize: '13px', color: isDark ? '#9CA59C' : '#8E8E93', margin: 0 }}>
+                    {focusModeEnabled ? 'Toggle focus mode off to see completed tasks' : 'Great job finishing your tasks'}
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* ---- FAB ---- */}
+          {!activeTask && !(focusModeEnabled && activeTaskId) && (
+            <button
+              type="button"
+              onClick={() => { setShowAddSheet(true); haptic.medium(); }}
+              style={{
+                position: 'fixed', bottom: '80px', right: '20px',
+                width: '52px', height: '52px', borderRadius: '50%',
+                background: '#3B6E3B', color: '#fff', border: 'none',
+                fontSize: '26px', fontWeight: 300, lineHeight: 1,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                boxShadow: '0 4px 14px rgba(59,110,59,0.35), 0 8px 28px rgba(59,110,59,0.2)',
+                cursor: 'pointer', touchAction: 'manipulation',
+                WebkitTapHighlightColor: 'transparent', zIndex: 150
+              }}
+              aria-label="Add task"
+            >+</button>
+          )}
+
+          {/* ---- Add Task Bottom Sheet ---- */}
+          {showAddSheet && (
+            <>
+              <div onClick={() => setShowAddSheet(false)} style={{
+                position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.3)',
+                backdropFilter: 'blur(4px)', WebkitBackdropFilter: 'blur(4px)', zIndex: 1000
+              }} />
+              <div style={{
+                position: 'fixed', bottom: 'calc(56px + env(safe-area-inset-bottom))', left: 0, right: 0,
+                background: isDark ? '#242B24' : '#fff', borderRadius: '18px 18px 0 0',
+                padding: '14px 18px 20px',
+                zIndex: 1001, boxShadow: isDark ? '0 -4px 20px rgba(0,0,0,0.5)' : '0 -4px 20px rgba(0,0,0,0.1)',
+                maxHeight: 'calc(80vh - 56px - env(safe-area-inset-bottom))', overflowY: 'auto', animation: 'slideUp 0.3s ease-out'
+              }}>
+                <div style={{ width: '32px', height: '4px', background: isDark ? '#6B7B6B' : '#D1D5DB', borderRadius: '99px', margin: '0 auto 12px' }} />
+                <h3 style={{ fontSize: '16px', fontWeight: 700, color: isDark ? '#E8F0E8' : '#1A1A1A', margin: '0 0 12px', textAlign: 'center' }}>New Task</h3>
+
+                {/* Name */}
+                <input
+                  type="text" value={taskName} onChange={(e) => setTaskName(e.target.value)}
+                  placeholder="What needs to be done?"
+                  style={{
+                    width: '100%',
+                    height: '44px',
+                    boxSizing: 'border-box',
+                    fontSize: '16px',
+                    padding: '0 14px',
+                    border: `1.5px solid ${isDark ? '#6B7B6B' : '#E5E5E5'}`,
+                    borderRadius: '10px',
+                    background: isDark ? '#1A1F1A' : '#FAFAFA',
+                    color: isDark ? '#E8F0E8' : '#1A1A1A',
+                    outline: 'none',
+                    marginBottom: '10px'
+                  }}
+                  onFocus={(e) => e.target.style.borderColor = '#3B6E3B'}
+                  onBlur={(e) => e.target.style.borderColor = isDark ? '#6B7B6B' : '#E5E5E5'}
+                />
+
+                {/* Time + Duration row */}
+                <div style={{ display: 'flex', gap: '8px', marginBottom: '10px' }}>
+                  <div style={{ flex: 1 }}>
+                    <label style={{ fontSize: '11px', fontWeight: 600, color: isDark ? '#9CA59C' : '#8E8E93', marginBottom: '6px', display: 'block' }}>Start</label>
+                    <div style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      height: '44px',
+                      border: `1.5px solid ${isDark ? '#6B7B6B' : '#E5E5E5'}`,
+                      borderRadius: '10px',
+                      background: isDark ? '#1A1F1A' : '#FAFAFA',
+                      padding: '0 12px',
+                      boxSizing: 'border-box'
+                    }}>
+                      <input type="time" value={taskStartTime} onChange={(e) => setTaskStartTime(e.target.value)}
+                        style={{
+                          fontSize: '16px',
+                          padding: 0,
+                          border: 'none',
+                          outline: 'none',
+                          flex: 1,
+                          background: 'transparent',
+                          color: isDark ? '#E8F0E8' : '#1A1A1A',
+                          width: '100%',
+                          height: '100%'
+                        }}
+                      />
+                    </div>
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <label style={{ fontSize: '11px', fontWeight: 600, color: isDark ? '#9CA59C' : '#8E8E93', marginBottom: '6px', display: 'block' }}>Duration</label>
+                    <div style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      height: '44px',
+                      border: `1.5px solid ${isDark ? '#6B7B6B' : '#E5E5E5'}`,
+                      borderRadius: '10px',
+                      background: isDark ? '#1A1F1A' : '#FAFAFA',
+                      padding: '0 12px',
+                      boxSizing: 'border-box'
+                    }}>
+                      <input type="number" value={taskDuration} onChange={(e) => setTaskDuration(e.target.value)}
+                        placeholder="30" min="1"
+                        style={{
+                          fontSize: '16px',
+                          padding: 0,
+                          border: 'none',
+                          outline: 'none',
+                          flex: 1,
+                          background: 'transparent',
+                          color: isDark ? '#E8F0E8' : '#1A1A1A',
+                          textAlign: 'center',
+                          width: '100%',
+                          height: '100%'
+                        }}
+                      />
+                      <span style={{ color: isDark ? '#9CA59C' : '#8E8E93', fontSize: '12px', fontWeight: 500, marginLeft: '4px', flexShrink: 0 }}>min</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Deadline */}
+                <div style={{ marginBottom: '10px' }}>
+                  <label style={{ fontSize: '11px', fontWeight: 600, color: isDark ? '#9CA59C' : '#8E8E93', marginBottom: '6px', display: 'block' }}>Deadline (optional)</label>
+                  <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    height: '44px',
+                    border: `1.5px solid ${isDark ? '#6B7B6B' : '#E5E5E5'}`,
+                    borderRadius: '10px',
+                    background: isDark ? '#1A1F1A' : '#FAFAFA',
+                    padding: '0 12px',
+                    boxSizing: 'border-box',
+                    gap: '8px'
+                  }}>
+                    <input type="date" value={taskDeadline} onChange={(e) => setTaskDeadline(e.target.value)}
+                      style={{
+                        fontSize: '16px',
+                        padding: 0,
+                        border: 'none',
+                        outline: 'none',
+                        flex: 1,
+                        background: 'transparent',
+                        color: isDark ? '#E8F0E8' : '#1A1A1A',
+                        width: '100%',
+                        height: '100%'
+                      }}
+                    />
+                    {taskDeadline && (
+                      <button
+                        onClick={() => setTaskDeadline('')}
+                        style={{
+                          width: '20px',
+                          height: '20px',
+                          borderRadius: '50%',
+                          background: '#D1D5DB',
+                          color: '#fff',
+                          border: 'none',
+                          fontSize: '12px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          cursor: 'pointer',
+                          flexShrink: 0,
+                          padding: 0,
+                          lineHeight: 1
+                        }}
+                        aria-label="Clear deadline"
+                      >×</button>
+                    )}
+                  </div>
+                </div>
+
+                {/* Duration Suggestion */}
+                {durationSuggestion && !taskDuration && (
+                  <div style={{
+                    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                    padding: '8px 12px', marginBottom: '10px', background: '#F5FAF5', borderRadius: '8px'
+                  }}>
+                    <span style={{ fontSize: '12px', fontWeight: 500, color: '#3B6E3B' }}>Usually {durationSuggestion.suggested} min</span>
+                    <button type="button" onClick={() => setTaskDuration(durationSuggestion.suggested.toString())}
+                      style={{ padding: '4px 12px', borderRadius: '6px', border: 'none', background: '#3B6E3B', color: '#fff', fontSize: '11px', fontWeight: 600, cursor: 'pointer', touchAction: 'manipulation' }}>
+                      Use
+                    </button>
+                  </div>
+                )}
+
+                {/* Presets */}
+                <div style={{ display: 'flex', gap: '6px', marginBottom: '12px', flexWrap: 'wrap' }}>
+                  {[{ n: "Break", d: 15 }, { n: "Meeting", d: 30 }, { n: "Deep Work", d: 90 }, { n: "Email", d: 20 }].map(p => (
+                    <button type="button" key={p.n} onClick={() => { setTaskName(p.n); setTaskDuration(p.d.toString()); haptic.light(); }}
+                      style={{ padding: '6px 12px', borderRadius: '99px', border: `1px solid ${isDark ? '#6B7B6B' : '#E5E5E5'}`, background: isDark ? '#1A1F1A' : '#fff', color: isDark ? '#E8F0E8' : '#1A1A1A', fontSize: '12px', fontWeight: 500, cursor: 'pointer', touchAction: 'manipulation' }}>
+                      {p.n} · {p.d}m
+                    </button>
+                  ))}
+                </div>
+
+                {/* Add Button */}
+                <button type="button" onClick={() => { addTask(); setShowAddSheet(false); }}
+                  style={{ width: '100%', padding: '14px', borderRadius: '12px', background: '#3B6E3B', color: '#fff', fontSize: '15px', fontWeight: 700, border: 'none', cursor: 'pointer', touchAction: 'manipulation' }}>
+                  Add Task
+                </button>
+              </div>
+            </>
+          )}
+
+          {/* ---- Modals ---- */}
+          <Suspense fallback={<div />}>
+            {showRescheduleModal && activeTask && (
+              <RescheduleModal
+                task={activeTask}
+                availability={availability}
+                existingTasks={taskBlocks}
+                onComplete={handleComplete}
+                onContinue={handleContinue}
+                onLaterToday={handleLaterToday}
+                onTomorrow={handleTomorrow}
+                onBackToPool={handleBackToPool}
+                onPickTime={handlePickTime}
+                onBreakTask={handleBreakTask}
+                onClose={() => setShowRescheduleModal(false)}
+              />
+            )}
+
+            {showEditDialog && editingTask && (
+              <EditTaskDialog
+                task={editingTask}
+                onSave={handleSaveEditedTask}
+                onClose={() => { setShowEditDialog(false); setEditingTask(null); }}
+              />
+            )}
+          </Suspense>
+
+          {showCelebration && (
+            <Celebration type={showCelebration} onComplete={() => setShowCelebration(null)} />
+          )}
+        </MobileLayout>
       </DndContext>
     );
   }
@@ -1998,7 +1999,7 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
   return (
     <div className="setup-fullscreen nat-bg">
       <div className="setup-inner nat-card">
-        
+
         {/* Header */}
         <div className="setup-header" style={{ marginBottom: "22px" }}>
           <div className="header-left">
@@ -2200,7 +2201,7 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
                 <div className="preset-sub">Planned</div>
               </div>
               <div className="preset-pill" style={{ cursor: "default", minWidth: "140px", boxShadow: "0 2px 8px rgba(59,110,59,0.04)" }}>
-                <div className="preset-text">{Math.floor(totalMinutes/60)}h {totalMinutes%60}m</div>
+                <div className="preset-text">{Math.floor(totalMinutes / 60)}h {totalMinutes % 60}m</div>
                 <div className="preset-sub">Scheduled</div>
               </div>
               <div className="preset-pill" style={{
@@ -2209,18 +2210,18 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
                 background: overflowData.severity === 'critical'
                   ? "linear-gradient(180deg, rgba(255,200,200,0.2), rgba(255,220,220,0.1))"
                   : overflowData.severity === 'warning'
-                  ? "linear-gradient(180deg, rgba(255,230,200,0.15), rgba(255,240,220,0.08))"
-                  : undefined,
+                    ? "linear-gradient(180deg, rgba(255,230,200,0.15), rgba(255,240,220,0.08))"
+                    : undefined,
                 boxShadow: "0 2px 8px rgba(59,110,59,0.04)"
               }}>
                 <div className="preset-text" style={{
                   color: overflowData.severity === 'critical'
                     ? "#b91c1c"
                     : overflowData.severity === 'warning'
-                    ? "#ea580c"
-                    : undefined
+                      ? "#ea580c"
+                      : undefined
                 }}>
-                  {Math.floor(Math.abs(freeTime)/60)}h {Math.abs(freeTime)%60}m
+                  {Math.floor(Math.abs(freeTime) / 60)}h {Math.abs(freeTime) % 60}m
                 </div>
                 <div className="preset-sub">
                   {overflowing ? `Overflow (${overflowData.severity})` : "Free Time"}
@@ -2441,7 +2442,7 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
 
             {/* Quick Add Presets */}
             <div className="presets horizontal-scroll" role="list">
-              {[{n:"Break",d:15},{n:"Meeting",d:30},{n:"Deep Work",d:90},{n:"Email",d:20}].map(p => (
+              {[{ n: "Break", d: 15 }, { n: "Meeting", d: 30 }, { n: "Deep Work", d: 90 }, { n: "Email", d: 20 }].map(p => (
                 <button
                   type="button"
                   key={p.n}
@@ -2497,9 +2498,9 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
             <div style={{ fontSize: "20px", fontWeight: 900, marginTop: 8, color: "#123a12" }}>{activeTask.name}</div>
 
             <div style={{ display: "flex", alignItems: "center", gap: 16, marginTop: 14 }}>
-              <div style={{ 
-                fontSize: "32px", 
-                fontWeight: 900, 
+              <div style={{
+                fontSize: "32px",
+                fontWeight: 900,
                 letterSpacing: "1px",
                 fontVariantNumeric: "tabular-nums",
                 color: "#3B6E3B",
@@ -2558,510 +2559,510 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
                 <span>{availability?.end || "17:00"}</span>
               </div>
 
-          <div className="timeline-bar" style={{ height: "auto", minHeight: "120px", padding: "16px 12px" }}>
-            {tasks.length === 0 ? (
-              <div style={{ textAlign: "center", padding: "30px 20px", opacity: 0.6 }}>
-                <LeafIcon size={36} fill="#C5D9C5" />
-                <p className="muted" style={{ marginTop: "12px", fontSize: "13px" }}>Add tasks to see your timeline</p>
-              </div>
-            ) : (
-              <DndContext
-                sensors={sensors}
-                collisionDetection={closestCenter}
-                onDragEnd={handleDragEnd}
-              >
-                <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-                  {/* Carried Over Tasks Section */}
-                {taskBlocks.filter(t => t.carriedOver).length > 0 && (
-                  <div>
-                    <div style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "8px",
-                      marginBottom: "12px",
-                      padding: "8px 12px",
-                      background: "linear-gradient(135deg, rgba(255,165,0,0.08), rgba(255,165,0,0.04))",
-                      borderRadius: "10px",
-                      border: "1.5px solid rgba(255,165,0,0.18)"
-                    }}>
-                      <span style={{ fontSize: "16px" }}>🍂</span>
-                      <h3 style={{ margin: 0, fontSize: "14px", fontWeight: "700", color: "#d97706" }}>
-                        Carried from previous days ({taskBlocks.filter(t => t.carriedOver).length})
-                      </h3>
-                    </div>
-                    <SortableContext
-                      items={taskBlocks.filter(t => t.carriedOver).map(t => t.id)}
-                      strategy={verticalListSortingStrategy}
-                    >
-                      <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
-                      {(() => {
-                        const carriedTasks = taskBlocks.filter(task => task.carriedOver).filter(task => {
-                          if (focusModeEnabled && activeTaskId) {
-                            if (task.id === activeTaskId) return true;
-                            if (task.completed) return false;
-                            const activeIndex = taskBlocks.findIndex(t => t.id === activeTaskId);
-                            const currentIndex = taskBlocks.findIndex(t => t.id === task.id);
-                            return currentIndex <= activeIndex;
-                          }
-                          return true;
-                        });
-                        const hasMultiple = carriedTasks.length > 1;
-
-                        return carriedTasks.map((task, i) => {
-                          const isActiveTask = activeTaskId === task.id;
-                          const shouldDim = activeTaskId && !isActiveTask;
-                          const health = getTaskHealth(task, tasks, availability);
-
-                          return (
-                            <SortableTaskItem
-                              task={task}
-                              key={task.id}
-                              sectionHasMultipleItems={hasMultiple}
-                              className={isActiveTask ? 'task-focused' : ''}
-                            style={{
-                      background: "linear-gradient(135deg, rgba(255,200,150,0.1), rgba(255,210,160,0.06))",
-                      border: `2px solid ${health.color}`,
-                      borderRadius: "16px",
-                      padding: "16px 18px",
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "14px",
-                      position: "relative",
-                      overflow: "hidden",
-                      opacity: shouldDim ? 0.4 : (task.completed ? 0.6 : 1),
-                      transition: "all 0.25s cubic-bezier(0.25, 0.46, 0.45, 0.94)",
-                      animation: "slideInFromLeft 0.4s ease-out",
-                      boxShadow: hasConflict(task.id)
-                        ? "0 2px 12px rgba(245,158,11,0.15)"
-                        : isActiveTask
-                        ? "0 0 0 3px rgba(111,175,111,0.3)"
-                        : "0 1px 3px rgba(255,165,0,0.06), 0 4px 12px rgba(255,165,0,0.08)"
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.boxShadow = "0 2px 8px rgba(255,165,0,0.1), 0 8px 24px rgba(255,165,0,0.12)";
-                      e.currentTarget.style.transform = "translateX(4px)";
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.boxShadow = "0 1px 3px rgba(255,165,0,0.06), 0 4px 12px rgba(255,165,0,0.08)";
-                      e.currentTarget.style.transform = "translateX(0)";
-                    }}
-                          >
-                            <div style={{
-                              position: "absolute",
-                              left: 0,
-                              top: 0,
-                              bottom: 0,
-                              width: "3px",
-                              background: "linear-gradient(180deg, #f59e0b, #d97706)"
-                            }} />
-
-                            <div style={{
-                              width: "36px",
-                              height: "36px",
-                              borderRadius: "50%",
-                              background: "linear-gradient(135deg, #f59e0b, #d97706)",
-                              display: "flex",
-                              alignItems: "center",
-                              justifyContent: "center",
-                              color: "#fff",
-                              fontSize: "14px",
-                              fontWeight: "700",
-                              flexShrink: 0,
-                              boxShadow: "0 4px 10px rgba(245,158,11,0.2)"
-                            }}>
-                              🍂
-                            </div>
-
-                            <div style={{ flex: 1 }}>
-                              <div style={{ fontSize: "15px", fontWeight: "700", color: "#c2410c", marginBottom: "4px", display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap" }}>
-                                <span>{task.name}{task.completed ? " (done)" : ""}</span>
-                                <button
-                                  className="delete-button"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    deleteTask(task.id);
-                                  }}
-                                  style={{
-                                    width: "18px",
-                                    height: "18px",
-                                    borderRadius: "50%",
-                                    display: "inline-flex",
-                                    alignItems: "center",
-                                    justifyContent: "center",
-                                    fontSize: "14px",
-                                    padding: 0,
-                                    marginLeft: "4px"
-                                  }}
-                                >
-                                  ×
-                                </button>
-                                {task.attempts > 0 && (
-                                  <span style={{
-                                    fontSize: "11px",
-                                    padding: "2px 6px",
-                                    background: "rgba(245,158,11,0.2)",
-                                    color: "#d97706",
-                                    borderRadius: "4px",
-                                    fontWeight: "600",
-                                    display: "inline-flex",
-                                    alignItems: "center",
-                                    gap: "3px"
-                                  }}>
-                                    🔁 {task.attempts}x
-                                  </span>
-                                )}
-                                {hasConflict(task.id) && (
-                                  <span style={{
-                                    fontSize: "11px",
-                                    padding: "2px 6px",
-                                    background: "rgba(245,158,11,0.15)",
-                                    color: "#d97706",
-                                    borderRadius: "4px",
-                                    fontWeight: "600",
-                                    display: "inline-flex",
-                                    alignItems: "center",
-                                    gap: "3px"
-                                  }}>
-                                    ⚠️ Conflict
-                                  </span>
-                                )}
-                                {(() => {
-                                  const urgency = getDeadlineUrgency(task);
-                                  if (!urgency) return null;
-                                  return (
-                                    <span style={{
-                                      fontSize: "11px",
-                                      padding: "2px 6px",
-                                      background: urgency.level === 'overdue' || urgency.level === 'today'
-                                        ? "rgba(220, 38, 38, 0.15)"
-                                        : urgency.level === 'tomorrow'
-                                        ? "rgba(245, 158, 11, 0.15)"
-                                        : "rgba(251, 191, 36, 0.12)",
-                                      color: urgency.color,
-                                      borderRadius: "4px",
-                                      fontWeight: "700",
-                                      display: "inline-flex",
-                                      alignItems: "center",
-                                      gap: "3px",
-                                      animation: urgency.shouldBlock ? "focusPulse 2s ease-in-out infinite" : "none"
-                                    }}>
-                                      {urgency.level === 'overdue' ? "🔴" : urgency.level === 'today' ? "🔴" : urgency.level === 'tomorrow' ? "⚠️" : "📅"} {urgency.message}
-                                    </span>
-                                  );
-                                })()}
-                                <span style={{ fontSize: "11px", padding: "2px 6px", background: "rgba(255,165,0,0.2)", color: "#c2410c", borderRadius: "4px", fontWeight: "600" }}>from {task.originalDate}</span>
-                                <TaskHealthIndicator health={health} compact={true} />
-                              </div>
-                              <div style={{ fontSize: "12px", color: "#92400e" }}>
-                                {minutesToHHMM(task.start)} — {minutesToHHMM(task.end)} • {renderBlockTimeText(task)}
-                              </div>
-                              {task.attempts >= 3 && (
-                                <div style={{
-                                  fontSize: "11px",
-                                  color: "#d97706",
-                                  marginTop: "6px",
-                                  padding: "4px 8px",
-                                  background: "rgba(255,165,0,0.1)",
-                                  borderRadius: "6px",
-                                  border: "1px dashed rgba(245,158,11,0.3)"
-                                }}>
-                                  ⚠️ Consider breaking this into smaller steps
-                                </div>
-                              )}
-                            </div>
-
-                            {!task.completed && activeTaskId !== task.id && (
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  startTask(task);
-                                }}
-                                style={{
-                                  padding: "8px 16px",
-                                  borderRadius: "10px",
-                                  border: "1.5px solid rgba(245,158,11,0.25)",
-                                  background: "linear-gradient(135deg, rgba(245,158,11,0.15), rgba(217,119,6,0.1))",
-                                  color: "#c2410c",
-                                  fontSize: "13px",
-                                  fontWeight: "600",
-                                  cursor: "pointer",
-                                  transition: "all 0.25s cubic-bezier(0.25, 0.46, 0.45, 0.94)",
-                                  boxShadow: "0 2px 6px rgba(245,158,11,0.1)",
-                                  flexShrink: 0,
-                                  position: "relative",
-                                  zIndex: 100,
-                                  pointerEvents: "auto"
-                                }}
-                                onMouseEnter={(e) => {
-                                  e.currentTarget.style.background = "linear-gradient(135deg, rgba(245,158,11,0.25), rgba(217,119,6,0.2))";
-                                  e.currentTarget.style.transform = "translateY(-2px)";
-                                  e.currentTarget.style.boxShadow = "0 4px 8px rgba(245,158,11,0.2)";
-                                }}
-                                onMouseLeave={(e) => {
-                                  e.currentTarget.style.background = "linear-gradient(135deg, rgba(245,158,11,0.15), rgba(217,119,6,0.1))";
-                                  e.currentTarget.style.transform = "translateY(0)";
-                                  e.currentTarget.style.boxShadow = "0 2px 4px rgba(245,158,11,0.1)";
-                                }}
-                              >
-                                Start →
-                              </button>
-                            )}
-                          </SortableTaskItem>
-                        );
-                      });
-                    })()}
-                    </div>
-                    </SortableContext>
+              <div className="timeline-bar" style={{ height: "auto", minHeight: "120px", padding: "16px 12px" }}>
+                {tasks.length === 0 ? (
+                  <div style={{ textAlign: "center", padding: "30px 20px", opacity: 0.6 }}>
+                    <LeafIcon size={36} fill="#C5D9C5" />
+                    <p className="muted" style={{ marginTop: "12px", fontSize: "13px" }}>Add tasks to see your timeline</p>
                   </div>
-                )}
-
-                {/* Today's Tasks Section */}
-                {taskBlocks.filter(t => !t.carriedOver).length > 0 && (
-                  <div>
-                    <div style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "8px",
-                      marginBottom: "12px",
-                      padding: "8px 12px",
-                      background: "linear-gradient(135deg, rgba(111,175,111,0.08), rgba(111,175,111,0.04))",
-                      borderRadius: "10px",
-                      border: "1.5px solid rgba(111,175,111,0.18)"
-                    }}>
-                      <span style={{ fontSize: "16px" }}>🌿</span>
-                      <h3 style={{ margin: 0, fontSize: "14px", fontWeight: "700", color: "#3B6E3B" }}>
-                        Today's tasks ({taskBlocks.filter(t => !t.carriedOver).length})
-                      </h3>
-                    </div>
-                    <SortableContext
-                      items={taskBlocks.filter(t => !t.carriedOver).map(t => t.id)}
-                      strategy={verticalListSortingStrategy}
-                    >
-                    <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
-                {(() => {
-                  const todayTasks = taskBlocks.filter(task => !task.carriedOver).filter(task => {
-                    // In focus mode, hide completed tasks and future tasks (but show active task)
-                    if (focusModeEnabled && activeTaskId) {
-                      if (task.id === activeTaskId) return true;
-                      if (task.completed) return false;
-                      // Hide tasks after the active task
-                      const activeIndex = taskBlocks.findIndex(t => t.id === activeTaskId);
-                      const currentIndex = taskBlocks.findIndex(t => t.id === task.id);
-                      return currentIndex <= activeIndex;
-                    }
-                    return true;
-                  });
-                  const hasMultiple = todayTasks.length > 1;
-
-                  return todayTasks.map((task, i) => {
-                    const isActiveTask = activeTaskId === task.id;
-                    const shouldDim = activeTaskId && !isActiveTask;
-                    const health = getTaskHealth(task, tasks, availability);
-
-                    return (
-                    <SortableTaskItem
-                      task={task}
-                      key={task.id}
-                      sectionHasMultipleItems={hasMultiple}
-                      className={isActiveTask ? 'task-focused' : ''}
-                    style={{
-                      background: "linear-gradient(135deg, rgba(167,211,167,0.1), rgba(111,175,111,0.06))",
-                      border: `2px solid ${health.color}`,
-                      borderRadius: "16px",
-                      padding: "16px 18px",
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "14px",
-                      position: "relative",
-                      overflow: "hidden",
-                      opacity: shouldDim ? 0.4 : (task.completed ? 0.6 : 1),
-                      transition: "all 0.25s cubic-bezier(0.25, 0.46, 0.45, 0.94)",
-                      animation: "slideInFromLeft 0.4s ease-out",
-                      boxShadow: hasConflict(task.id)
-                        ? "0 2px 12px rgba(245,158,11,0.15)"
-                        : isActiveTask
-                        ? "0 0 0 3px rgba(111,175,111,0.3)"
-                        : "0 1px 3px rgba(59,110,59,0.04), 0 4px 12px rgba(59,110,59,0.06)"
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.boxShadow = "0 2px 8px rgba(59,110,59,0.08), 0 8px 24px rgba(59,110,59,0.1)";
-                      e.currentTarget.style.transform = "translateX(4px)";
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.boxShadow = "0 1px 3px rgba(59,110,59,0.04), 0 4px 12px rgba(59,110,59,0.06)";
-                      e.currentTarget.style.transform = "translateX(0)";
-                    }}
+                ) : (
+                  <DndContext
+                    sensors={sensors}
+                    collisionDetection={closestCenter}
+                    onDragEnd={handleDragEnd}
                   >
-                    <div style={{
-                      position: "absolute",
-                      left: 0,
-                      top: 0,
-                      bottom: 0,
-                      width: "3px",
-                      background: `linear-gradient(180deg, ${i % 2 === 0 ? "#6FAF6F" : "#3B6E3B"}, ${i % 2 === 0 ? "#3B6E3B" : "#6FAF6F"})`
-                    }} />
-
-                    <div style={{
-                      width: "36px",
-                      height: "36px",
-                      borderRadius: "50%",
-                      background: `linear-gradient(135deg, ${i % 2 === 0 ? "#6FAF6F" : "#3B6E3B"}, ${i % 2 === 0 ? "#3B6E3B" : "#6FAF6F"})`,
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      color: "#fff",
-                      fontSize: "14px",
-                      fontWeight: "700",
-                      flexShrink: 0,
-                      boxShadow: "0 4px 10px rgba(59,110,59,0.12)"
-                    }}>
-                      {i + 1}
-                    </div>
-
-                    <div style={{ flex: 1 }}>
-                      <div style={{ fontSize: "15px", fontWeight: "700", color: "#3B6E3B", marginBottom: "4px", display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap" }}>
-                        <span>{task.name}{task.completed ? " (done)" : ""}</span>
-                        <button
-                          className="delete-button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            deleteTask(task.id);
-                          }}
-                          style={{
-                            width: "18px",
-                            height: "18px",
-                            borderRadius: "50%",
-                            display: "inline-flex",
+                    <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+                      {/* Carried Over Tasks Section */}
+                      {taskBlocks.filter(t => t.carriedOver).length > 0 && (
+                        <div>
+                          <div style={{
+                            display: "flex",
                             alignItems: "center",
-                            justifyContent: "center",
-                            fontSize: "14px",
-                            padding: 0,
-                            marginLeft: "4px"
-                          }}
-                        >
-                          ×
-                        </button>
-                        {task.attempts > 0 && (
-                          <span style={{
-                            fontSize: "11px",
-                            padding: "2px 6px",
-                            background: "rgba(245,158,11,0.2)",
-                            color: "#d97706",
-                            borderRadius: "4px",
-                            fontWeight: "600",
-                            display: "inline-flex",
-                            alignItems: "center",
-                            gap: "3px"
+                            gap: "8px",
+                            marginBottom: "12px",
+                            padding: "8px 12px",
+                            background: "linear-gradient(135deg, rgba(255,165,0,0.08), rgba(255,165,0,0.04))",
+                            borderRadius: "10px",
+                            border: "1.5px solid rgba(255,165,0,0.18)"
                           }}>
-                            🔁 {task.attempts}x
-                          </span>
-                        )}
-                        {hasConflict(task.id) && (
-                          <span style={{
-                            fontSize: "11px",
-                            padding: "2px 6px",
-                            background: "rgba(245,158,11,0.15)",
-                            color: "#d97706",
-                            borderRadius: "4px",
-                            fontWeight: "600",
-                            display: "inline-flex",
+                            <span style={{ fontSize: "16px" }}>🍂</span>
+                            <h3 style={{ margin: 0, fontSize: "14px", fontWeight: "700", color: "#d97706" }}>
+                              Carried from previous days ({taskBlocks.filter(t => t.carriedOver).length})
+                            </h3>
+                          </div>
+                          <SortableContext
+                            items={taskBlocks.filter(t => t.carriedOver).map(t => t.id)}
+                            strategy={verticalListSortingStrategy}
+                          >
+                            <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+                              {(() => {
+                                const carriedTasks = taskBlocks.filter(task => task.carriedOver).filter(task => {
+                                  if (focusModeEnabled && activeTaskId) {
+                                    if (task.id === activeTaskId) return true;
+                                    if (task.completed) return false;
+                                    const activeIndex = taskBlocks.findIndex(t => t.id === activeTaskId);
+                                    const currentIndex = taskBlocks.findIndex(t => t.id === task.id);
+                                    return currentIndex <= activeIndex;
+                                  }
+                                  return true;
+                                });
+                                const hasMultiple = carriedTasks.length > 1;
+
+                                return carriedTasks.map((task, i) => {
+                                  const isActiveTask = activeTaskId === task.id;
+                                  const shouldDim = activeTaskId && !isActiveTask;
+                                  const health = getTaskHealth(task, tasks, availability);
+
+                                  return (
+                                    <SortableTaskItem
+                                      task={task}
+                                      key={task.id}
+                                      sectionHasMultipleItems={hasMultiple}
+                                      className={isActiveTask ? 'task-focused' : ''}
+                                      style={{
+                                        background: "linear-gradient(135deg, rgba(255,200,150,0.1), rgba(255,210,160,0.06))",
+                                        border: `2px solid ${health.color}`,
+                                        borderRadius: "16px",
+                                        padding: "16px 18px",
+                                        display: "flex",
+                                        alignItems: "center",
+                                        gap: "14px",
+                                        position: "relative",
+                                        overflow: "hidden",
+                                        opacity: shouldDim ? 0.4 : (task.completed ? 0.6 : 1),
+                                        transition: "all 0.25s cubic-bezier(0.25, 0.46, 0.45, 0.94)",
+                                        animation: "slideInFromLeft 0.4s ease-out",
+                                        boxShadow: hasConflict(task.id)
+                                          ? "0 2px 12px rgba(245,158,11,0.15)"
+                                          : isActiveTask
+                                            ? "0 0 0 3px rgba(111,175,111,0.3)"
+                                            : "0 1px 3px rgba(255,165,0,0.06), 0 4px 12px rgba(255,165,0,0.08)"
+                                      }}
+                                      onMouseEnter={(e) => {
+                                        e.currentTarget.style.boxShadow = "0 2px 8px rgba(255,165,0,0.1), 0 8px 24px rgba(255,165,0,0.12)";
+                                        e.currentTarget.style.transform = "translateX(4px)";
+                                      }}
+                                      onMouseLeave={(e) => {
+                                        e.currentTarget.style.boxShadow = "0 1px 3px rgba(255,165,0,0.06), 0 4px 12px rgba(255,165,0,0.08)";
+                                        e.currentTarget.style.transform = "translateX(0)";
+                                      }}
+                                    >
+                                      <div style={{
+                                        position: "absolute",
+                                        left: 0,
+                                        top: 0,
+                                        bottom: 0,
+                                        width: "3px",
+                                        background: "linear-gradient(180deg, #f59e0b, #d97706)"
+                                      }} />
+
+                                      <div style={{
+                                        width: "36px",
+                                        height: "36px",
+                                        borderRadius: "50%",
+                                        background: "linear-gradient(135deg, #f59e0b, #d97706)",
+                                        display: "flex",
+                                        alignItems: "center",
+                                        justifyContent: "center",
+                                        color: "#fff",
+                                        fontSize: "14px",
+                                        fontWeight: "700",
+                                        flexShrink: 0,
+                                        boxShadow: "0 4px 10px rgba(245,158,11,0.2)"
+                                      }}>
+                                        🍂
+                                      </div>
+
+                                      <div style={{ flex: 1 }}>
+                                        <div style={{ fontSize: "15px", fontWeight: "700", color: "#c2410c", marginBottom: "4px", display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap" }}>
+                                          <span>{task.name}{task.completed ? " (done)" : ""}</span>
+                                          <button
+                                            className="delete-button"
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              deleteTask(task.id);
+                                            }}
+                                            style={{
+                                              width: "18px",
+                                              height: "18px",
+                                              borderRadius: "50%",
+                                              display: "inline-flex",
+                                              alignItems: "center",
+                                              justifyContent: "center",
+                                              fontSize: "14px",
+                                              padding: 0,
+                                              marginLeft: "4px"
+                                            }}
+                                          >
+                                            ×
+                                          </button>
+                                          {task.attempts > 0 && (
+                                            <span style={{
+                                              fontSize: "11px",
+                                              padding: "2px 6px",
+                                              background: "rgba(245,158,11,0.2)",
+                                              color: "#d97706",
+                                              borderRadius: "4px",
+                                              fontWeight: "600",
+                                              display: "inline-flex",
+                                              alignItems: "center",
+                                              gap: "3px"
+                                            }}>
+                                              🔁 {task.attempts}x
+                                            </span>
+                                          )}
+                                          {hasConflict(task.id) && (
+                                            <span style={{
+                                              fontSize: "11px",
+                                              padding: "2px 6px",
+                                              background: "rgba(245,158,11,0.15)",
+                                              color: "#d97706",
+                                              borderRadius: "4px",
+                                              fontWeight: "600",
+                                              display: "inline-flex",
+                                              alignItems: "center",
+                                              gap: "3px"
+                                            }}>
+                                              ⚠️ Conflict
+                                            </span>
+                                          )}
+                                          {(() => {
+                                            const urgency = getDeadlineUrgency(task);
+                                            if (!urgency) return null;
+                                            return (
+                                              <span style={{
+                                                fontSize: "11px",
+                                                padding: "2px 6px",
+                                                background: urgency.level === 'overdue' || urgency.level === 'today'
+                                                  ? "rgba(220, 38, 38, 0.15)"
+                                                  : urgency.level === 'tomorrow'
+                                                    ? "rgba(245, 158, 11, 0.15)"
+                                                    : "rgba(251, 191, 36, 0.12)",
+                                                color: urgency.color,
+                                                borderRadius: "4px",
+                                                fontWeight: "700",
+                                                display: "inline-flex",
+                                                alignItems: "center",
+                                                gap: "3px",
+                                                animation: urgency.shouldBlock ? "focusPulse 2s ease-in-out infinite" : "none"
+                                              }}>
+                                                {urgency.level === 'overdue' ? "🔴" : urgency.level === 'today' ? "🔴" : urgency.level === 'tomorrow' ? "⚠️" : "📅"} {urgency.message}
+                                              </span>
+                                            );
+                                          })()}
+                                          <span style={{ fontSize: "11px", padding: "2px 6px", background: "rgba(255,165,0,0.2)", color: "#c2410c", borderRadius: "4px", fontWeight: "600" }}>from {task.originalDate}</span>
+                                          <TaskHealthIndicator health={health} compact={true} />
+                                        </div>
+                                        <div style={{ fontSize: "12px", color: "#92400e" }}>
+                                          {minutesToHHMM(task.start)} — {minutesToHHMM(task.end)} • {renderBlockTimeText(task)}
+                                        </div>
+                                        {task.attempts >= 3 && (
+                                          <div style={{
+                                            fontSize: "11px",
+                                            color: "#d97706",
+                                            marginTop: "6px",
+                                            padding: "4px 8px",
+                                            background: "rgba(255,165,0,0.1)",
+                                            borderRadius: "6px",
+                                            border: "1px dashed rgba(245,158,11,0.3)"
+                                          }}>
+                                            ⚠️ Consider breaking this into smaller steps
+                                          </div>
+                                        )}
+                                      </div>
+
+                                      {!task.completed && activeTaskId !== task.id && (
+                                        <button
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            startTask(task);
+                                          }}
+                                          style={{
+                                            padding: "8px 16px",
+                                            borderRadius: "10px",
+                                            border: "1.5px solid rgba(245,158,11,0.25)",
+                                            background: "linear-gradient(135deg, rgba(245,158,11,0.15), rgba(217,119,6,0.1))",
+                                            color: "#c2410c",
+                                            fontSize: "13px",
+                                            fontWeight: "600",
+                                            cursor: "pointer",
+                                            transition: "all 0.25s cubic-bezier(0.25, 0.46, 0.45, 0.94)",
+                                            boxShadow: "0 2px 6px rgba(245,158,11,0.1)",
+                                            flexShrink: 0,
+                                            position: "relative",
+                                            zIndex: 100,
+                                            pointerEvents: "auto"
+                                          }}
+                                          onMouseEnter={(e) => {
+                                            e.currentTarget.style.background = "linear-gradient(135deg, rgba(245,158,11,0.25), rgba(217,119,6,0.2))";
+                                            e.currentTarget.style.transform = "translateY(-2px)";
+                                            e.currentTarget.style.boxShadow = "0 4px 8px rgba(245,158,11,0.2)";
+                                          }}
+                                          onMouseLeave={(e) => {
+                                            e.currentTarget.style.background = "linear-gradient(135deg, rgba(245,158,11,0.15), rgba(217,119,6,0.1))";
+                                            e.currentTarget.style.transform = "translateY(0)";
+                                            e.currentTarget.style.boxShadow = "0 2px 4px rgba(245,158,11,0.1)";
+                                          }}
+                                        >
+                                          Start →
+                                        </button>
+                                      )}
+                                    </SortableTaskItem>
+                                  );
+                                });
+                              })()}
+                            </div>
+                          </SortableContext>
+                        </div>
+                      )}
+
+                      {/* Today's Tasks Section */}
+                      {taskBlocks.filter(t => !t.carriedOver).length > 0 && (
+                        <div>
+                          <div style={{
+                            display: "flex",
                             alignItems: "center",
-                            gap: "3px"
+                            gap: "8px",
+                            marginBottom: "12px",
+                            padding: "8px 12px",
+                            background: "linear-gradient(135deg, rgba(111,175,111,0.08), rgba(111,175,111,0.04))",
+                            borderRadius: "10px",
+                            border: "1.5px solid rgba(111,175,111,0.18)"
                           }}>
-                            ⚠️ Conflict
-                          </span>
-                        )}
-                        {(() => {
-                          const urgency = getDeadlineUrgency(task);
-                          if (!urgency) return null;
-                          return (
-                            <span style={{
-                              fontSize: "11px",
-                              padding: "2px 6px",
-                              background: urgency.level === 'overdue' || urgency.level === 'today'
-                                ? "rgba(220, 38, 38, 0.15)"
-                                : urgency.level === 'tomorrow'
-                                ? "rgba(245, 158, 11, 0.15)"
-                                : "rgba(251, 191, 36, 0.12)",
-                              color: urgency.color,
-                              borderRadius: "4px",
-                              fontWeight: "700",
-                              display: "inline-flex",
-                              alignItems: "center",
-                              gap: "3px",
-                              animation: urgency.shouldBlock ? "focusPulse 2s ease-in-out infinite" : "none"
-                            }}>
-                              {urgency.level === 'overdue' ? "🔴" : urgency.level === 'today' ? "🔴" : urgency.level === 'tomorrow' ? "⚠️" : "📅"} {urgency.message}
-                            </span>
-                          );
-                        })()}
-                        {task.carriedOver && <span style={{ fontSize: "11px", padding: "2px 6px", background: "rgba(255,165,0,0.15)", color: "#d97706", borderRadius: "4px", fontWeight: "600" }}>from {task.originalDate}</span>}
-                        <TaskHealthIndicator health={health} compact={true} />
-                      </div>
-                      <div style={{ fontSize: "12px", color: "#6B8E6B" }}>
-                        {minutesToHHMM(task.start)} — {minutesToHHMM(task.end)} • {renderBlockTimeText(task)}
-                      </div>
-                      {task.attempts >= 3 && (
-                        <div style={{
-                          fontSize: "11px",
-                          color: "#d97706",
-                          marginTop: "6px",
-                          padding: "4px 8px",
-                          background: "rgba(255,165,0,0.1)",
-                          borderRadius: "6px",
-                          border: "1px dashed rgba(245,158,11,0.3)"
-                        }}>
-                          ⚠️ Consider breaking this into smaller steps
+                            <span style={{ fontSize: "16px" }}>🌿</span>
+                            <h3 style={{ margin: 0, fontSize: "14px", fontWeight: "700", color: "#3B6E3B" }}>
+                              Today's tasks ({taskBlocks.filter(t => !t.carriedOver).length})
+                            </h3>
+                          </div>
+                          <SortableContext
+                            items={taskBlocks.filter(t => !t.carriedOver).map(t => t.id)}
+                            strategy={verticalListSortingStrategy}
+                          >
+                            <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+                              {(() => {
+                                const todayTasks = taskBlocks.filter(task => !task.carriedOver).filter(task => {
+                                  // In focus mode, hide completed tasks and future tasks (but show active task)
+                                  if (focusModeEnabled && activeTaskId) {
+                                    if (task.id === activeTaskId) return true;
+                                    if (task.completed) return false;
+                                    // Hide tasks after the active task
+                                    const activeIndex = taskBlocks.findIndex(t => t.id === activeTaskId);
+                                    const currentIndex = taskBlocks.findIndex(t => t.id === task.id);
+                                    return currentIndex <= activeIndex;
+                                  }
+                                  return true;
+                                });
+                                const hasMultiple = todayTasks.length > 1;
+
+                                return todayTasks.map((task, i) => {
+                                  const isActiveTask = activeTaskId === task.id;
+                                  const shouldDim = activeTaskId && !isActiveTask;
+                                  const health = getTaskHealth(task, tasks, availability);
+
+                                  return (
+                                    <SortableTaskItem
+                                      task={task}
+                                      key={task.id}
+                                      sectionHasMultipleItems={hasMultiple}
+                                      className={isActiveTask ? 'task-focused' : ''}
+                                      style={{
+                                        background: "linear-gradient(135deg, rgba(167,211,167,0.1), rgba(111,175,111,0.06))",
+                                        border: `2px solid ${health.color}`,
+                                        borderRadius: "16px",
+                                        padding: "16px 18px",
+                                        display: "flex",
+                                        alignItems: "center",
+                                        gap: "14px",
+                                        position: "relative",
+                                        overflow: "hidden",
+                                        opacity: shouldDim ? 0.4 : (task.completed ? 0.6 : 1),
+                                        transition: "all 0.25s cubic-bezier(0.25, 0.46, 0.45, 0.94)",
+                                        animation: "slideInFromLeft 0.4s ease-out",
+                                        boxShadow: hasConflict(task.id)
+                                          ? "0 2px 12px rgba(245,158,11,0.15)"
+                                          : isActiveTask
+                                            ? "0 0 0 3px rgba(111,175,111,0.3)"
+                                            : "0 1px 3px rgba(59,110,59,0.04), 0 4px 12px rgba(59,110,59,0.06)"
+                                      }}
+                                      onMouseEnter={(e) => {
+                                        e.currentTarget.style.boxShadow = "0 2px 8px rgba(59,110,59,0.08), 0 8px 24px rgba(59,110,59,0.1)";
+                                        e.currentTarget.style.transform = "translateX(4px)";
+                                      }}
+                                      onMouseLeave={(e) => {
+                                        e.currentTarget.style.boxShadow = "0 1px 3px rgba(59,110,59,0.04), 0 4px 12px rgba(59,110,59,0.06)";
+                                        e.currentTarget.style.transform = "translateX(0)";
+                                      }}
+                                    >
+                                      <div style={{
+                                        position: "absolute",
+                                        left: 0,
+                                        top: 0,
+                                        bottom: 0,
+                                        width: "3px",
+                                        background: `linear-gradient(180deg, ${i % 2 === 0 ? "#6FAF6F" : "#3B6E3B"}, ${i % 2 === 0 ? "#3B6E3B" : "#6FAF6F"})`
+                                      }} />
+
+                                      <div style={{
+                                        width: "36px",
+                                        height: "36px",
+                                        borderRadius: "50%",
+                                        background: `linear-gradient(135deg, ${i % 2 === 0 ? "#6FAF6F" : "#3B6E3B"}, ${i % 2 === 0 ? "#3B6E3B" : "#6FAF6F"})`,
+                                        display: "flex",
+                                        alignItems: "center",
+                                        justifyContent: "center",
+                                        color: "#fff",
+                                        fontSize: "14px",
+                                        fontWeight: "700",
+                                        flexShrink: 0,
+                                        boxShadow: "0 4px 10px rgba(59,110,59,0.12)"
+                                      }}>
+                                        {i + 1}
+                                      </div>
+
+                                      <div style={{ flex: 1 }}>
+                                        <div style={{ fontSize: "15px", fontWeight: "700", color: "#3B6E3B", marginBottom: "4px", display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap" }}>
+                                          <span>{task.name}{task.completed ? " (done)" : ""}</span>
+                                          <button
+                                            className="delete-button"
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              deleteTask(task.id);
+                                            }}
+                                            style={{
+                                              width: "18px",
+                                              height: "18px",
+                                              borderRadius: "50%",
+                                              display: "inline-flex",
+                                              alignItems: "center",
+                                              justifyContent: "center",
+                                              fontSize: "14px",
+                                              padding: 0,
+                                              marginLeft: "4px"
+                                            }}
+                                          >
+                                            ×
+                                          </button>
+                                          {task.attempts > 0 && (
+                                            <span style={{
+                                              fontSize: "11px",
+                                              padding: "2px 6px",
+                                              background: "rgba(245,158,11,0.2)",
+                                              color: "#d97706",
+                                              borderRadius: "4px",
+                                              fontWeight: "600",
+                                              display: "inline-flex",
+                                              alignItems: "center",
+                                              gap: "3px"
+                                            }}>
+                                              🔁 {task.attempts}x
+                                            </span>
+                                          )}
+                                          {hasConflict(task.id) && (
+                                            <span style={{
+                                              fontSize: "11px",
+                                              padding: "2px 6px",
+                                              background: "rgba(245,158,11,0.15)",
+                                              color: "#d97706",
+                                              borderRadius: "4px",
+                                              fontWeight: "600",
+                                              display: "inline-flex",
+                                              alignItems: "center",
+                                              gap: "3px"
+                                            }}>
+                                              ⚠️ Conflict
+                                            </span>
+                                          )}
+                                          {(() => {
+                                            const urgency = getDeadlineUrgency(task);
+                                            if (!urgency) return null;
+                                            return (
+                                              <span style={{
+                                                fontSize: "11px",
+                                                padding: "2px 6px",
+                                                background: urgency.level === 'overdue' || urgency.level === 'today'
+                                                  ? "rgba(220, 38, 38, 0.15)"
+                                                  : urgency.level === 'tomorrow'
+                                                    ? "rgba(245, 158, 11, 0.15)"
+                                                    : "rgba(251, 191, 36, 0.12)",
+                                                color: urgency.color,
+                                                borderRadius: "4px",
+                                                fontWeight: "700",
+                                                display: "inline-flex",
+                                                alignItems: "center",
+                                                gap: "3px",
+                                                animation: urgency.shouldBlock ? "focusPulse 2s ease-in-out infinite" : "none"
+                                              }}>
+                                                {urgency.level === 'overdue' ? "🔴" : urgency.level === 'today' ? "🔴" : urgency.level === 'tomorrow' ? "⚠️" : "📅"} {urgency.message}
+                                              </span>
+                                            );
+                                          })()}
+                                          {task.carriedOver && <span style={{ fontSize: "11px", padding: "2px 6px", background: "rgba(255,165,0,0.15)", color: "#d97706", borderRadius: "4px", fontWeight: "600" }}>from {task.originalDate}</span>}
+                                          <TaskHealthIndicator health={health} compact={true} />
+                                        </div>
+                                        <div style={{ fontSize: "12px", color: "#6B8E6B" }}>
+                                          {minutesToHHMM(task.start)} — {minutesToHHMM(task.end)} • {renderBlockTimeText(task)}
+                                        </div>
+                                        {task.attempts >= 3 && (
+                                          <div style={{
+                                            fontSize: "11px",
+                                            color: "#d97706",
+                                            marginTop: "6px",
+                                            padding: "4px 8px",
+                                            background: "rgba(255,165,0,0.1)",
+                                            borderRadius: "6px",
+                                            border: "1px dashed rgba(245,158,11,0.3)"
+                                          }}>
+                                            ⚠️ Consider breaking this into smaller steps
+                                          </div>
+                                        )}
+                                      </div>
+
+                                      {!task.completed && activeTaskId !== task.id && (
+                                        <button
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            startTask(task);
+                                          }}
+                                          style={{
+                                            padding: "8px 16px",
+                                            borderRadius: "10px",
+                                            border: "1.5px solid rgba(111,175,111,0.25)",
+                                            background: "linear-gradient(135deg, rgba(111,175,111,0.15), rgba(59,110,59,0.1))",
+                                            color: "#3B6E3B",
+                                            fontSize: "13px",
+                                            fontWeight: "600",
+                                            cursor: "pointer",
+                                            transition: "all 0.25s cubic-bezier(0.25, 0.46, 0.45, 0.94)",
+                                            boxShadow: "0 2px 6px rgba(111,175,111,0.1)",
+                                            flexShrink: 0
+                                          }}
+                                          onMouseEnter={(e) => {
+                                            e.currentTarget.style.background = "linear-gradient(135deg, rgba(111,175,111,0.25), rgba(59,110,59,0.2))";
+                                            e.currentTarget.style.transform = "translateY(-2px)";
+                                            e.currentTarget.style.boxShadow = "0 4px 8px rgba(111,175,111,0.2)";
+                                          }}
+                                          onMouseLeave={(e) => {
+                                            e.currentTarget.style.background = "linear-gradient(135deg, rgba(111,175,111,0.15), rgba(59,110,59,0.1))";
+                                            e.currentTarget.style.transform = "translateY(0)";
+                                            e.currentTarget.style.boxShadow = "0 2px 4px rgba(111,175,111,0.1)";
+                                          }}
+                                        >
+                                          Start →
+                                        </button>
+                                      )}
+                                    </SortableTaskItem>
+                                  );
+                                });
+                              })()}
+                            </div>
+                          </SortableContext>
                         </div>
                       )}
                     </div>
-
-                    {!task.completed && activeTaskId !== task.id && (
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          startTask(task);
-                        }}
-                        style={{
-                          padding: "8px 16px",
-                          borderRadius: "10px",
-                          border: "1.5px solid rgba(111,175,111,0.25)",
-                          background: "linear-gradient(135deg, rgba(111,175,111,0.15), rgba(59,110,59,0.1))",
-                          color: "#3B6E3B",
-                          fontSize: "13px",
-                          fontWeight: "600",
-                          cursor: "pointer",
-                          transition: "all 0.25s cubic-bezier(0.25, 0.46, 0.45, 0.94)",
-                          boxShadow: "0 2px 6px rgba(111,175,111,0.1)",
-                          flexShrink: 0
-                        }}
-                        onMouseEnter={(e) => {
-                          e.currentTarget.style.background = "linear-gradient(135deg, rgba(111,175,111,0.25), rgba(59,110,59,0.2))";
-                          e.currentTarget.style.transform = "translateY(-2px)";
-                          e.currentTarget.style.boxShadow = "0 4px 8px rgba(111,175,111,0.2)";
-                        }}
-                        onMouseLeave={(e) => {
-                          e.currentTarget.style.background = "linear-gradient(135deg, rgba(111,175,111,0.15), rgba(59,110,59,0.1))";
-                          e.currentTarget.style.transform = "translateY(0)";
-                          e.currentTarget.style.boxShadow = "0 2px 4px rgba(111,175,111,0.1)";
-                        }}
-                      >
-                        Start →
-                      </button>
-                    )}
-                  </SortableTaskItem>
-                  );
-                });
-              })()}
-                    </div>
-                    </SortableContext>
-                  </div>
+                  </DndContext>
                 )}
               </div>
-              </DndContext>
-            )}
-          </div>
-        </div>
+            </div>
 
           </>
         )}

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import MobileLayout from './mobile/MobileLayout';
 import { haptic } from '../utils/haptics';
+import { useDarkMode } from '../utils/useDarkMode';
 import {
   suggestDuration,
   getAllHourlyCompletionRates,
@@ -9,6 +10,7 @@ import {
 } from '../utils/analytics';
 
 export default function Insights({ onNavigate }) {
+  const isDark = useDarkMode();
   const [isMobile, setIsMobile] = useState(() => window.matchMedia('(max-width: 768px)').matches);
   const [accuracyStats, setAccuracyStats] = useState(null);
   const [energyPattern, setEnergyPattern] = useState(null);
@@ -71,7 +73,7 @@ export default function Insights({ onNavigate }) {
 
       const bestHours = Object.entries(hourlyRates)
         .filter(([hour, rate]) => rate > 0) // Only show hours with actual data
-        .sort(([,a], [,b]) => b - a)
+        .sort(([, a], [, b]) => b - a)
         .slice(0, 3)
         .map(([hour, rate]) => ({
           hour: parseInt(hour),
@@ -93,7 +95,7 @@ export default function Insights({ onNavigate }) {
     });
 
     const frequent = Object.entries(taskCounts)
-      .sort(([,a], [,b]) => b - a)
+      .sort(([, a], [, b]) => b - a)
       .slice(0, 5)
       .map(([name, count]) => {
         const suggestion = suggestDuration(name);
@@ -129,7 +131,6 @@ export default function Insights({ onNavigate }) {
   };
 
   if (isMobile) {
-    const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
 
     return (
       <MobileLayout
@@ -178,14 +179,14 @@ export default function Insights({ onNavigate }) {
                 padding: '8px 12px',
                 borderRadius: '10px',
                 background: accuracyStats.trend === 'improving' ? 'rgba(16,185,129,0.1)' :
-                           accuracyStats.trend === 'declining' ? 'rgba(239,68,68,0.1)' : 'rgba(251,191,36,0.1)',
+                  accuracyStats.trend === 'declining' ? 'rgba(239,68,68,0.1)' : 'rgba(251,191,36,0.1)',
                 color: accuracyStats.trend === 'improving' ? '#10b981' :
-                       accuracyStats.trend === 'declining' ? '#ef4444' : '#fbbf24',
+                  accuracyStats.trend === 'declining' ? '#ef4444' : '#fbbf24',
                 fontSize: '12px',
                 fontWeight: 600
               }}>
                 {accuracyStats.trend === 'improving' ? '↗ Improving' :
-                 accuracyStats.trend === 'declining' ? '↘ Declining' : '→ Stable'}
+                  accuracyStats.trend === 'declining' ? '↘ Declining' : '→ Stable'}
               </div>
             </div>
             <div style={{ marginTop: '12px', fontSize: '12px', color: isDark ? '#9CA59C' : '#6B8E6B' }}>
@@ -210,13 +211,13 @@ export default function Insights({ onNavigate }) {
               <div style={{
                 padding: '8px 14px', borderRadius: '12px', fontWeight: 700, fontSize: '13px',
                 background: estimationBias.bias === 'accurate' ? 'rgba(16,185,129,0.1)' :
-                             estimationBias.bias === 'underestimate' ? 'rgba(245,158,11,0.1)' : 'rgba(99,102,241,0.1)',
+                  estimationBias.bias === 'underestimate' ? 'rgba(245,158,11,0.1)' : 'rgba(99,102,241,0.1)',
                 color: estimationBias.bias === 'accurate' ? '#10b981' :
-                       estimationBias.bias === 'underestimate' ? '#d97706' : '#6366f1',
+                  estimationBias.bias === 'underestimate' ? '#d97706' : '#6366f1',
               }}>
                 {estimationBias.bias === 'accurate' ? '✓ On Target' :
-                 estimationBias.bias === 'underestimate' ? `↑ Under by ${estimationBias.avgDiffPercent}%` :
-                 `↓ Over by ${Math.abs(estimationBias.avgDiffPercent)}%`}
+                  estimationBias.bias === 'underestimate' ? `↑ Under by ${estimationBias.avgDiffPercent}%` :
+                    `↓ Over by ${Math.abs(estimationBias.avgDiffPercent)}%`}
               </div>
               <div style={{ fontSize: '11px', color: isDark ? '#9CA59C' : '#8E8E93' }}>
                 {estimationBias.sampleSize} tasks analysed
@@ -292,8 +293,8 @@ export default function Insights({ onNavigate }) {
             break_task: { icon: '🔨', label: 'Broke it up' },
             pick_time: { icon: '🎯', label: 'Picked a time' },
           };
-          const entries = Object.entries(rescheduleHabits).sort(([,a],[,b]) => b - a);
-          const total = entries.reduce((s, [,v]) => s + v, 0);
+          const entries = Object.entries(rescheduleHabits).sort(([, a], [, b]) => b - a);
+          const total = entries.reduce((s, [, v]) => s + v, 0);
           return (
             <div style={{
               background: isDark ? '#242B24' : '#fff',
@@ -425,7 +426,6 @@ export default function Insights({ onNavigate }) {
   }
 
   // Desktop render (simplified for now)
-  const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
   return (
     <div style={{ padding: '40px', maxWidth: '1200px', margin: '0 auto' }}>
       <h1 style={{ fontSize: '32px', fontWeight: 800, color: isDark ? '#E8F0E8' : '#1A1A1A', marginBottom: '8px' }}>

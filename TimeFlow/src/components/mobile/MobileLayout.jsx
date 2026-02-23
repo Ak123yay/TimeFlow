@@ -1,4 +1,5 @@
-import React from 'react';
+import { useState, useEffect } from 'react';
+import { useDarkMode } from '../../utils/useDarkMode';
 import { haptic } from '../../utils/haptics';
 import '../../styles/mobile.css';
 
@@ -9,7 +10,7 @@ import '../../styles/mobile.css';
  */
 export default function MobileLayout({ children, showBottomNav = true, onNavigate, activeTab = 'today' }) {
   // Detect system color scheme
-  const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+  const isDark = useDarkMode();
 
   return (
     <div style={{
@@ -52,11 +53,11 @@ export default function MobileLayout({ children, showBottomNav = true, onNavigat
           zIndex: 200
         }}>
           {[
-            { id: 'today', icon: '🌿', label: 'Today' },
-            { id: 'week', icon: '📅', label: 'Week' },
-            { id: 'pool', icon: '🌊', label: 'Pool' },
-            { id: 'stats', icon: '📊', label: 'Stats' },
-            { id: 'streak', icon: '🔥', label: 'Streak' }
+            { id: 'today', icon: 'schedule', label: 'Today' },
+            { id: 'week', icon: 'calendar_view_week', label: 'Week' },
+            { id: 'pool', icon: 'format_list_bulleted', label: 'Pool' },
+            { id: 'stats', icon: 'bar_chart', label: 'Stats' },
+            { id: 'streak', icon: 'local_fire_department', label: 'Streak' }
           ].map(item => (
             <button
               key={item.id}
@@ -96,7 +97,16 @@ export default function MobileLayout({ children, showBottomNav = true, onNavigat
                 background: '#3B6E3B',
                 transition: 'width 0.2s ease'
               }} />
-              <span style={{ fontSize: '20px', lineHeight: 1 }}>{item.icon}</span>
+              <span
+                className="material-symbols-outlined"
+                style={{
+                  fontSize: '22px',
+                  lineHeight: 1,
+                  fontVariationSettings: activeTab === item.id
+                    ? "'FILL' 1, 'wght' 500, 'GRAD' 0, 'opsz' 24"
+                    : "'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24"
+                }}
+              >{item.icon}</span>
               <span>{item.label}</span>
             </button>
           ))}

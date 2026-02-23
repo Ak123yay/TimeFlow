@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
+import { useDarkMode } from '../../utils/useDarkMode';
 
 export default function SearchBar({ onSearch, placeholder = "Search tasks..." }) {
   const [query, setQuery] = useState('');
-  const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+  const isDark = useDarkMode();
 
   useEffect(() => {
     const debounce = setTimeout(() => {

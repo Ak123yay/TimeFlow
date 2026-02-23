@@ -1,3 +1,5 @@
+import { useState, useEffect } from 'react';
+import { useDarkMode } from '../utils/useDarkMode';
 import { haptic } from '../utils/haptics';
 import { loadTasksForDate } from '../utils/storage';
 
@@ -5,7 +7,7 @@ import { loadTasksForDate } from '../utils/storage';
  * DailyCalendar - Simple view showing just today's date and stats
  */
 export default function DailyCalendar() {
-  const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+  const isDark = useDarkMode();
   const today = new Date();
   const dateString = today.toISOString().slice(0, 10);
   const tasks = loadTasksForDate(dateString);
@@ -105,10 +107,10 @@ export default function DailyCalendar() {
               background: completionRate === 100
                 ? '#10b981'
                 : completionRate >= 75
-                ? '#6FAF6F'
-                : completionRate >= 50
-                ? '#fbbf24'
-                : '#f59e0b',
+                  ? '#6FAF6F'
+                  : completionRate >= 50
+                    ? '#fbbf24'
+                    : '#f59e0b',
               transition: 'width 0.3s ease'
             }} />
           </div>

@@ -6,6 +6,7 @@ import CalendarView from './CalendarView';
 import FirstTimeTooltip from './FirstTimeTooltip';
 import { hasSeenTooltip, markTooltipSeen, TOOLTIP_CONTENT } from "../utils/firstTimeTooltips";
 import { haptic } from "../utils/haptics";
+import { useDarkMode } from "../utils/useDarkMode";
 import "../App.css";
 
 function LeafIcon({ size = 18, fill = "#3B6E3B" }) {
@@ -18,6 +19,7 @@ function LeafIcon({ size = 18, fill = "#3B6E3B" }) {
 }
 
 export default function WeeklyView({ onBackToToday }) {
+  const isDark = useDarkMode();
   const [weekStart, setWeekStart] = useState(getCurrentWeekStart());
   const [weekData, setWeekData] = useState([]);
   const [selectedDay, setSelectedDay] = useState(null);
@@ -63,7 +65,6 @@ export default function WeeklyView({ onBackToToday }) {
   const isCurrentWeek = weekStart === getCurrentWeekStart();
 
   if (isMobile) {
-    const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
     return (
       <MobileLayout showBottomNav={true} onNavigate={(tab) => {
         haptic.light();
@@ -150,161 +151,161 @@ export default function WeeklyView({ onBackToToday }) {
         {/* Week View */}
         {viewMode === 'week' && (
           <>
-        {/* Week Navigation */}
-        <div style={{
-          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-          marginBottom: '14px', padding: '10px 14px',
-          background: isDark ? '#242B24' : '#fff', borderRadius: '16px', boxShadow: isDark ? '0 1px 3px rgba(0,0,0,0.12), 0 4px 12px rgba(0,0,0,0.16)' : '0 1px 3px rgba(0,0,0,0.04), 0 4px 12px rgba(0,0,0,0.06)'
-        }}>
-          <button onClick={goToPreviousWeek} style={{
-            padding: '6px 10px', borderRadius: '12px', border: 'none',
-            background: isDark ? '#1A1F1A' : '#F0F0F0', color: isDark ? '#E8F0E8' : '#1A1A1A', fontSize: '12px', fontWeight: 600,
-            cursor: 'pointer', touchAction: 'manipulation'
-          }}>←</button>
+            {/* Week Navigation */}
+            <div style={{
+              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+              marginBottom: '14px', padding: '10px 14px',
+              background: isDark ? '#242B24' : '#fff', borderRadius: '16px', boxShadow: isDark ? '0 1px 3px rgba(0,0,0,0.12), 0 4px 12px rgba(0,0,0,0.16)' : '0 1px 3px rgba(0,0,0,0.04), 0 4px 12px rgba(0,0,0,0.06)'
+            }}>
+              <button onClick={goToPreviousWeek} style={{
+                padding: '6px 10px', borderRadius: '12px', border: 'none',
+                background: isDark ? '#1A1F1A' : '#F0F0F0', color: isDark ? '#E8F0E8' : '#1A1A1A', fontSize: '12px', fontWeight: 600,
+                cursor: 'pointer', touchAction: 'manipulation'
+              }}>←</button>
 
-          <div style={{ flex: 1, textAlign: 'center' }}>
-            <div style={{ fontSize: '13px', fontWeight: 700, color: isDark ? '#E8F0E8' : '#1A1A1A' }}>
-              {weekData[0]?.month} {weekData[0]?.dayOfMonth} - {weekData[6]?.month} {weekData[6]?.dayOfMonth}
-            </div>
-            {!isCurrentWeek && (
-              <button onClick={goToCurrentWeek} style={{
-                marginTop: '2px', padding: '2px 10px', borderRadius: '6px',
-                border: 'none', background: 'rgba(59,110,59,0.08)', color: '#3B6E3B',
-                fontSize: '10px', fontWeight: 600, cursor: 'pointer', touchAction: 'manipulation'
-              }}>Today</button>
-            )}
-          </div>
-
-          <button onClick={goToNextWeek} style={{
-            padding: '6px 10px', borderRadius: '12px', border: 'none',
-            background: isDark ? '#1A1F1A' : '#F0F0F0', color: isDark ? '#E8F0E8' : '#1A1A1A', fontSize: '12px', fontWeight: 600,
-            cursor: 'pointer', touchAction: 'manipulation'
-          }}>→</button>
-        </div>
-
-        {/* Day Cards */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '14px' }}>
-          {weekData.map((day) => {
-            const completionColor = day.completionRate === 100 ? '#10b981'
-              : day.completionRate >= 75 ? '#6FAF6F'
-              : day.completionRate >= 50 ? '#fbbf24'
-              : day.completionRate > 0 ? '#f59e0b' : '#cbd5e1';
-
-            return (
-              <div
-                key={day.date}
-                onClick={() => { if (day.reflection) { setSelectedDay(day); haptic.light(); } }}
-                style={{
-                  background: day.isToday ? (isDark ? 'rgba(111,175,111,0.15)' : 'rgba(59,110,59,0.04)') : (isDark ? '#242B24' : '#fff'),
-                  border: day.isToday ? (isDark ? '1.5px solid #6FAF6F' : '1.5px solid #3B6E3B') : (isDark ? '1.5px solid #6B7B6B' : '1.5px solid #E5E5E5'),
-                  borderRadius: '16px', padding: '14px 16px',
-                  cursor: day.reflection ? 'pointer' : 'default',
-                  touchAction: 'manipulation'
-                }}
-              >
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: day.hasTasks ? '10px' : 0 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                    <div>
-                      <div style={{ fontSize: '10px', fontWeight: 700, color: isDark ? '#9CA59C' : '#8E8E93', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                        {day.dayOfWeek}
-                      </div>
-                      <div style={{ fontSize: '16px', fontWeight: 800, color: isDark ? '#E8F0E8' : '#1A1A1A' }}>
-                        {day.dayOfMonth}
-                      </div>
-                    </div>
-                    {day.isToday && (
-                      <div style={{
-                        padding: '3px 8px', background: 'rgba(59,110,59,0.1)',
-                        borderRadius: '6px', fontSize: '9px', fontWeight: 700, color: '#3B6E3B'
-                      }}>TODAY</div>
-                    )}
-                    {day.isFuture && !day.isToday && (
-                      <div style={{
-                        padding: '3px 8px', background: isDark ? '#1A1F1A' : '#F0F0F0',
-                        borderRadius: '6px', fontSize: '9px', fontWeight: 600, color: isDark ? '#9CA59C' : '#8E8E93'
-                      }}>UPCOMING</div>
-                    )}
-                  </div>
-
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    {day.reflection && (
-                      <div style={{
-                        width: '20px', height: '20px', borderRadius: '50%',
-                        background: 'linear-gradient(135deg, #A7D3A7, #6FAF6F)',
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        fontSize: '10px', border: isDark ? '1.5px solid #242B24' : '1.5px solid #fff'
-                      }}>📝</div>
-                    )}
-                    {day.hasTasks && (
-                      <span style={{ fontSize: '13px', fontWeight: 700, color: '#3B6E3B' }}>
-                        {day.completedCount}/{day.taskCount}
-                      </span>
-                    )}
-                  </div>
+              <div style={{ flex: 1, textAlign: 'center' }}>
+                <div style={{ fontSize: '13px', fontWeight: 700, color: isDark ? '#E8F0E8' : '#1A1A1A' }}>
+                  {weekData[0]?.month} {weekData[0]?.dayOfMonth} - {weekData[6]?.month} {weekData[6]?.dayOfMonth}
                 </div>
-
-                {day.hasTasks && (
-                  <>
-                    <div style={{
-                      height: '4px', background: isDark ? '#1A1F1A' : '#F0F0F0', borderRadius: '99px',
-                      overflow: 'hidden', marginBottom: '6px'
-                    }}>
-                      <div style={{
-                        height: '100%', width: `${day.completionRate}%`,
-                        background: completionColor, transition: 'width 0.3s ease'
-                      }} />
-                    </div>
-
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                      <span style={{ fontSize: '11px', color: isDark ? '#9CA59C' : '#8E8E93' }}>
-                        {day.completionRate}% complete
-                      </span>
-                      {day.carriedOverCount > 0 && (
-                        <span style={{ fontSize: '10px', fontWeight: 600, color: '#D97706' }}>
-                          🍂 {day.carriedOverCount} carried
-                        </span>
-                      )}
-                    </div>
-                  </>
+                {!isCurrentWeek && (
+                  <button onClick={goToCurrentWeek} style={{
+                    marginTop: '2px', padding: '2px 10px', borderRadius: '6px',
+                    border: 'none', background: 'rgba(59,110,59,0.08)', color: '#3B6E3B',
+                    fontSize: '10px', fontWeight: 600, cursor: 'pointer', touchAction: 'manipulation'
+                  }}>Today</button>
                 )}
+              </div>
 
-                {!day.hasTasks && (
-                  <div style={{ padding: '8px 0', textAlign: 'center', color: isDark ? '#6B7B6B' : '#D1D5DB', fontSize: '11px' }}>
-                    No tasks
+              <button onClick={goToNextWeek} style={{
+                padding: '6px 10px', borderRadius: '12px', border: 'none',
+                background: isDark ? '#1A1F1A' : '#F0F0F0', color: isDark ? '#E8F0E8' : '#1A1A1A', fontSize: '12px', fontWeight: 600,
+                cursor: 'pointer', touchAction: 'manipulation'
+              }}>→</button>
+            </div>
+
+            {/* Day Cards */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '14px' }}>
+              {weekData.map((day) => {
+                const completionColor = day.completionRate === 100 ? '#10b981'
+                  : day.completionRate >= 75 ? '#6FAF6F'
+                    : day.completionRate >= 50 ? '#fbbf24'
+                      : day.completionRate > 0 ? '#f59e0b' : '#cbd5e1';
+
+                return (
+                  <div
+                    key={day.date}
+                    onClick={() => { if (day.reflection) { setSelectedDay(day); haptic.light(); } }}
+                    style={{
+                      background: day.isToday ? (isDark ? 'rgba(111,175,111,0.15)' : 'rgba(59,110,59,0.04)') : (isDark ? '#242B24' : '#fff'),
+                      border: day.isToday ? (isDark ? '1.5px solid #6FAF6F' : '1.5px solid #3B6E3B') : (isDark ? '1.5px solid #6B7B6B' : '1.5px solid #E5E5E5'),
+                      borderRadius: '16px', padding: '14px 16px',
+                      cursor: day.reflection ? 'pointer' : 'default',
+                      touchAction: 'manipulation'
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: day.hasTasks ? '10px' : 0 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                        <div>
+                          <div style={{ fontSize: '10px', fontWeight: 700, color: isDark ? '#9CA59C' : '#8E8E93', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                            {day.dayOfWeek}
+                          </div>
+                          <div style={{ fontSize: '16px', fontWeight: 800, color: isDark ? '#E8F0E8' : '#1A1A1A' }}>
+                            {day.dayOfMonth}
+                          </div>
+                        </div>
+                        {day.isToday && (
+                          <div style={{
+                            padding: '3px 8px', background: 'rgba(59,110,59,0.1)',
+                            borderRadius: '6px', fontSize: '9px', fontWeight: 700, color: '#3B6E3B'
+                          }}>TODAY</div>
+                        )}
+                        {day.isFuture && !day.isToday && (
+                          <div style={{
+                            padding: '3px 8px', background: isDark ? '#1A1F1A' : '#F0F0F0',
+                            borderRadius: '6px', fontSize: '9px', fontWeight: 600, color: isDark ? '#9CA59C' : '#8E8E93'
+                          }}>UPCOMING</div>
+                        )}
+                      </div>
+
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        {day.reflection && (
+                          <div style={{
+                            width: '20px', height: '20px', borderRadius: '50%',
+                            background: 'linear-gradient(135deg, #A7D3A7, #6FAF6F)',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            fontSize: '10px', border: isDark ? '1.5px solid #242B24' : '1.5px solid #fff'
+                          }}>📝</div>
+                        )}
+                        {day.hasTasks && (
+                          <span style={{ fontSize: '13px', fontWeight: 700, color: '#3B6E3B' }}>
+                            {day.completedCount}/{day.taskCount}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    {day.hasTasks && (
+                      <>
+                        <div style={{
+                          height: '4px', background: isDark ? '#1A1F1A' : '#F0F0F0', borderRadius: '99px',
+                          overflow: 'hidden', marginBottom: '6px'
+                        }}>
+                          <div style={{
+                            height: '100%', width: `${day.completionRate}%`,
+                            background: completionColor, transition: 'width 0.3s ease'
+                          }} />
+                        </div>
+
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                          <span style={{ fontSize: '11px', color: isDark ? '#9CA59C' : '#8E8E93' }}>
+                            {day.completionRate}% complete
+                          </span>
+                          {day.carriedOverCount > 0 && (
+                            <span style={{ fontSize: '10px', fontWeight: 600, color: '#D97706' }}>
+                              🍂 {day.carriedOverCount} carried
+                            </span>
+                          )}
+                        </div>
+                      </>
+                    )}
+
+                    {!day.hasTasks && (
+                      <div style={{ padding: '8px 0', textAlign: 'center', color: isDark ? '#6B7B6B' : '#D1D5DB', fontSize: '11px' }}>
+                        No tasks
+                      </div>
+                    )}
                   </div>
-                )}
-              </div>
-            );
-          })}
-        </div>
+                );
+              })}
+            </div>
 
-        {/* Summary Stats */}
-        <div style={{
-          background: isDark ? '#242B24' : '#fff', borderRadius: '18px', padding: '16px',
-          boxShadow: isDark ? '0 1px 3px rgba(0,0,0,0.12), 0 4px 12px rgba(0,0,0,0.16)' : '0 1px 3px rgba(0,0,0,0.04), 0 4px 12px rgba(0,0,0,0.06)'
-        }}>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px' }}>
-            <div style={{ textAlign: 'center' }}>
-              <div style={{ fontSize: '18px', fontWeight: 800, color: '#3B6E3B' }}>
-                {weekData.reduce((sum, day) => sum + day.completedCount, 0)}/{weekData.reduce((sum, day) => sum + day.taskCount, 0)}
+            {/* Summary Stats */}
+            <div style={{
+              background: isDark ? '#242B24' : '#fff', borderRadius: '18px', padding: '16px',
+              boxShadow: isDark ? '0 1px 3px rgba(0,0,0,0.12), 0 4px 12px rgba(0,0,0,0.16)' : '0 1px 3px rgba(0,0,0,0.04), 0 4px 12px rgba(0,0,0,0.06)'
+            }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px' }}>
+                <div style={{ textAlign: 'center' }}>
+                  <div style={{ fontSize: '18px', fontWeight: 800, color: '#3B6E3B' }}>
+                    {weekData.reduce((sum, day) => sum + day.completedCount, 0)}/{weekData.reduce((sum, day) => sum + day.taskCount, 0)}
+                  </div>
+                  <div style={{ fontSize: '10px', color: isDark ? '#9CA59C' : '#8E8E93', marginTop: '2px' }}>Tasks</div>
+                </div>
+                <div style={{ textAlign: 'center' }}>
+                  <div style={{ fontSize: '18px', fontWeight: 800, color: '#3B6E3B' }}>
+                    {weekData.filter(d => d.hasTasks).length}/7
+                  </div>
+                  <div style={{ fontSize: '10px', color: isDark ? '#9CA59C' : '#8E8E93', marginTop: '2px' }}>Active</div>
+                </div>
+                <div style={{ textAlign: 'center' }}>
+                  <div style={{ fontSize: '18px', fontWeight: 800, color: '#3B6E3B' }}>
+                    {weekData.reduce((sum, day) => sum + day.carriedOverCount, 0)}
+                  </div>
+                  <div style={{ fontSize: '10px', color: isDark ? '#9CA59C' : '#8E8E93', marginTop: '2px' }}>Carried</div>
+                </div>
               </div>
-              <div style={{ fontSize: '10px', color: isDark ? '#9CA59C' : '#8E8E93', marginTop: '2px' }}>Tasks</div>
             </div>
-            <div style={{ textAlign: 'center' }}>
-              <div style={{ fontSize: '18px', fontWeight: 800, color: '#3B6E3B' }}>
-                {weekData.filter(d => d.hasTasks).length}/7
-              </div>
-              <div style={{ fontSize: '10px', color: isDark ? '#9CA59C' : '#8E8E93', marginTop: '2px' }}>Active</div>
-            </div>
-            <div style={{ textAlign: 'center' }}>
-              <div style={{ fontSize: '18px', fontWeight: 800, color: '#3B6E3B' }}>
-                {weekData.reduce((sum, day) => sum + day.carriedOverCount, 0)}
-              </div>
-              <div style={{ fontSize: '10px', color: isDark ? '#9CA59C' : '#8E8E93', marginTop: '2px' }}>Carried</div>
-            </div>
-          </div>
-        </div>
-        </>
+          </>
         )}
 
         {selectedDay && selectedDay.reflection && (
@@ -380,13 +381,13 @@ export default function WeeklyView({ onBackToToday }) {
             const cardBackground = day.isToday
               ? "linear-gradient(135deg, rgba(167,211,167,0.2), rgba(111,175,111,0.1))"
               : day.isPast ? "linear-gradient(135deg, rgba(200,200,200,0.08), rgba(180,180,180,0.04))"
-              : "linear-gradient(135deg, rgba(220,240,220,0.12), rgba(200,230,200,0.06))";
+                : "linear-gradient(135deg, rgba(220,240,220,0.12), rgba(200,230,200,0.06))";
             const borderColor = day.isToday ? "rgba(111,175,111,0.4)"
               : day.isPast ? "rgba(150,150,150,0.15)" : "rgba(111,175,111,0.2)";
             const completionColor = day.completionRate === 100 ? "#10b981"
               : day.completionRate >= 75 ? "#6FAF6F"
-              : day.completionRate >= 50 ? "#fbbf24"
-              : day.completionRate > 0 ? "#f59e0b" : "#cbd5e1";
+                : day.completionRate >= 50 ? "#fbbf24"
+                  : day.completionRate > 0 ? "#f59e0b" : "#cbd5e1";
 
             return (
               <div key={day.date} onClick={() => setSelectedDay(day)} style={{

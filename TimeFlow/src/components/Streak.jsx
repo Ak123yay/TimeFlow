@@ -5,6 +5,7 @@ import { hasSeenTooltip, markTooltipSeen, TOOLTIP_CONTENT } from "../utils/first
 import { getReflectionHistory } from '../utils/storage';
 import { loadStreak } from '../utils/streaks';
 import { haptic } from '../utils/haptics';
+import { useDarkMode } from '../utils/useDarkMode';
 
 function LeafIcon({ size = 18, fill = "#3B6E3B" }) {
   return (
@@ -16,6 +17,7 @@ function LeafIcon({ size = 18, fill = "#3B6E3B" }) {
 }
 
 export default function Streak({ onNavigate }) {
+  const isDark = useDarkMode();
   const [isMobile, setIsMobile] = useState(() => window.matchMedia('(max-width: 768px)').matches);
   const [streak, setStreak] = useState({ current: 0, longest: 0, lastActive: null });
   const [reflections, setReflections] = useState([]);
@@ -54,7 +56,6 @@ export default function Streak({ onNavigate }) {
   };
 
   if (isMobile) {
-    const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
     return (
       <MobileLayout
         showBottomNav={true}
@@ -216,8 +217,8 @@ export default function Streak({ onNavigate }) {
                   <div style={{
                     width: '36px', height: '36px', borderRadius: '50%',
                     background: ref.mood === 'great' ? 'rgba(16,185,129,0.1)' :
-                                ref.mood === 'good' ? 'rgba(111,175,111,0.1)' :
-                                ref.mood === 'okay' ? 'rgba(251,191,36,0.1)' : 'rgba(245,158,11,0.1)',
+                      ref.mood === 'good' ? 'rgba(111,175,111,0.1)' :
+                        ref.mood === 'okay' ? 'rgba(251,191,36,0.1)' : 'rgba(245,158,11,0.1)',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                     fontSize: '18px'
                   }}>
@@ -228,7 +229,7 @@ export default function Streak({ onNavigate }) {
                       {ref.date}
                     </div>
                     <div style={{ fontSize: '11px', color: isDark ? '#9CA59C' : '#8E8E93', marginTop: '2px' }}>
-                      {ref.completedCount}/{ref.totalCount} tasks • {Math.floor(ref.timeSpent/60)}h {ref.timeSpent%60}m
+                      {ref.completedCount}/{ref.totalCount} tasks • {Math.floor(ref.timeSpent / 60)}h {ref.timeSpent % 60}m
                     </div>
                   </div>
                   <LeafIcon size={16} fill="#3B6E3B" />
@@ -320,8 +321,8 @@ export default function Streak({ onNavigate }) {
                   <div style={{
                     width: '48px', height: '48px', borderRadius: '50%',
                     background: ref.mood === 'great' ? 'rgba(16,185,129,0.1)' :
-                                ref.mood === 'good' ? 'rgba(111,175,111,0.1)' :
-                                ref.mood === 'okay' ? 'rgba(251,191,36,0.1)' : 'rgba(245,158,11,0.1)',
+                      ref.mood === 'good' ? 'rgba(111,175,111,0.1)' :
+                        ref.mood === 'okay' ? 'rgba(251,191,36,0.1)' : 'rgba(245,158,11,0.1)',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                     fontSize: '24px'
                   }}>
@@ -332,7 +333,7 @@ export default function Streak({ onNavigate }) {
                       {ref.date}
                     </div>
                     <div style={{ fontSize: '13px', color: '#6B8E6B', marginTop: '4px' }}>
-                      {ref.completedCount}/{ref.totalCount} tasks completed • {Math.floor(ref.timeSpent/60)}h {ref.timeSpent%60}m
+                      {ref.completedCount}/{ref.totalCount} tasks completed • {Math.floor(ref.timeSpent / 60)}h {ref.timeSpent % 60}m
                     </div>
                   </div>
                   <LeafIcon size={20} fill="#3B6E3B" />

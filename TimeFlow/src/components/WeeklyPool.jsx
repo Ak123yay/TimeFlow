@@ -12,6 +12,7 @@ import MobileLayout from './mobile/MobileLayout';
 import FirstTimeTooltip from './FirstTimeTooltip';
 import { hasSeenTooltip, markTooltipSeen, TOOLTIP_CONTENT } from "../utils/firstTimeTooltips";
 import { haptic } from "../utils/haptics";
+import { useDarkMode } from "../utils/useDarkMode";
 import SearchBar from './shared/SearchBar';
 import "../App.css";
 
@@ -44,6 +45,7 @@ const saveTasks = (tasks) => {
 };
 
 export default function WeeklyPool({ onNavigateToToday }) {
+  const isDark = useDarkMode();
   const [poolTasks, setPoolTasks] = useState(() => loadWeeklyPool());
   const [newTaskName, setNewTaskName] = useState("");
   const [newTaskDeadline, setNewTaskDeadline] = useState("");
@@ -125,7 +127,6 @@ export default function WeeklyPool({ onNavigateToToday }) {
   };
 
   if (isMobile) {
-    const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
     return (
       <MobileLayout showBottomNav={true} onNavigate={(tab) => {
         haptic.light();
@@ -408,34 +409,34 @@ export default function WeeklyPool({ onNavigateToToday }) {
                 const urgency = task.deadline ? getDeadlineUrgency(task) : null;
 
                 return (
-                <div key={task.id} className="pool-task-card">
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontSize: 15, fontWeight: 700, color: "#3B6E3B" }}>
-                      {task.name}
-                    </div>
-                    {urgency && (
-                      <div style={{ marginTop: "4px" }}>
-                        <span style={{
-                          fontSize: "11px", padding: "3px 8px",
-                          background: urgency.color + "22",
-                          color: urgency.color,
-                          borderRadius: "9999px", fontWeight: "600",
-                          display: "inline-block"
-                        }}>
-                          📅 {urgency.message}
-                        </span>
+                  <div key={task.id} className="pool-task-card">
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontSize: 15, fontWeight: 700, color: "#3B6E3B" }}>
+                        {task.name}
                       </div>
-                    )}
+                      {urgency && (
+                        <div style={{ marginTop: "4px" }}>
+                          <span style={{
+                            fontSize: "11px", padding: "3px 8px",
+                            background: urgency.color + "22",
+                            color: urgency.color,
+                            borderRadius: "9999px", fontWeight: "600",
+                            display: "inline-block"
+                          }}>
+                            📅 {urgency.message}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                    <button onClick={() => handleMoveToToday(task)} className="btn primary" style={{
+                      fontSize: 13, padding: "8px 16px"
+                    }}>
+                      Move to Today →
+                    </button>
+                    <button className="delete-button" onClick={() => deleteTask(task.id)}>
+                      ×
+                    </button>
                   </div>
-                  <button onClick={() => handleMoveToToday(task)} className="btn primary" style={{
-                    fontSize: 13, padding: "8px 16px"
-                  }}>
-                    Move to Today →
-                  </button>
-                  <button className="delete-button" onClick={() => deleteTask(task.id)}>
-                    ×
-                  </button>
-                </div>
                 );
               })}
             </div>

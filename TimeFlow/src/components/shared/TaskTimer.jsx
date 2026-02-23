@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import { useDarkMode } from '../../utils/useDarkMode';
 
 /**
  * TaskTimer - Clean mobile-friendly active task timer
@@ -14,7 +15,7 @@ export default function TaskTimer({
 }) {
   if (!activeTask) return null;
 
-  const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+  const isDark = useDarkMode();
 
   const progressPct = totalSeconds > 0
     ? ((totalSeconds - secondsLeft) / totalSeconds) * 100

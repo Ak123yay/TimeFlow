@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useDarkMode } from '../utils/useDarkMode';
 import { haptic } from '../utils/haptics';
 
 export default function InstallPrompt() {
@@ -40,7 +41,7 @@ export default function InstallPrompt() {
 
   if (!showPrompt) return null;
 
-  const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+  const isDark = useDarkMode();
 
   return (
     <div style={{

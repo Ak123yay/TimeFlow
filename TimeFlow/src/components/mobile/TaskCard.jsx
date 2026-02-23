@@ -1,4 +1,5 @@
-import React, { useMemo } from 'react';
+import { useMemo } from 'react';
+import { useDarkMode } from '../../utils/useDarkMode';
 import SwipeableTask from '../SwipeableTask';
 
 /**
@@ -16,7 +17,7 @@ export default function TaskCard({
   showSwipeActions = true
 }) {
   // Detect system color scheme
-  const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+  const isDark = useDarkMode();
 
   // OPTIMIZED: Memoize deadline calculation - only recalculates when deadline changes
   const deadlineInfo = useMemo(() => {
@@ -50,7 +51,7 @@ export default function TaskCard({
           ? '2px solid #3B6E3B'
           : task.conflicts
             ? '1.5px solid rgba(220,38,38,0.3)'
-            : `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'}`,
+            : `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'} `,
         boxShadow: isActive
           ? '0 2px 12px rgba(59,110,59,0.12)'
           : task.conflicts

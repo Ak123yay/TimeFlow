@@ -1,11 +1,12 @@
-import React from 'react';
+import { useState } from 'react';
+import { useDarkMode } from '../utils/useDarkMode';
 import { haptic } from '../utils/haptics';
 
 /**
  * FirstTimeTooltip - Intro card shown on first visit to a tab
  */
 export default function FirstTimeTooltip({ title, description, icon, onDismiss }) {
-  const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+  const isDark = useDarkMode();
 
   return (
     <div style={{

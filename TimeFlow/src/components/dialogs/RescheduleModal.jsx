@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useDarkMode } from "../../utils/useDarkMode";
 import { getDeadlineUrgency } from "../../utils/scheduler";
 import {
   generateSmartRecommendation,
@@ -62,22 +63,13 @@ export default function RescheduleModal({
   const [isMobile, setIsMobile] = useState(
     () => window.matchMedia('(max-width: 640px)').matches
   );
-  const [isDark, setIsDark] = useState(
-    () => window.matchMedia('(prefers-color-scheme: dark)').matches
-  );
+  const isDark = useDarkMode();
 
   useEffect(() => {
     const mqMobile = window.matchMedia('(max-width: 640px)');
     const hMobile = e => setIsMobile(e.matches);
     mqMobile.addEventListener('change', hMobile);
     return () => mqMobile.removeEventListener('change', hMobile);
-  }, []);
-
-  useEffect(() => {
-    const mqDark = window.matchMedia('(prefers-color-scheme: dark)');
-    const hDark = e => setIsDark(e.matches);
-    mqDark.addEventListener('change', hDark);
-    return () => mqDark.removeEventListener('change', hDark);
   }, []);
 
   useEffect(() => {
