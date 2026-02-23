@@ -3,7 +3,9 @@ import MobileLayout from './mobile/MobileLayout';
 import { haptic } from '../utils/haptics';
 import {
   suggestDuration,
-  getAllHourlyCompletionRates
+  getAllHourlyCompletionRates,
+  getEstimationBias,
+  getRescheduleOptionFrequencies,
 } from '../utils/analytics';
 
 export default function Insights({ onNavigate }) {
@@ -11,6 +13,8 @@ export default function Insights({ onNavigate }) {
   const [accuracyStats, setAccuracyStats] = useState(null);
   const [energyPattern, setEnergyPattern] = useState(null);
   const [frequentTasks, setFrequentTasks] = useState([]);
+  const [estimationBias, setEstimationBias] = useState(null);
+  const [rescheduleHabits, setRescheduleHabits] = useState({});
 
   useEffect(() => {
     const mq = window.matchMedia('(max-width: 768px)');
@@ -99,6 +103,14 @@ export default function Insights({ onNavigate }) {
 
     setFrequentTasks(frequent);
 
+    // Estimation bias
+    const bias = getEstimationBias();
+    if (bias.bias !== 'unknown') setEstimationBias(bias);
+
+    // Reschedule habits
+    const freqs = getRescheduleOptionFrequencies();
+    if (Object.keys(freqs).length > 0) setRescheduleHabits(freqs);
+
   }, []);
 
   const calculateTrend = (values) => {
@@ -182,6 +194,40 @@ export default function Insights({ onNavigate }) {
           </div>
         )}
 
+        {/* Estimation Bias Card */}
+        {estimationBias && (
+          <div style={{
+            background: isDark ? '#242B24' : '#fff',
+            borderRadius: '14px',
+            padding: '16px',
+            marginBottom: '14px',
+            boxShadow: isDark ? '0 1px 6px rgba(0,0,0,0.3)' : '0 1px 6px rgba(0,0,0,0.04)'
+          }}>
+            <h3 style={{ fontSize: '14px', fontWeight: 700, color: isDark ? '#E8F0E8' : '#1A1A1A', margin: '0 0 12px' }}>
+              Estimation Bias 🎯
+            </h3>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '10px' }}>
+              <div style={{
+                padding: '8px 14px', borderRadius: '10px', fontWeight: 700, fontSize: '13px',
+                background: estimationBias.bias === 'accurate' ? 'rgba(16,185,129,0.1)' :
+                             estimationBias.bias === 'underestimate' ? 'rgba(245,158,11,0.1)' : 'rgba(99,102,241,0.1)',
+                color: estimationBias.bias === 'accurate' ? '#10b981' :
+                       estimationBias.bias === 'underestimate' ? '#d97706' : '#6366f1',
+              }}>
+                {estimationBias.bias === 'accurate' ? '✓ On Target' :
+                 estimationBias.bias === 'underestimate' ? `↑ Under by ${estimationBias.avgDiffPercent}%` :
+                 `↓ Over by ${Math.abs(estimationBias.avgDiffPercent)}%`}
+              </div>
+              <div style={{ fontSize: '11px', color: isDark ? '#9CA59C' : '#8E8E93' }}>
+                {estimationBias.sampleSize} tasks analysed
+              </div>
+            </div>
+            <div style={{ fontSize: '12px', color: isDark ? '#A8C8A8' : '#2E5E2E', lineHeight: 1.5 }}>
+              {estimationBias.suggestion}
+            </div>
+          </div>
+        )}
+
         {/* Energy Patterns Card */}
         {energyPattern && energyPattern.length > 0 && (
           <div style={{
@@ -234,6 +280,54 @@ export default function Insights({ onNavigate }) {
             </div>
           </div>
         )}
+
+        {/* Reschedule Habits Card */}
+        {Object.keys(rescheduleHabits).length > 0 && (() => {
+          const LABELS = {
+            complete: { icon: '✓', label: 'Completed' },
+            continue: { icon: '⏱️', label: 'Kept going' },
+            later_today: { icon: '🕐', label: 'Later today' },
+            tomorrow: { icon: '📅', label: 'Tomorrow' },
+            back_to_pool: { icon: '🌊', label: 'Back to pool' },
+            break_task: { icon: '🔨', label: 'Broke it up' },
+            pick_time: { icon: '🎯', label: 'Picked a time' },
+          };
+          const entries = Object.entries(rescheduleHabits).sort(([,a],[,b]) => b - a);
+          const total = entries.reduce((s, [,v]) => s + v, 0);
+          return (
+            <div style={{
+              background: isDark ? '#242B24' : '#fff',
+              borderRadius: '14px',
+              padding: '16px',
+              marginBottom: '14px',
+              boxShadow: isDark ? '0 1px 6px rgba(0,0,0,0.3)' : '0 1px 6px rgba(0,0,0,0.04)'
+            }}>
+              <h3 style={{ fontSize: '14px', fontWeight: 700, color: isDark ? '#E8F0E8' : '#1A1A1A', margin: '0 0 12px' }}>
+                Reschedule Habits 🔁
+              </h3>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                {entries.map(([key, count]) => {
+                  const meta = LABELS[key] || { icon: '•', label: key };
+                  const pct = Math.round((count / total) * 100);
+                  return (
+                    <div key={key} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                      <span style={{ fontSize: '14px', width: '20px', textAlign: 'center' }}>{meta.icon}</span>
+                      <div style={{ flex: 1 }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '3px' }}>
+                          <span style={{ fontSize: '12px', fontWeight: 600, color: isDark ? '#E8F0E8' : '#1A1A1A' }}>{meta.label}</span>
+                          <span style={{ fontSize: '11px', color: isDark ? '#9CA59C' : '#8E8E93' }}>{count}×  ({pct}%)</span>
+                        </div>
+                        <div style={{ height: '4px', borderRadius: '2px', background: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)', overflow: 'hidden' }}>
+                          <div style={{ width: `${pct}%`, height: '100%', borderRadius: '2px', background: key === 'complete' ? '#4CAF50' : isDark ? '#5A7A5A' : '#8BBB8B', transition: 'width 0.5s ease' }} />
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          );
+        })()}
 
         {/* Frequent Tasks with Suggestions */}
         {frequentTasks.length > 0 && (
@@ -293,7 +387,7 @@ export default function Insights({ onNavigate }) {
         )}
 
         {/* Empty State */}
-        {!accuracyStats && (!energyPattern || energyPattern.length === 0) && frequentTasks.length === 0 && (
+        {!accuracyStats && !estimationBias && Object.keys(rescheduleHabits).length === 0 && (!energyPattern || energyPattern.length === 0) && frequentTasks.length === 0 && (
           <div style={{ textAlign: 'center', padding: '40px 20px' }}>
             <div style={{ fontSize: '48px', marginBottom: '12px' }}>📊</div>
             <p style={{ fontSize: '15px', fontWeight: 600, color: isDark ? '#E8F0E8' : '#1A1A1A', margin: '0 0 4px' }}>
