@@ -1535,16 +1535,10 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
 
             {/* Carried Over */}
             {filterForFocus(filterTasksBySearch(carriedTasks)).length > 0 && (
-              <div style={{
-                marginBottom: '14px',
-                padding: '14px',
-                borderRadius: '20px',
-                background: isDark ? 'rgba(217,119,6,0.08)' : 'rgba(251,191,36,0.07)',
-                border: `1px solid ${isDark ? 'rgba(217,119,6,0.15)' : 'rgba(217,119,6,0.14)'}`
-              }}>
+              <div style={{ marginBottom: '14px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px', paddingLeft: '2px' }}>
                   <span style={{ fontSize: '11px', fontWeight: 800, color: '#D97706', textTransform: 'uppercase', letterSpacing: '0.8px' }}>
-                    🍂 Carried Over
+                    Carried Over
                   </span>
                   <span style={{ fontSize: '10px', fontWeight: 700, background: 'rgba(217,119,6,0.12)', color: '#D97706', padding: '2px 7px', borderRadius: '99px' }}>
                     {filterForFocus(filterTasksBySearch(carriedTasks)).length}
@@ -1648,7 +1642,7 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
               <div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px', paddingLeft: '2px' }}>
                   <span style={{ fontSize: '11px', fontWeight: 800, color: isDark ? '#E8F0E8' : '#1A1A1A', textTransform: 'uppercase', letterSpacing: '0.8px' }}>
-                    🌿 Today
+                    Today
                   </span>
                   <span style={{ fontSize: '10px', fontWeight: 700, background: 'rgba(59,110,59,0.1)', color: '#3B6E3B', padding: '2px 7px', borderRadius: '99px' }}>
                     {filterForFocus(filterTasksBySearch(todayTasks)).length}

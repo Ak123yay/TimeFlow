@@ -102,32 +102,6 @@ export default function TaskCard({
 
       {/* Content */}
       <div style={{ flex: 1, minWidth: 0 }}>
-        {/* In Progress badge */}
-        {isActive && (
-          <div style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: '4px',
-            fontSize: '9px',
-            fontWeight: 700,
-            color: '#3B6E3B',
-            background: 'rgba(59,110,59,0.12)',
-            padding: '2px 7px',
-            borderRadius: '99px',
-            letterSpacing: '0.3px',
-            textTransform: 'uppercase',
-            marginBottom: '4px'
-          }}>
-            <span style={{
-              width: '6px', height: '6px', borderRadius: '50%',
-              background: '#3B6E3B',
-              boxShadow: '0 0 0 2px rgba(59,110,59,0.2)',
-              animation: 'pulse 2s ease-in-out infinite',
-              flexShrink: 0
-            }} />
-            In Progress
-          </div>
-        )}
         <div style={{
           fontSize: '14px',
           fontWeight: 600,
@@ -236,6 +210,19 @@ export default function TaskCard({
         >
           ▶
         </button>
+      )}
+
+      {/* Active pulse dot */}
+      {isActive && (
+        <div style={{
+          width: '8px',
+          height: '8px',
+          borderRadius: '50%',
+          background: '#3B6E3B',
+          boxShadow: '0 0 6px rgba(59,110,59,0.5)',
+          flexShrink: 0,
+          animation: 'pulse 2s ease-in-out infinite'
+        }} />
       )}
     </div>
   );
