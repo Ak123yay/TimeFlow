@@ -93,24 +93,6 @@ export default function TaskCard({
 
       {/* Content */}
       <div style={{ flex: 1, minWidth: 0 }}>
-        {isUpNext && (
-          <div style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: '3px',
-            fontSize: '9px',
-            fontWeight: 700,
-            color: '#3B6E3B',
-            background: 'rgba(59,110,59,0.1)',
-            padding: '2px 7px',
-            borderRadius: '99px',
-            marginBottom: '4px',
-            letterSpacing: '0.4px',
-            textTransform: 'uppercase'
-          }}>
-            ▶ Up Next
-          </div>
-        )}
         <div style={{
           fontSize: '14px',
           fontWeight: 600,
@@ -135,6 +117,18 @@ export default function TaskCard({
           flexWrap: 'wrap'
         }}>
           <span>{task.duration}m</span>
+          {isUpNext && (
+            <>
+              <span style={{ opacity: 0.4 }}>·</span>
+              <span style={{
+                fontSize: '9px',
+                fontWeight: 700,
+                color: isActive ? 'rgba(255,255,255,0.9)' : '#3B6E3B',
+                letterSpacing: '0.3px',
+                textTransform: 'uppercase'
+              }}>▶ up next</span>
+            </>
+          )}
           {task.startTime && (
             <>
               <span style={{ opacity: 0.4 }}>·</span>
