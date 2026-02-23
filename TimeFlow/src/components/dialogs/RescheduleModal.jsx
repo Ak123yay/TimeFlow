@@ -218,6 +218,24 @@ export default function RescheduleModal({
                     {category.primary}
                   </span>
                 )}
+                {completionProb && (
+                  <span style={{
+                    fontSize: 12, fontWeight: 600, padding: '3px 9px', borderRadius: 7,
+                    color: completionProb.probability >= 0.6 ? '#16a34a' : completionProb.probability >= 0.4 ? '#b45309' : '#dc2626',
+                    background: completionProb.probability >= 0.6 ? 'rgba(34,197,94,0.1)' : completionProb.probability >= 0.4 ? 'rgba(245,158,11,0.1)' : 'rgba(239,68,68,0.1)',
+                  }}>
+                    {Math.round(completionProb.probability * 100)}% likely
+                  </span>
+                )}
+                {procrastination && procrastination.severity !== 'none' && procrastination.severity !== 'mild' && (
+                  <span style={{
+                    fontSize: 12, fontWeight: 600, padding: '3px 9px', borderRadius: 7,
+                    color: procrastination.severity === 'chronic' ? '#dc2626' : '#d97706',
+                    background: procrastination.severity === 'chronic' ? 'rgba(220,38,38,0.1)' : 'rgba(255,152,0,0.1)',
+                  }}>
+                    {procrastination.severity === 'chronic' ? '🚫 Avoided' : procrastination.severity === 'severe' ? '⚡ Avoiding' : '🔄 Drifting'}
+                  </span>
+                )}
               </div>
             </div>
 
