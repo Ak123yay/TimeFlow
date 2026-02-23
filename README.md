@@ -1,7 +1,7 @@
 # TimeFlow (Beta V1.1)
 
 **A mobile optimized nature-themed intelligent task scheduler that helps you flow through your day with calm productivity.**
-**Now with the smartest resceduling yet!**
+**Now with the smartest rescheduling yet!**
 
 ## What is TimeFlow?
 
@@ -148,11 +148,12 @@ TimeFlow prevents common mistakes:
 
 - **100% Offline** - Uses browser localStorage, no server needed
 - **React 19.2** - Modern, responsive UI
-- **Vite 7.3.1** - Lightning-fast build and dev server
+- **Vite 7.2.4** - Lightning-fast build and dev server
 - **PWA (Progressive Web App)** - vite-plugin-pwa v1.2.0 with Workbox
 - **Service Worker** - Precaches 713KB of assets, offline-first with auto-updates
 - **Mobile-Optimized** - Touch gestures, haptic feedback, responsive design
-- **No Dependencies** - Minimal, fast, no external state management
+- **Framer Motion 12** - Smooth animations
+- **Minimal Dependencies** - No external state management
 - **CSS Variables** - Dynamic theming with system preference detection
 - **Lazy Loading** - Optimized code splitting for fast initial load
 
@@ -210,7 +211,7 @@ TimeFlow embraces **calm productivity** over hustle culture:
 - **3-tier health system** (healthy, warning, critical)
 - **Real-time search** with 300ms debouncing in Today and Pool views
 - **Insights dashboard** with duration accuracy, best hours, and smart suggestions
-- **PWA support** - 742KB precached, offline-first with service worker
+- **PWA support** - 713KB precached, offline-first with service worker
 - **Automatic carry-over** at your configured start time
 - **Toggle completion** - Uncheck tasks if marked by mistake
 - **Daily + Monthly calendars** - Daily view in Today, monthly in Week

@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useDarkMode } from '../utils/useDarkMode';
 import { loadTasksForDate } from '../utils/storage';
 import { haptic } from '../utils/haptics';
 
@@ -9,7 +10,7 @@ export default function CalendarView({ onDaySelect, selectedDate }) {
   const [currentDate, setCurrentDate] = useState(() => new Date());
 
   // Detect system color scheme
-  const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+  const isDark = useDarkMode();
 
   // Get first day of month and total days
   const year = currentDate.getFullYear();
@@ -202,15 +203,15 @@ export default function CalendarView({ onDaySelect, selectedDate }) {
                 border: dayData.isToday
                   ? isDark ? '2px solid #6FAF6F' : '2px solid #3B6E3B'
                   : dayData.isSelected
-                  ? isDark ? '2px solid #8BC98B' : '2px solid #6FAF6F'
-                  : 'none',
+                    ? isDark ? '2px solid #8BC98B' : '2px solid #6FAF6F'
+                    : 'none',
                 background: dayData.isToday
                   ? isDark ? 'rgba(111,175,111,0.15)' : 'rgba(59,110,59,0.1)'
                   : dayData.isSelected
-                  ? isDark ? 'rgba(139,201,139,0.15)' : 'rgba(111,175,111,0.1)'
-                  : dayData.tasks > 0
-                  ? isDark ? '#1A1F1A' : '#F5F5F5'
-                  : 'transparent',
+                    ? isDark ? 'rgba(139,201,139,0.15)' : 'rgba(111,175,111,0.1)'
+                    : dayData.tasks > 0
+                      ? isDark ? '#1A1F1A' : '#F5F5F5'
+                      : 'transparent',
                 cursor: 'pointer',
                 display: 'flex',
                 flexDirection: 'column',
@@ -231,8 +232,8 @@ export default function CalendarView({ onDaySelect, selectedDate }) {
                 color: dayData.isToday
                   ? isDark ? '#8BC98B' : '#3B6E3B'
                   : dayData.isPast
-                  ? isDark ? '#6B7B6B' : '#9CA3AF'
-                  : isDark ? '#E8F0E8' : '#1A1A1A'
+                    ? isDark ? '#6B7B6B' : '#9CA3AF'
+                    : isDark ? '#E8F0E8' : '#1A1A1A'
               }}>
                 {dayData.day}
               </div>
@@ -252,8 +253,8 @@ export default function CalendarView({ onDaySelect, selectedDate }) {
                     background: completionRate === 1
                       ? isDark ? '#8BC98B' : '#3B6E3B'
                       : completionRate > 0
-                      ? '#D97706'
-                      : isDark ? '#6B7B6B' : '#9CA3AF'
+                        ? '#D97706'
+                        : isDark ? '#6B7B6B' : '#9CA3AF'
                   }} />
                   {/* Show task count if more than 3 */}
                   {dayData.tasks > 1 && (

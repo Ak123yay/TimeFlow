@@ -19,12 +19,29 @@ const ANIM_CSS = `
   from { transform: scale(0.92); opacity: 0; }
   to   { transform: scale(1);    opacity: 1; }
 }
+@keyframes aiPulse {
+  0%   { box-shadow: 0 0 0 0 rgba(110,175,110,0); }
+  50%  { box-shadow: 0 0 0 6px rgba(110,175,110,0.12); }
+  100% { box-shadow: 0 0 0 0 rgba(110,175,110,0); }
+}
+@keyframes dotPulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.4; }
+}
 `;
 
 const CAT_EMOJI = {
   coding: '💻', meetings: '🤝', creative: '🎨',
   email: '📧', admin: '📋', health: '🏃',
   learning: '📚', personal: '🌱',
+};
+
+// Material-style icon using emoji fallbacks
+const TILE_ICONS = {
+  continue: { icon: '▶', label: 'Continue' },
+  later_today: { icon: '🕐', label: 'Later Today' },
+  tomorrow: { icon: '📅', label: 'Tomorrow' },
+  back_to_pool: { icon: '📥', label: 'Back to Pool' },
 };
 
 export default function RescheduleModal({
@@ -45,14 +62,22 @@ export default function RescheduleModal({
   const [isMobile, setIsMobile] = useState(
     () => window.matchMedia('(max-width: 640px)').matches
   );
-
-  const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+  const [isDark, setIsDark] = useState(
+    () => window.matchMedia('(prefers-color-scheme: dark)').matches
+  );
 
   useEffect(() => {
-    const mq = window.matchMedia('(max-width: 640px)');
-    const h = e => setIsMobile(e.matches);
-    mq.addEventListener('change', h);
-    return () => mq.removeEventListener('change', h);
+    const mqMobile = window.matchMedia('(max-width: 640px)');
+    const hMobile = e => setIsMobile(e.matches);
+    mqMobile.addEventListener('change', hMobile);
+    return () => mqMobile.removeEventListener('change', hMobile);
+  }, []);
+
+  useEffect(() => {
+    const mqDark = window.matchMedia('(prefers-color-scheme: dark)');
+    const hDark = e => setIsDark(e.matches);
+    mqDark.addEventListener('change', hDark);
+    return () => mqDark.removeEventListener('change', hDark);
   }, []);
 
   useEffect(() => {
@@ -74,61 +99,87 @@ export default function RescheduleModal({
 
   if (!task) return null;
 
-  const attempts      = task.attempts || 0;
-  const remaining     = task.remaining || task.duration;
-  const urgency       = getDeadlineUrgency(task);
-  const category      = categorizeTask(task.name);
-  const urgentLevel   = urgency?.level;
+  const attempts = task.attempts || 0;
+  const remaining = task.remaining || task.duration;
+  const urgency = getDeadlineUrgency(task);
+  const category = categorizeTask(task.name);
+  const urgentLevel = urgency?.level;
 
   const procrastination = aiRec?.analysis?.procrastination;
-  const completionProb  = aiRec?.analysis?.completionProbability;
-  const bestSlot        = aiRec?.analysis?.bestSlot;
-  const continueDur     = aiRec?.analysis?.continueDuration;
-  const rankedOptions   = aiRec?.ranked || [];
-  const topOption       = aiRec?.primary?.option;
+  const completionProb = aiRec?.analysis?.completionProbability;
+  const bestSlot = aiRec?.analysis?.bestSlot;
+  const continueDur = aiRec?.analysis?.continueDuration;
+  const rankedOptions = aiRec?.ranked || [];
+  const topOption = aiRec?.primary?.option;
 
   const showBreakTask = attempts >= 2 ||
     (task.duration || 0) >= 60 ||
     (procrastination && procrastination.severity !== 'none');
 
-  // ── colors ────────────────────────────────────────────────────────────────
-  const bg       = isDark ? '#1E241E' : '#FAFCFA';
-  const cardBg   = isDark ? '#262E26' : '#ffffff';
-  const titleCol = isDark ? '#E8F0E8' : '#0F2B0F';
-  const labelCol = isDark ? '#8BC98B' : '#2E5E2E';
-  const mutedCol = isDark ? '#7A8A7A' : '#7A947A';
-  const divider  = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)';
-  const chipBg   = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)';
-  const chipBrd  = isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)';
-
-  const taskEmoji = CAT_EMOJI[category?.primary] || '⏰';
-  const px = isMobile ? 18 : 24;
-
-  // probability bar color
+  // ── derived AI labels ──────────────────────────────────────────────────────
+  const probPct = completionProb ? Math.round(completionProb.probability * 100) : null;
   const probCol = completionProb
     ? completionProb.probability >= 0.6 ? '#4CAF50'
       : completionProb.probability >= 0.4 ? '#F59E0B' : '#EF4444'
     : '#888';
 
-  // ── sheet ─────────────────────────────────────────────────────────────────
+  const procLabel = procrastination
+    ? { none: 'None', mild: 'Mild', moderate: 'Moderate', severe: 'Severe', chronic: 'Chronic' }[procrastination.severity] || 'Unknown'
+    : null;
+  const procColor = procrastination
+    ? { none: '#4CAF50', mild: '#8BC98B', moderate: '#F59E0B', severe: '#EF4444', chronic: '#DC2626' }[procrastination.severity] || '#888'
+    : '#888';
+
+  const catLabel = category?.primary && category.primary !== 'other' ? category.primary : null;
+  const taskEmoji = CAT_EMOJI[category?.primary] || '⏰';
+
+  // ── theme palette ──────────────────────────────────────────────────────────
+  const glassBg = isDark
+    ? 'linear-gradient(180deg, rgba(28,36,28,0.97) 0%, rgba(18,22,18,0.99) 100%)'
+    : 'linear-gradient(180deg, rgba(255,255,255,0.98) 0%, rgba(245,250,245,1) 100%)';
+  const surface = isDark
+    ? 'rgba(255,255,255,0.04)'
+    : 'rgba(0,0,0,0.03)';
+  const border = isDark
+    ? 'rgba(255,255,255,0.08)'
+    : 'rgba(0,0,0,0.08)';
+  const greenBorder = isDark
+    ? 'rgba(110,175,110,0.38)'
+    : 'rgba(59,110,59,0.35)';
+  const textPrimary = isDark ? '#E8F0E8' : '#0F2B0F';
+  const textMuted = isDark ? '#7A8A7A' : '#6B8070';
+  const green = isDark ? '#6FAF6F' : '#3B7A3B';
+  const greenDark = isDark ? '#4e8f4e' : '#2D622D';
+  const divider = isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.07)';
+
   const sheetStyle = isMobile
     ? {
-        position: 'fixed', bottom: 0, left: 0, right: 0,
-        background: bg,
-        borderRadius: '22px 22px 0 0',
-        maxHeight: '94dvh', overflowY: 'auto',
-        paddingBottom: 'max(16px, env(safe-area-inset-bottom))',
-        animation: 'slideUpSheet 0.3s cubic-bezier(0.32,0.72,0,1)',
-        boxShadow: isDark ? '0 -20px 60px rgba(0,0,0,0.55)' : '0 -10px 40px rgba(0,0,0,0.12)',
-      }
+      position: 'fixed', bottom: 0, left: 0, right: 0,
+      background: glassBg,
+      backdropFilter: 'blur(20px)',
+      WebkitBackdropFilter: 'blur(20px)',
+      borderRadius: '24px 24px 0 0',
+      maxHeight: '96dvh', overflowY: 'auto',
+      paddingBottom: 'max(20px, env(safe-area-inset-bottom))',
+      animation: 'slideUpSheet 0.32s cubic-bezier(0.32,0.72,0,1)',
+      boxShadow: isDark
+        ? '0 -24px 80px rgba(0,0,0,0.7)'
+        : '0 -12px 48px rgba(0,0,0,0.15)',
+    }
     : {
-        background: bg,
-        borderRadius: 22,
-        width: '100%', maxWidth: 400,
-        maxHeight: '88vh', overflowY: 'auto',
-        boxShadow: isDark ? '0 24px 64px rgba(0,0,0,0.55)' : '0 20px 56px rgba(0,0,0,0.14)',
-        animation: 'scaleIn 0.25s cubic-bezier(0.34,1.2,0.64,1)',
-      };
+      background: glassBg,
+      backdropFilter: 'blur(20px)',
+      WebkitBackdropFilter: 'blur(20px)',
+      borderRadius: 24,
+      width: '100%', maxWidth: 420,
+      maxHeight: '92vh', overflowY: 'auto',
+      boxShadow: isDark
+        ? '0 32px 80px rgba(0,0,0,0.7)'
+        : '0 20px 56px rgba(0,0,0,0.14)',
+      animation: 'scaleIn 0.25s cubic-bezier(0.34,1.2,0.64,1)',
+    };
+
+  const px = isMobile ? 18 : 22;
 
   return (
     <>
@@ -138,9 +189,9 @@ export default function RescheduleModal({
       <div
         style={{
           position: 'fixed', inset: 0,
-          background: 'rgba(0,0,0,0.45)',
-          backdropFilter: 'blur(8px)',
-          WebkitBackdropFilter: 'blur(8px)',
+          background: isDark ? 'rgba(0,0,0,0.65)' : 'rgba(0,0,0,0.35)',
+          backdropFilter: 'blur(10px)',
+          WebkitBackdropFilter: 'blur(10px)',
           display: 'flex',
           alignItems: isMobile ? 'flex-end' : 'center',
           justifyContent: 'center',
@@ -157,246 +208,360 @@ export default function RescheduleModal({
             <div style={{ display: 'flex', justifyContent: 'center', padding: '12px 0 4px' }}>
               <div style={{
                 width: 36, height: 4, borderRadius: 2,
-                background: isDark ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.1)',
+                background: isDark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.12)',
               }} />
             </div>
           )}
 
-          {/* ─── HEADER ───────────────────────────────────────────────────── */}
-          <div style={{ padding: `${isMobile ? 14 : 26}px ${px}px 0` }}>
-
-            {/* label row */}
-            <div style={{
-              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-              marginBottom: 12,
-            }}>
+          {/* ─── HEADER CHIPS ─────────────────────────────────────────────── */}
+          <div style={{
+            display: 'flex', gap: 10, alignItems: 'center',
+            padding: `${isMobile ? 14 : 22}px ${px}px 0`,
+            flexWrap: 'wrap',
+          }}>
+            {/* category chip */}
+            {catLabel && (
               <div style={{
-                display: 'flex', alignItems: 'center', gap: 8,
+                display: 'flex', alignItems: 'center', gap: 6,
+                padding: '5px 12px', borderRadius: 9999,
+                background: surface,
+                border: `1px solid ${greenBorder}`,
               }}>
-                <span style={{ fontSize: 20 }}>{taskEmoji}</span>
-                <span style={{
-                  fontSize: 11, fontWeight: 700, letterSpacing: 0.6,
-                  textTransform: 'uppercase', color: mutedCol,
-                }}>Time's up</span>
-              </div>
-
-              {/* close X */}
-              <button
-                onClick={onClose}
-                style={{
-                  background: 'none', border: 'none', cursor: 'pointer',
-                  color: mutedCol, fontSize: 18, lineHeight: 1,
-                  padding: '4px 6px', borderRadius: 8,
-                }}
-              >
-                ✕
-              </button>
-            </div>
-
-            {/* task name */}
-            <div style={{
-              fontSize: isMobile ? 20 : 22, fontWeight: 800,
-              color: titleCol, lineHeight: 1.3, marginBottom: 12,
-              wordBreak: 'break-word',
-            }}>
-              {task.name}
-            </div>
-
-            {/* chip row - horizontal, wrapping */}
-            <div style={{
-              display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 16,
-            }}>
-              <Chip isDark={isDark}>{remaining} min left</Chip>
-              {category.primary !== 'other' && (
-                <Chip isDark={isDark} accent>{category.primary}</Chip>
-              )}
-              {attempts >= 2 && (
-                <Chip isDark={isDark} warn>↩ {attempts}× rescheduled</Chip>
-              )}
-              {(urgentLevel === 'overdue' || urgentLevel === 'today') && (
-                <Chip isDark={isDark} danger>
-                  {urgentLevel === 'overdue' ? 'Overdue' : 'Due today'}
-                </Chip>
-              )}
-              {urgentLevel === 'tomorrow' && (
-                <Chip isDark={isDark} warn>Due tomorrow</Chip>
-              )}
-            </div>
-
-            {/* completion probability bar */}
-            {completionProb && (
-              <div style={{ marginBottom: 16 }}>
-                <div style={{
-                  display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                  marginBottom: 5,
-                }}>
-                  <span style={{ fontSize: 11, fontWeight: 600, color: mutedCol }}>
-                    Completion likelihood
-                  </span>
-                  <span style={{ fontSize: 12, fontWeight: 700, color: probCol }}>
-                    {Math.round(completionProb.probability * 100)}% — {completionProb.label}
-                  </span>
-                </div>
-                <div style={{
-                  height: 4, borderRadius: 2, width: '100%',
-                  background: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.05)',
-                  overflow: 'hidden',
-                }}>
-                  <div style={{
-                    width: `${Math.round(completionProb.probability * 100)}%`,
-                    height: '100%', borderRadius: 2,
-                    background: probCol,
-                    transition: 'width 0.4s ease',
-                  }} />
-                </div>
-              </div>
-            )}
-
-            {/* AI summary */}
-            {aiRec?.summary && (
-              <div style={{
-                display: 'flex', gap: 8, alignItems: 'flex-start',
-                padding: '10px 12px', borderRadius: 10, marginBottom: 18,
-                background: isDark ? 'rgba(111,175,111,0.06)' : 'rgba(46,94,46,0.04)',
-                border: `1px solid ${isDark ? 'rgba(111,175,111,0.12)' : 'rgba(46,94,46,0.08)'}`,
-              }}>
-                <span style={{
-                  fontSize: 8, fontWeight: 800, letterSpacing: 0.5,
-                  background: labelCol, color: '#fff',
-                  padding: '2px 5px', borderRadius: 3, flexShrink: 0, marginTop: 1,
-                }}>AI</span>
-                <span style={{ fontSize: 12, color: isDark ? '#A8C8A8' : '#2E5E2E', lineHeight: 1.5 }}>
-                  {aiRec.summary}
+                <span style={{ fontSize: 14 }}>{taskEmoji}</span>
+                <span style={{ fontSize: 12, fontWeight: 600, color: green, textTransform: 'capitalize' }}>
+                  {catLabel}
                 </span>
               </div>
             )}
 
-            {/* procrastination warning */}
-            {procrastination && procrastination.severity !== 'none' && procrastination.severity !== 'mild' && (
+            {/* streak chip */}
+            {attempts >= 1 && (
               <div style={{
-                padding: '8px 12px', borderRadius: 9, marginBottom: 16,
-                background: procrastination.severity === 'chronic'
-                  ? (isDark ? 'rgba(220,38,38,0.08)' : 'rgba(220,38,38,0.04)')
-                  : (isDark ? 'rgba(245,158,11,0.08)' : 'rgba(245,158,11,0.04)'),
-                border: `1px solid ${procrastination.severity === 'chronic'
-                  ? 'rgba(220,38,38,0.15)' : 'rgba(245,158,11,0.15)'}`,
+                display: 'flex', alignItems: 'center', gap: 5,
+                padding: '5px 12px', borderRadius: 9999,
+                background: surface,
+                border: '1px solid rgba(245,158,11,0.3)',
               }}>
-                <div style={{
-                  fontSize: 11, fontWeight: 700, marginBottom: 2,
-                  color: procrastination.severity === 'chronic' ? '#dc2626' : '#d97706',
-                }}>
-                  {procrastination.severity === 'chronic' ? 'Chronic avoidance detected'
-                    : procrastination.severity === 'severe' ? 'Strong avoidance pattern'
-                    : 'Avoidance building'}
-                </div>
-                {procrastination.interventions?.[0] && (
-                  <div style={{ fontSize: 11, color: mutedCol }}>
-                    {procrastination.interventions[0].reason}
-                  </div>
-                )}
+                <span style={{ fontSize: 12, fontWeight: 600, color: '#F59E0B' }}>
+                  ↩ {attempts}× rescheduled
+                </span>
               </div>
+            )}
+
+            {/* urgency chip */}
+            {(urgentLevel === 'overdue' || urgentLevel === 'today') && (
+              <div style={{
+                padding: '5px 12px', borderRadius: 9999,
+                background: 'rgba(220,38,38,0.1)',
+                border: '1px solid rgba(220,38,38,0.3)',
+              }}>
+                <span style={{ fontSize: 12, fontWeight: 700, color: '#ef4444' }}>
+                  {urgentLevel === 'overdue' ? '🔴 Overdue' : '🔥 Due today'}
+                </span>
+              </div>
+            )}
+
+            {/* close */}
+            <button
+              onClick={onClose}
+              style={{
+                marginLeft: 'auto', background: 'none', border: 'none',
+                cursor: 'pointer', color: textMuted, fontSize: 18,
+                lineHeight: 1, padding: '4px 6px', borderRadius: 8,
+              }}
+            >✕</button>
+          </div>
+
+          {/* ─── TITLE ────────────────────────────────────────────────────── */}
+          <div style={{ padding: `14px ${px}px 0` }}>
+            <div style={{ fontSize: 13, fontWeight: 600, color: textMuted, marginBottom: 4 }}>
+              Time's up:
+            </div>
+            <div style={{
+              fontSize: isMobile ? 26 : 30, fontWeight: 900,
+              color: green, lineHeight: 1.15,
+              wordBreak: 'break-word', marginBottom: 18,
+            }}>
+              {task.name}
+            </div>
+          </div>
+
+          {/* ─── STAT CARDS ───────────────────────────────────────────────── */}
+          {(probPct !== null || procLabel) && (
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: (probPct !== null && procLabel) ? '1fr 1fr' : '1fr',
+              gap: 10,
+              padding: `0 ${px}px 16px`,
+            }}>
+              {probPct !== null && (
+                <div style={{
+                  background: surface,
+                  border: `1px solid ${border}`,
+                  borderRadius: 16, padding: '14px 14px 12px',
+                  display: 'flex', flexDirection: 'column', gap: 2,
+                }}>
+                  {/* mini donut-style ring via border trick */}
+                  <div style={{
+                    width: 28, height: 28, borderRadius: '50%',
+                    border: `3px solid ${probCol}`,
+                    marginBottom: 6, opacity: isDark ? 0.85 : 1,
+                  }} />
+                  <div style={{ fontSize: 22, fontWeight: 800, color: textPrimary, lineHeight: 1 }}>
+                    {probPct}%
+                  </div>
+                  <div style={{ fontSize: 10, fontWeight: 700, color: textMuted, textTransform: 'uppercase', letterSpacing: 0.8, marginTop: 2 }}>
+                    Completion Prob.
+                  </div>
+                  {/* mini bar */}
+                  <div style={{
+                    marginTop: 8, height: 3, borderRadius: 2,
+                    background: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.07)', overflow: 'hidden',
+                  }}>
+                    <div style={{
+                      width: `${probPct}%`, height: '100%',
+                      background: probCol, borderRadius: 2,
+                      transition: 'width 0.4s ease',
+                    }} />
+                  </div>
+                </div>
+              )}
+
+              {procLabel && (
+                <div style={{
+                  background: surface,
+                  border: `1px solid ${border}`,
+                  borderRadius: 16, padding: '14px 14px 12px',
+                  display: 'flex', flexDirection: 'column', gap: 2,
+                }}>
+                  <div style={{ fontSize: 22, marginBottom: 4 }}>
+                    {procrastination?.severity === 'none' ? '😊'
+                      : procrastination?.severity === 'mild' ? '🙂'
+                        : procrastination?.severity === 'moderate' ? '😐'
+                          : procrastination?.severity === 'severe' ? '😬'
+                            : '😰'}
+                  </div>
+                  <div style={{ fontSize: 16, fontWeight: 800, color: procColor, lineHeight: 1 }}>
+                    {procLabel}
+                  </div>
+                  <div style={{ fontSize: 10, fontWeight: 700, color: textMuted, textTransform: 'uppercase', letterSpacing: 0.8, marginTop: 2 }}>
+                    Procrastination
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* ─── AI RECOMMENDATION CARD ───────────────────────────────────── */}
+          {aiRec?.summary && (
+            <div style={{
+              margin: `0 ${px}px 16px`,
+              position: 'relative', overflow: 'hidden',
+              borderRadius: 18,
+              background: isDark
+                ? 'linear-gradient(135deg, rgba(110,175,110,0.18) 0%, rgba(110,175,110,0.06) 100%)'
+                : 'linear-gradient(135deg, rgba(59,122,59,0.1) 0%, rgba(59,122,59,0.03) 100%)',
+              border: `1px solid rgba(110,175,110,0.3)`,
+              padding: '16px 16px 14px',
+              animation: 'aiPulse 3s infinite ease-in-out',
+            }}>
+              {/* decorative star */}
+              <div style={{
+                position: 'absolute', top: 8, right: 10,
+                fontSize: 52, opacity: 0.12, lineHeight: 1,
+                userSelect: 'none', pointerEvents: 'none',
+              }}>✨</div>
+
+              <div style={{
+                display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6,
+              }}>
+                <span style={{
+                  fontSize: 8, fontWeight: 800, letterSpacing: 0.5,
+                  background: green, color: '#fff',
+                  padding: '2px 6px', borderRadius: 4,
+                }}>AI</span>
+                <span style={{
+                  fontSize: 11, fontWeight: 700, color: green,
+                  textTransform: 'uppercase', letterSpacing: 0.8,
+                }}>Recommendation</span>
+              </div>
+              <div style={{ fontSize: 14, color: isDark ? textPrimary : '#1A3A1A', lineHeight: 1.55, fontWeight: 500 }}>
+                {aiRec.summary}
+              </div>
+            </div>
+          )}
+
+          {/* procrastination warning banner (severe/chronic) */}
+          {procrastination && procrastination.severity !== 'none' && procrastination.severity !== 'mild' && (
+            <div style={{
+              margin: `0 ${px}px 14px`,
+              padding: '10px 14px', borderRadius: 12,
+              background: procrastination.severity === 'chronic'
+                ? 'rgba(220,38,38,0.1)' : 'rgba(245,158,11,0.1)',
+              border: `1px solid ${procrastination.severity === 'chronic'
+                ? 'rgba(220,38,38,0.25)' : 'rgba(245,158,11,0.25)'}`,
+            }}>
+              <div style={{
+                fontSize: 12, fontWeight: 700, marginBottom: 2,
+                color: procrastination.severity === 'chronic' ? '#ef4444' : '#d97706',
+              }}>
+                {procrastination.severity === 'chronic' ? '⚠️ Chronic avoidance detected'
+                  : procrastination.severity === 'severe' ? '⚠️ Strong avoidance pattern'
+                    : '⚠️ Avoidance building'}
+              </div>
+              {procrastination.interventions?.[0] && (
+                <div style={{ fontSize: 11, color: textMuted }}>
+                  {procrastination.interventions[0].reason}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* ─── ACTION GRID (2x2) ────────────────────────────────────────── */}
+          <div style={{
+            display: 'grid', gridTemplateColumns: '1fr 1fr',
+            gap: 10, padding: `0 ${px}px 10px`,
+          }}>
+            <ActionCard
+              onClick={() => onContinue(continueDur?.suggestedMinutes > 1 ? continueDur.suggestedMinutes : 1)}
+              isTop={topOption === 'continue'}
+              icon="▶"
+              label="Continue"
+              hint={continueDur ? `+${continueDur.suggestedMinutes} min` : '+1 min'}
+              green={green} greenBorder={greenBorder} surface={surface}
+              border={border} textPrimary={textPrimary} textMuted={textMuted}
+            />
+            <ActionCard
+              onClick={() => bestSlot && onLaterToday(bestSlot)}
+              isTop={topOption === 'later_today'}
+              disabled={!bestSlot}
+              icon="🕐"
+              label="Later Today"
+              hint={bestSlot ? `${bestSlot.startTime}${bestSlot.score >= 70 ? ' ★' : ''}` : 'No slots'}
+              green={green} greenBorder={greenBorder} surface={surface}
+              border={border} textPrimary={textPrimary} textMuted={textMuted}
+            />
+            <ActionCard
+              onClick={onTomorrow}
+              isTop={topOption === 'tomorrow'}
+              warn={urgentLevel === 'overdue' || urgentLevel === 'today'}
+              icon="📅"
+              label="Tomorrow"
+              hint={urgentLevel === 'overdue' || urgentLevel === 'today' ? '⚠ risky' : 'fresh start'}
+              green={green} greenBorder={greenBorder} surface={surface}
+              border={border} textPrimary={textPrimary} textMuted={textMuted}
+            />
+            <ActionCard
+              onClick={onBackToPool}
+              isTop={topOption === 'back_to_pool'}
+              icon="📥"
+              label="Back to Pool"
+              hint="save for later"
+              green={green} greenBorder={greenBorder} surface={surface}
+              border={border} textPrimary={textPrimary} textMuted={textMuted}
+            />
+          </div>
+
+          {/* ─── SECONDARY BUTTONS ────────────────────────────────────────── */}
+          <div style={{ display: 'flex', gap: 8, padding: `0 ${px}px 16px` }}>
+            <GhostBtn onClick={onPickTime} green={green} textMuted={textMuted}>
+              🎯 Pick a time
+            </GhostBtn>
+            {showBreakTask && (
+              <GhostBtn
+                onClick={onBreakTask}
+                green={green} textMuted={textMuted}
+                highlight={topOption === 'break_task'}
+              >
+                🔨 Break it up
+              </GhostBtn>
             )}
           </div>
 
-          {/* ─── ACTIONS ──────────────────────────────────────────────────── */}
-          <div style={{ padding: `0 ${px}px 20px` }}>
-
-            {/* Mark complete */}
-            <CompleteBtn
+          {/* ─── MARK COMPLETE (full-width pill) ──────────────────────────── */}
+          <div style={{ padding: `0 ${px}px 16px` }}>
+            <button
               onClick={onComplete}
-              isTop={topOption === 'complete'}
-              isDark={isDark}
-            />
-
-            {/* 2x2 grid */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 8 }}>
-              <Tile
-                onClick={() => onContinue(continueDur?.suggestedMinutes > 1 ? continueDur.suggestedMinutes : 1)}
-                isTop={topOption === 'continue'}
-                isDark={isDark} titleCol={titleCol} mutedCol={mutedCol} labelCol={labelCol}
-                emoji="⏱️" label="Keep going"
-                hint={continueDur ? `+${continueDur.suggestedMinutes} min` : '+1 min'}
-              />
-              <Tile
-                onClick={() => bestSlot && onLaterToday(bestSlot)}
-                isTop={topOption === 'later_today'}
-                disabled={!bestSlot}
-                isDark={isDark} titleCol={titleCol} mutedCol={mutedCol} labelCol={labelCol}
-                emoji="🕐" label="Later today"
-                hint={bestSlot ? `${bestSlot.startTime}${bestSlot.score >= 70 ? ' ★' : ''}` : 'No slots'}
-              />
-              <Tile
-                onClick={onTomorrow}
-                isTop={topOption === 'tomorrow'}
-                warn={urgentLevel === 'overdue' || urgentLevel === 'today'}
-                isDark={isDark} titleCol={titleCol} mutedCol={mutedCol} labelCol={labelCol}
-                emoji="📅" label="Tomorrow"
-                hint={urgentLevel === 'overdue' || urgentLevel === 'today' ? '⚠ risky' : 'fresh start'}
-              />
-              <Tile
-                onClick={onBackToPool}
-                isTop={topOption === 'back_to_pool'}
-                isDark={isDark} titleCol={titleCol} mutedCol={mutedCol} labelCol={labelCol}
-                emoji="🌊" label="Back to Pool"
-                hint="save for later"
-              />
-            </div>
-
-            {/* tertiary */}
-            <div style={{ display: 'flex', gap: 8 }}>
-              <SecondaryBtn onClick={onPickTime} isDark={isDark} mutedCol={mutedCol} labelCol={labelCol}>
-                🎯 Pick a time
-              </SecondaryBtn>
-              {showBreakTask && (
-                <SecondaryBtn
-                  onClick={onBreakTask}
-                  isDark={isDark} mutedCol={mutedCol} labelCol={labelCol}
-                  highlight={topOption === 'break_task'}
-                >
-                  🔨 Break it up
-                </SecondaryBtn>
+              style={{
+                width: '100%', height: 58,
+                borderRadius: 9999,
+                background: `linear-gradient(135deg, ${greenDark}, ${green})`,
+                color: '#fff',
+                border: topOption === 'complete'
+                  ? '2px solid rgba(255,255,255,0.25)'
+                  : '2px solid transparent',
+                fontSize: 16, fontWeight: 800,
+                cursor: 'pointer',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
+                boxShadow: topOption === 'complete'
+                  ? '0 6px 24px rgba(78,143,78,0.5), 0 0 0 3px rgba(110,175,110,0.2)'
+                  : '0 4px 16px rgba(78,143,78,0.3)',
+                transition: 'transform 0.12s, box-shadow 0.12s',
+                position: 'relative',
+              }}
+              onMouseDown={e => { e.currentTarget.style.transform = 'scale(0.98)'; }}
+              onMouseUp={e => { e.currentTarget.style.transform = 'scale(1)'; }}
+              onTouchStart={e => { e.currentTarget.style.transform = 'scale(0.97)'; }}
+              onTouchEnd={e => { e.currentTarget.style.transform = 'scale(1)'; }}
+            >
+              <span style={{ fontSize: 22 }}>✓</span>
+              <span>Mark Complete</span>
+              {topOption === 'complete' && (
+                <span style={{
+                  position: 'absolute', top: -7, right: 12,
+                  fontSize: 8, fontWeight: 800, padding: '2px 6px',
+                  background: '#fff', color: greenDark,
+                  borderRadius: 5, boxShadow: '0 1px 4px rgba(0,0,0,0.15)',
+                  letterSpacing: 0.4,
+                }}>AI</span>
               )}
-            </div>
+            </button>
           </div>
 
-          {/* ─── FOOTER ───────────────────────────────────────────────────── */}
+          {/* ─── AI ANALYSIS FOOTER ───────────────────────────────────────── */}
           <div style={{
             borderTop: `1px solid ${divider}`,
-            padding: `8px ${px}px ${isMobile ? 10 : 14}px`,
+            padding: `8px ${px}px ${isMobile ? 10 : 16}px`,
           }}>
             <button
               onClick={() => setShowDetails(v => !v)}
               style={{
                 background: 'none', border: 'none',
-                color: mutedCol, fontSize: 11, fontWeight: 600,
-                cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4,
+                color: textMuted, fontSize: 12, fontWeight: 600,
+                cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 5,
                 padding: '6px 0',
               }}
             >
-              {showDetails ? '▾' : '▸'} AI analysis
+              <span style={{ fontSize: 14 }}>{showDetails ? '▾' : '▸'}</span>
+              AI analysis breakdown
             </button>
 
-            {/* expanded details */}
             {showDetails && (
               <div style={{
-                marginTop: 8, padding: 12,
-                background: isDark ? 'rgba(0,0,0,0.15)' : 'rgba(0,0,0,0.02)',
-                borderRadius: 10,
+                marginTop: 8, padding: 14,
+                background: isDark ? 'rgba(0,0,0,0.2)' : 'rgba(0,0,0,0.03)',
+                borderRadius: 12,
                 animation: 'fadeIn 0.18s ease-out',
               }}>
                 {/* factor list */}
                 {completionProb?.factors?.length > 0 && (
-                  <div style={{ marginBottom: 12 }}>
-                    <div style={{ fontSize: 10, fontWeight: 700, color: labelCol, marginBottom: 6, textTransform: 'uppercase', letterSpacing: 0.4 }}>
+                  <div style={{ marginBottom: 14 }}>
+                    <div style={{
+                      fontSize: 10, fontWeight: 700, color: green,
+                      marginBottom: 8, textTransform: 'uppercase', letterSpacing: 0.6,
+                    }}>
                       Probability factors
                     </div>
                     {completionProb.factors.map((f, i) => (
                       <div key={i} style={{
-                        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                        padding: '3px 0', fontSize: 11, color: mutedCol,
+                        display: 'flex', alignItems: 'center',
+                        justifyContent: 'space-between',
+                        padding: '4px 0', fontSize: 11, color: textMuted,
+                        borderBottom: i < completionProb.factors.length - 1
+                          ? `1px solid ${divider}` : 'none',
                       }}>
                         <span>{f.name}</span>
-                        <span style={{ fontWeight: 600, color: titleCol }}>
+                        <span style={{ fontWeight: 700, color: textPrimary }}>
                           {Math.round(f.value * 100)}%
                         </span>
                       </div>
@@ -407,30 +572,32 @@ export default function RescheduleModal({
                 {/* option ranking */}
                 {rankedOptions.length > 0 && (
                   <div>
-                    <div style={{ fontSize: 10, fontWeight: 700, color: labelCol, marginBottom: 6, textTransform: 'uppercase', letterSpacing: 0.4 }}>
+                    <div style={{
+                      fontSize: 10, fontWeight: 700, color: green,
+                      marginBottom: 8, textTransform: 'uppercase', letterSpacing: 0.6,
+                    }}>
                       Option ranking
                     </div>
                     {rankedOptions.slice(0, 5).map((opt, i) => (
                       <div key={i} style={{
                         display: 'flex', alignItems: 'center', gap: 8,
-                        marginBottom: 5,
+                        marginBottom: 6,
                       }}>
-                        <span style={{ fontSize: 12, width: 18, textAlign: 'center' }}>{opt.icon}</span>
+                        <span style={{ fontSize: 13, width: 20, textAlign: 'center' }}>{opt.icon}</span>
                         <div style={{
                           flex: 1, height: 4, borderRadius: 2,
-                          background: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)',
-                          overflow: 'hidden',
+                          background: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.07)', overflow: 'hidden',
                         }}>
                           <div style={{
                             width: `${opt.score}%`, height: '100%', borderRadius: 2,
-                            background: i === 0 ? '#4CAF50' : (isDark ? 'rgba(255,255,255,0.18)' : 'rgba(0,0,0,0.15)'),
+                            background: i === 0 ? green : (isDark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.12)'),
                             transition: 'width 0.4s ease',
                           }} />
                         </div>
                         <span style={{
-                          fontSize: 10, color: i === 0 ? titleCol : mutedCol,
-                          minWidth: 22, textAlign: 'right',
+                          fontSize: 10, minWidth: 24, textAlign: 'right',
                           fontWeight: i === 0 ? 700 : 400,
+                          color: i === 0 ? textPrimary : textMuted,
                         }}>
                           {opt.score}
                         </span>
@@ -448,74 +615,105 @@ export default function RescheduleModal({
   );
 }
 
-// ── Sub-components ──────────────────────────────────────────────────────────────
+// ── Sub-components ─────────────────────────────────────────────────────────────
 
-function Chip({ children, isDark, accent, warn, danger }) {
-  let color = isDark ? '#9CA59C' : '#6B7B6B';
-  let bgColor = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)';
-  let border = isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)';
+function ActionCard({
+  onClick, isTop, disabled, warn,
+  icon, label, hint,
+  green, greenBorder, surface, border, textPrimary, textMuted,
+}) {
+  const cardBorder = isTop ? greenBorder
+    : warn ? 'rgba(245,158,11,0.3)'
+      : border;
 
-  if (accent) {
-    color = isDark ? '#8BC98B' : '#2E5E2E';
-    bgColor = isDark ? 'rgba(111,175,111,0.1)' : 'rgba(46,94,46,0.06)';
-    border = isDark ? 'rgba(111,175,111,0.18)' : 'rgba(46,94,46,0.12)';
-  } else if (warn) {
-    color = '#b45309';
-    bgColor = 'rgba(245,158,11,0.08)';
-    border = 'rgba(245,158,11,0.18)';
-  } else if (danger) {
-    color = '#dc2626';
-    bgColor = 'rgba(220,38,38,0.08)';
-    border = 'rgba(220,38,38,0.18)';
-  }
+  const cardBg = isTop
+    ? 'rgba(110,175,110,0.08)'
+    : warn
+      ? 'rgba(245,158,11,0.05)'
+      : surface;
 
-  return (
-    <span style={{
-      fontSize: 11, fontWeight: 600, padding: '3px 10px',
-      borderRadius: 6, color, background: bgColor,
-      border: `1px solid ${border}`,
-      lineHeight: 1.3,
-    }}>
-      {children}
-    </span>
-  );
-}
+  const iconBg = isTop
+    ? 'rgba(110,175,110,0.2)'
+    : warn
+      ? 'rgba(245,158,11,0.12)'
+      : 'rgba(255,255,255,0.06)';
 
-function CompleteBtn({ onClick, isTop, isDark }) {
-  const grad = isDark
-    ? 'linear-gradient(135deg, #2E5A2E, #4A9B4A)'
-    : 'linear-gradient(135deg, #2D622D, #4A9B4A)';
+  const iconColor = isTop ? green
+    : warn ? '#d97706'
+      : textMuted;
+
+  // recommended green dot
+  const showDot = isTop;
 
   return (
     <button
       onClick={onClick}
+      disabled={disabled}
       style={{
-        width: '100%', height: 50,
-        background: grad, color: '#fff',
-        border: isTop ? '2px solid rgba(255,255,255,0.2)' : '2px solid transparent',
-        borderRadius: 14,
-        fontSize: 15, fontWeight: 700,
-        cursor: 'pointer',
-        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-        marginBottom: 10,
-        boxShadow: isTop
-          ? '0 4px 18px rgba(59,110,59,0.4), 0 0 0 2px rgba(111,175,111,0.25)'
-          : '0 2px 10px rgba(59,110,59,0.2)',
-        transition: 'transform 0.1s',
+        background: cardBg,
+        border: `1.5px solid ${cardBorder}`,
+        borderRadius: 18,
+        padding: '16px 14px 14px',
+        display: 'flex', flexDirection: 'column',
+        alignItems: 'flex-start', justifyContent: 'space-between',
+        minHeight: 110,
+        cursor: disabled ? 'not-allowed' : 'pointer',
+        opacity: disabled ? 0.35 : 1,
         position: 'relative',
+        transition: 'transform 0.12s, border-color 0.15s',
+        boxShadow: isTop ? '0 0 18px rgba(110,175,110,0.1)' : 'none',
+        textAlign: 'left',
       }}
-      onMouseDown={e => { e.currentTarget.style.transform = 'scale(0.98)'; }}
+      onMouseDown={e => { if (!disabled) e.currentTarget.style.transform = 'scale(0.96)'; }}
       onMouseUp={e => { e.currentTarget.style.transform = 'scale(1)'; }}
-      onTouchStart={e => { e.currentTarget.style.transform = 'scale(0.97)'; }}
+      onTouchStart={e => { if (!disabled) e.currentTarget.style.transform = 'scale(0.96)'; }}
       onTouchEnd={e => { e.currentTarget.style.transform = 'scale(1)'; }}
     >
-      ✓ Mark complete
+      {/* icon circle */}
+      <div style={{
+        width: 38, height: 38, borderRadius: '50%',
+        background: iconBg,
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        fontSize: 18, color: iconColor,
+        marginBottom: 8, flexShrink: 0,
+      }}>
+        {icon}
+      </div>
+
+      <div>
+        <div style={{
+          fontSize: 15, fontWeight: 700,
+          color: isTop ? '#fff' : textPrimary,
+          lineHeight: 1.2, marginBottom: 2,
+        }}>
+          {label}
+        </div>
+        <div style={{
+          fontSize: 12, fontWeight: 500,
+          color: isTop ? green : warn ? '#d97706' : textMuted,
+          lineHeight: 1.2,
+        }}>
+          {hint}
+        </div>
+      </div>
+
+      {/* recommended dot */}
+      {showDot && (
+        <div style={{
+          position: 'absolute', top: 12, right: 12,
+          width: 8, height: 8, borderRadius: '50%',
+          background: green,
+          animation: 'dotPulse 2s infinite ease-in-out',
+        }} />
+      )}
+
+      {/* AI badge */}
       {isTop && (
         <span style={{
-          position: 'absolute', top: -6, right: -6,
-          fontSize: 8, fontWeight: 800, padding: '2px 5px',
-          background: '#fff', color: '#2D622D',
-          borderRadius: 5, boxShadow: '0 1px 4px rgba(0,0,0,0.12)',
+          position: 'absolute', top: -7, right: -7,
+          fontSize: 8, fontWeight: 800, padding: '2px 6px',
+          background: green, color: '#fff',
+          borderRadius: 5, boxShadow: '0 1px 4px rgba(0,0,0,0.25)',
           letterSpacing: 0.4,
         }}>AI</span>
       )}
@@ -523,103 +721,41 @@ function CompleteBtn({ onClick, isTop, isDark }) {
   );
 }
 
-function Tile({ onClick, isTop, disabled, warn, isDark, titleCol, mutedCol, labelCol, emoji, label, hint }) {
-  const borderColor = isTop
-    ? (isDark ? 'rgba(111,175,111,0.4)' : 'rgba(59,110,59,0.3)')
-    : warn
-    ? 'rgba(245,158,11,0.25)'
-    : (isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.07)');
-
-  const tileBg = isTop
-    ? (isDark ? 'rgba(111,175,111,0.08)' : 'rgba(59,110,59,0.04)')
-    : warn
-    ? (isDark ? 'rgba(245,158,11,0.05)' : 'rgba(245,158,11,0.03)')
-    : (isDark ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.01)');
-
-  return (
-    <button
-      onClick={onClick}
-      disabled={disabled}
-      style={{
-        background: tileBg,
-        border: `1.5px solid ${borderColor}`,
-        borderRadius: 12,
-        padding: '14px 8px 12px',
-        display: 'flex', flexDirection: 'column',
-        alignItems: 'center', justifyContent: 'center',
-        gap: 3, minHeight: 78,
-        cursor: disabled ? 'not-allowed' : 'pointer',
-        opacity: disabled ? 0.35 : 1,
-        position: 'relative',
-        transition: 'transform 0.1s',
-      }}
-      onMouseDown={e => { if (!disabled) e.currentTarget.style.transform = 'scale(0.96)'; }}
-      onMouseUp={e => { e.currentTarget.style.transform = 'scale(1)'; }}
-      onTouchStart={e => { if (!disabled) e.currentTarget.style.transform = 'scale(0.96)'; }}
-      onTouchEnd={e => { e.currentTarget.style.transform = 'scale(1)'; }}
-    >
-      <span style={{ fontSize: 20, lineHeight: 1 }}>{emoji}</span>
-      <span style={{
-        fontSize: 13, fontWeight: 700,
-        color: isTop ? labelCol : titleCol, lineHeight: 1.2,
-      }}>
-        {label}
-      </span>
-      <span style={{
-        fontSize: 11, color: warn ? '#b45309' : mutedCol, lineHeight: 1.2,
-      }}>
-        {hint}
-      </span>
-      {isTop && (
-        <span style={{
-          position: 'absolute', top: -6, right: -6,
-          fontSize: 8, fontWeight: 800, padding: '2px 5px',
-          background: isDark ? '#5aA05A' : '#3B6E3B', color: '#fff',
-          borderRadius: 5, boxShadow: '0 1px 3px rgba(0,0,0,0.15)',
-          letterSpacing: 0.3,
-        }}>AI</span>
-      )}
-    </button>
-  );
-}
-
-function SecondaryBtn({ onClick, isDark, mutedCol, labelCol, highlight, children }) {
+function GhostBtn({ onClick, green, textMuted, highlight, children }) {
   const borderStyle = highlight
-    ? '1.5px solid rgba(234,88,12,0.3)'
-    : `1.5px dashed ${isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'}`;
-  const color = highlight ? '#ea580c' : mutedCol;
-  const bgStyle = highlight
-    ? (isDark ? 'rgba(234,88,12,0.08)' : 'rgba(234,88,12,0.04)')
-    : 'transparent';
+    ? '1.5px solid rgba(234,88,12,0.4)'
+    : '1.5px dashed rgba(255,255,255,0.12)';
+  const color = highlight ? '#ea580c' : textMuted;
+  const bgStyle = highlight ? 'rgba(234,88,12,0.08)' : 'transparent';
 
   return (
     <button
       onClick={onClick}
       style={{
-        flex: 1, height: 40,
-        background: bgStyle, border: borderStyle, borderRadius: 10,
+        flex: 1, height: 42,
+        background: bgStyle, border: borderStyle, borderRadius: 12,
         color, fontSize: 12, fontWeight: 600, cursor: 'pointer',
         transition: 'border-color 0.15s, color 0.15s',
         position: 'relative',
       }}
       onMouseEnter={e => {
         if (!highlight) {
-          e.currentTarget.style.borderColor = labelCol;
-          e.currentTarget.style.color = labelCol;
+          e.currentTarget.style.borderColor = green;
+          e.currentTarget.style.color = green;
         }
       }}
       onMouseLeave={e => {
         if (!highlight) {
-          e.currentTarget.style.borderColor = isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)';
-          e.currentTarget.style.color = mutedCol;
+          e.currentTarget.style.borderColor = 'rgba(255,255,255,0.12)';
+          e.currentTarget.style.color = textMuted;
         }
       }}
     >
       {children}
       {highlight && (
         <span style={{
-          position: 'absolute', top: -6, right: -6,
-          fontSize: 8, fontWeight: 800, padding: '2px 5px',
+          position: 'absolute', top: -7, right: -7,
+          fontSize: 8, fontWeight: 800, padding: '2px 6px',
           background: '#ea580c', color: '#fff',
           borderRadius: 5, letterSpacing: 0.3,
         }}>AI</span>

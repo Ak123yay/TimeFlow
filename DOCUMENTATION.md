@@ -2957,26 +2957,46 @@ export const loadAvailability = () => {
 
 ```
 App.jsx
-├── Setup.jsx (first-time setup)
-└── Today.jsx (main interface)
-    ├── CalendarView.jsx
-    ├── RescheduleModal.jsx (AI-powered)
-    │   ├── ProbabilityMeter (completion prediction visual)
-    │   ├── ProcrastinationBanner (avoidance warning)
-    │   ├── AIRecommendationCard (top pick highlight)
-    │   ├── WorkloadPreview (best day suggestion)
-    │   └── MomentumBadge (streak motivation)
-    ├── EditTaskDialog.jsx
-    ├── DetailedTimeline.jsx
-    ├── TaskHealthIndicator.jsx
-    ├── TaskTimer.jsx
-    ├── SwipeableTask.jsx (mobile wrapper)
-    └── SortableTaskItem (inline)
-├── WeeklyPool.jsx
-    └── MoveToTodayDialog.jsx
-├── WeeklyView.jsx
-    └── ReflectionViewer.jsx
-└── DayReflection.jsx (not yet implemented)
+├── Onboarding.jsx (first-time 5-screen onboarding)
+├── Setup.jsx (availability configuration)
+├── InstallPrompt.jsx (PWA install banner)
+└── Today.jsx (main scheduling interface)
+    ├── DailyCalendar.jsx (daily date header)
+    ├── DetailedTimeline.jsx (visual timeline view)
+    ├── CalendarView.jsx (monthly calendar view)
+    ├── TaskHealthIndicator.jsx (risk color badges)
+    ├── Celebration.jsx (completion animation)
+    ├── FirstTimeTooltip.jsx (contextual help cards)
+    ├── BottomSheet.jsx (mobile slide-up panels)
+    ├── SwipeableTask.jsx (mobile swipe wrapper)
+    │
+    ├── mobile/
+    │   ├── MobileLayout.jsx (bottom nav shell)
+    │   └── TaskCard.jsx (mobile task cards)
+    │
+    ├── shared/
+    │   ├── TaskTimer.jsx (active task countdown)
+    │   ├── SearchBar.jsx (real-time search input)
+    │   └── StatsBar.jsx (capacity / progress bar)
+    │
+    └── dialogs/
+        ├── RescheduleModal.jsx (AI-powered — 7 options)
+        │   ├── Pill (badge chip)
+        │   ├── BigCompleteBtn (hero CTA)
+        │   ├── ActionTile (Continue/Later/Tomorrow/Pool)
+        │   └── GhostBtn (Pick Time / Break Task)
+        ├── RescheduleDialog.jsx (simple reschedule fallback)
+        ├── EditTaskDialog.jsx (task editing form)
+        ├── MoveToTodayDialog.jsx (pool → today flow)
+        ├── ReflectionViewer.jsx (view past reflections)
+        ├── DeleteConfirmDialog.jsx (delete confirmation)
+        └── DialogBase.jsx (shared dialog shell)
+├── WeeklyPool.jsx (idea bucket / brainstorming)
+├── WeeklyView.jsx (7-day calendar overview)
+├── DayReflection.jsx (end-of-day review screen)
+├── Streak.jsx (streak overview + insights nav)
+├── StreakDisplay.jsx (compact streak widget)
+└── Insights.jsx (analytics dashboard)
 ```
 
 ### Component Details
@@ -3635,13 +3655,15 @@ Returns today's session performance: total sessions, completed sessions, total f
 
 ### Tech Stack
 
-- **React 18**: UI framework
-- **Vite**: Build tool & dev server
+- **React 19.2**: UI framework
+- **Vite 7.2.4**: Build tool & dev server
 - **@dnd-kit**: Drag-and-drop functionality
+- **Framer Motion 12**: Smooth animations
+- **vite-plugin-pwa 1.2.0 + Workbox**: PWA & offline support
 - **localStorage**: Data persistence
-- **CSS Modules**: Scoped styling (inline for now)
+- **Inline CSS**: Component-scoped styling
 
-### No Dependencies For:
+### No External Dependencies For:
 - Routing (hash-based manual routing)
 - State management (React useState)
 - Date handling (native Date API)
@@ -3684,39 +3706,64 @@ const taskBlocks = useMemo(() =>
 ```
 TimeFlow/
 ├── src/
-│   ├── App.jsx              # Root component
-│   ├── App.css              # Global styles
+│   ├── App.jsx                      # Root component & hash router
+│   ├── App.css                      # Global styles & animations
+│   ├── index.css                    # Base resets
+│   ├── main.jsx                     # Entry point
+│   ├── styles/                      # Additional stylesheets
 │   ├── components/
-│   │   ├── Today.jsx        # Main interface
-│   │   ├── Setup.jsx        # First-time setup
-│   │   ├── WeeklyPool.jsx   # Task pool
-│   │   ├── WeeklyView.jsx   # Week calendar
-│   │   ├── CalendarView.jsx # Monthly calendar
-│   │   ├── DetailedTimeline.jsx  # Timeline view
-│   │   ├── TaskHealthIndicator.jsx  # Health badges
-│   │   ├── SwipeableTask.jsx # Mobile swipe wrapper
+│   │   ├── Today.jsx                # Main scheduling interface
+│   │   ├── Setup.jsx                # Availability configuration
+│   │   ├── Onboarding.jsx           # 5-screen first-time onboarding
+│   │   ├── WeeklyPool.jsx           # Idea bucket / brainstorming
+│   │   ├── WeeklyView.jsx           # 7-day calendar overview
+│   │   ├── DayReflection.jsx        # End-of-day review screen
+│   │   ├── Insights.jsx             # Analytics dashboard
+│   │   ├── Streak.jsx               # Streak overview + insights nav
+│   │   ├── StreakDisplay.jsx         # Compact streak widget
+│   │   ├── CalendarView.jsx         # Monthly calendar
+│   │   ├── DailyCalendar.jsx        # Daily date header
+│   │   ├── DetailedTimeline.jsx     # Visual timeline view
+│   │   ├── TaskHealthIndicator.jsx  # Health color badges
+│   │   ├── SwipeableTask.jsx        # Mobile swipe-to-reveal wrapper
+│   │   ├── Celebration.jsx          # Completion animations
+│   │   ├── BottomSheet.jsx          # Mobile slide-up panels
+│   │   ├── FirstTimeTooltip.jsx     # Contextual help cards
+│   │   ├── InstallPrompt.jsx        # PWA install banner
 │   │   ├── mobile/
-│   │   │   └── TaskCard.jsx # Mobile task cards
+│   │   │   ├── MobileLayout.jsx     # Bottom nav shell
+│   │   │   ├── TaskCard.jsx         # Mobile task cards
+│   │   │   └── animations/         # Mobile animation helpers
 │   │   ├── shared/
-│   │   │   └── TaskTimer.jsx # Active task timer
+│   │   │   ├── TaskTimer.jsx        # Active task countdown
+│   │   │   ├── SearchBar.jsx        # Real-time search input
+│   │   │   └── StatsBar.jsx         # Capacity / progress bar
 │   │   └── dialogs/
-│   │       ├── RescheduleModal.jsx  # AI-powered reschedule interface
-│   │       ├── EditTaskDialog.jsx
-│   │       ├── MoveToTodayDialog.jsx
-│   │       └── ReflectionViewer.jsx
-│   ├── utils/
-│   │   ├── storage.js       # localStorage helpers
-│   │   ├── scheduler.js     # Scheduling algorithms + energy-aware optimization
-│   │   ├── analytics.js     # Learning, tracking & productivity scoring
-│   │   ├── smartReschedule.js # AI rescheduling engine (10 subsystems)
-│   │   └── haptics.js       # Haptic feedback utilities
-│   └── main.jsx             # Entry point
+│   │       ├── RescheduleModal.jsx  # AI-powered rescheduling interface
+│   │       ├── RescheduleDialog.jsx # Simple reschedule fallback
+│   │       ├── EditTaskDialog.jsx   # Task editing form
+│   │       ├── MoveToTodayDialog.jsx # Pool → Today flow
+│   │       ├── ReflectionViewer.jsx # View past reflections
+│   │       ├── DeleteConfirmDialog.jsx # Delete confirmation
+│   │       └── DialogBase.jsx       # Shared dialog shell
+│   └── utils/
+│       ├── storage.js              # localStorage helpers
+│       ├── storageCache.js         # Caching layer for storage
+│       ├── scheduler.js            # Scheduling algorithms + AI optimization
+│       ├── analytics.js            # Learning, tracking & productivity scoring
+│       ├── smartReschedule.js      # AI rescheduling engine (10 subsystems)
+│       ├── streaks.js              # Streak calculation logic
+│       ├── haptics.js              # Haptic feedback utilities
+│       ├── notifications.js        # Browser notification helpers
+│       ├── timeUtils.js            # Time formatting utilities
+│       └── firstTimeTooltips.js    # Tooltip content & state
 ├── public/
-│   └── vite.svg
+│   ├── icon-192.png                 # PWA home screen icon
+│   └── icon-512.png                 # PWA splash screen icon
 ├── index.html
 ├── package.json
 ├── vite.config.js
-└── README.md                # This file
+└── DOCUMENTATION.md                 # Full technical documentation
 ```
 
 ---
@@ -3808,16 +3855,15 @@ npm run lint     # Run ESLint
 
 ### Planned Features 🚧
 
-- ⏳ End-of-day reflection screen
 - ⏳ Task dependencies
 - ⏳ Habit tracking
-- ⏳ Mood tracking
 - ⏳ Task batching suggestions
 - ⏳ Break time detection
 - ⏳ Flow state protection
 - ⏳ Multi-day optimization
 - ⏳ Time-of-day theming
 - ⏳ Floating leaf animations
+- ⏳ Data export / backup
 
 ---
 
@@ -4012,7 +4058,7 @@ Inspired by:
 A: All data is stored locally in your browser's localStorage. Nothing is sent to servers.
 
 **Q: Will I lose my data if I clear browser cache?**
-A: Yes. Use browser export/import features to backup localStorage, or we'll add export in v1.1.
+A: Yes. Use your browser's developer tools to export localStorage data as a backup. A built-in export feature is planned for a future version.
 
 **Q: Why does "Later Today" sometimes not work?**
 A: No available time slots found that fit the task duration. Try shortening the task or using "Tomorrow".
@@ -4027,7 +4073,7 @@ A: Yes! Fully responsive design with touch-friendly targets.
 A: 100% offline. No internet required.
 
 **Q: How do I backup my data?**
-A: Export localStorage via browser dev tools, or wait for v1.1's built-in export feature.
+A: Export localStorage via browser developer tools (Application → Local Storage). A built-in export feature is planned for a future version.
 
 **Q: Why is my task marked critical?**
 A: Risk score ≥50. Usually due to: 5+ reschedules (40 pts) + deadline today (25 pts) = 65 pts = Critical.
