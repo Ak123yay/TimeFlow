@@ -93,8 +93,8 @@ export default function Streak({ onNavigate }) {
         {/* Current Streak Card */}
         <div style={{
           background: 'linear-gradient(135deg, #3B6E3B 0%, #2E5A2E 100%)',
-          borderRadius: '16px', padding: '24px', marginBottom: '14px',
-          boxShadow: '0 4px 12px rgba(59,110,59,0.2)', textAlign: 'center'
+          borderRadius: '20px', padding: '24px', marginBottom: '14px',
+          boxShadow: '0 4px 12px rgba(59,110,59,0.15), 0 12px 32px rgba(59,110,59,0.2)', textAlign: 'center'
         }}>
           <div style={{ fontSize: '64px', fontWeight: 900, color: '#fff', lineHeight: 1 }}>
             {streak.current}
@@ -110,8 +110,8 @@ export default function Streak({ onNavigate }) {
         {/* Stats Grid */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '10px', marginBottom: '14px' }}>
           <div style={{
-            background: isDark ? '#242B24' : '#fff', borderRadius: '14px', padding: '16px',
-            boxShadow: '0 1px 6px rgba(0,0,0,0.04)', textAlign: 'center'
+            background: isDark ? '#242B24' : '#fff', borderRadius: '18px', padding: '18px',
+            boxShadow: isDark ? '0 1px 3px rgba(0,0,0,0.12), 0 4px 12px rgba(0,0,0,0.16)' : '0 1px 3px rgba(0,0,0,0.04), 0 4px 12px rgba(0,0,0,0.06)', textAlign: 'center'
           }}>
             <div style={{ fontSize: '28px', fontWeight: 800, color: '#3B6E3B' }}>
               {streak.longest}
@@ -120,8 +120,8 @@ export default function Streak({ onNavigate }) {
           </div>
 
           <div style={{
-            background: isDark ? '#242B24' : '#fff', borderRadius: '14px', padding: '16px',
-            boxShadow: '0 1px 6px rgba(0,0,0,0.04)', textAlign: 'center'
+            background: isDark ? '#242B24' : '#fff', borderRadius: '18px', padding: '18px',
+            boxShadow: isDark ? '0 1px 3px rgba(0,0,0,0.12), 0 4px 12px rgba(0,0,0,0.16)' : '0 1px 3px rgba(0,0,0,0.04), 0 4px 12px rgba(0,0,0,0.06)', textAlign: 'center'
           }}>
             <div style={{ fontSize: '28px', fontWeight: 800, color: '#3B6E3B' }}>
               {reflections.length}
@@ -138,15 +138,15 @@ export default function Streak({ onNavigate }) {
           }}
           style={{
             background: isDark ? '#242B24' : '#fff',
-            borderRadius: '14px',
-            padding: '14px',
+            borderRadius: '18px',
+            padding: '16px',
             marginBottom: '14px',
-            boxShadow: '0 1px 6px rgba(0,0,0,0.04)',
+            boxShadow: isDark ? '0 1px 3px rgba(0,0,0,0.12), 0 4px 12px rgba(0,0,0,0.16)' : '0 1px 3px rgba(0,0,0,0.04), 0 4px 12px rgba(0,0,0,0.06)',
             display: 'flex',
             alignItems: 'center',
             gap: '12px',
             cursor: 'pointer',
-            transition: 'transform 0.2s ease',
+            transition: 'all 0.25s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
             border: `1.5px solid ${isDark ? '#6B7B6B' : '#E5E5E5'}`
           }}
         >
@@ -178,7 +178,7 @@ export default function Streak({ onNavigate }) {
         {/* Next Milestone */}
         {getDaysUntilMilestone() && (
           <div style={{
-            background: isDark ? '#242B24' : '#fff', borderRadius: '14px', padding: '14px',
+            background: isDark ? '#242B24' : '#fff', borderRadius: '16px', padding: '14px',
             marginBottom: '14px', boxShadow: '0 1px 6px rgba(0,0,0,0.04)',
             display: 'flex', alignItems: 'center', gap: '12px'
           }}>
@@ -209,8 +209,8 @@ export default function Streak({ onNavigate }) {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
               {reflections.map((ref, idx) => (
                 <div key={idx} style={{
-                  background: isDark ? '#242B24' : '#fff', borderRadius: '12px', padding: '12px 14px',
-                  boxShadow: '0 1px 6px rgba(0,0,0,0.04)',
+                  background: isDark ? '#242B24' : '#fff', borderRadius: '16px', padding: '14px 16px',
+                  boxShadow: isDark ? '0 1px 3px rgba(0,0,0,0.12), 0 4px 12px rgba(0,0,0,0.16)' : '0 1px 3px rgba(0,0,0,0.04), 0 4px 12px rgba(0,0,0,0.06)',
                   display: 'flex', alignItems: 'center', gap: '12px'
                 }}>
                   <div style={{
@@ -269,8 +269,8 @@ export default function Streak({ onNavigate }) {
         {/* Desktop content - similar structure */}
         <div style={{
           background: 'linear-gradient(135deg, #3B6E3B 0%, #2E5A2E 100%)',
-          borderRadius: '20px', padding: '40px', marginBottom: '24px',
-          boxShadow: '0 8px 24px rgba(59,110,59,0.2)', textAlign: 'center'
+          borderRadius: '24px', padding: '40px', marginBottom: '24px',
+          boxShadow: '0 4px 12px rgba(59,110,59,0.15), 0 12px 32px rgba(59,110,59,0.2)', textAlign: 'center'
         }}>
           <div style={{ fontSize: '96px', fontWeight: 900, color: '#fff', lineHeight: 1 }}>
             {streak.current}
@@ -285,8 +285,8 @@ export default function Streak({ onNavigate }) {
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '16px', marginBottom: '24px' }}>
           <div style={{
-            background: '#fff', borderRadius: '16px', padding: '24px',
-            border: '1px solid rgba(111,175,111,0.15)', textAlign: 'center'
+            background: '#fff', borderRadius: '20px', padding: '24px',
+            border: '1.5px solid rgba(111,175,111,0.15)', textAlign: 'center'
           }}>
             <div style={{ fontSize: '48px', fontWeight: 800, color: '#3B6E3B' }}>
               {streak.longest}
@@ -295,8 +295,8 @@ export default function Streak({ onNavigate }) {
           </div>
 
           <div style={{
-            background: '#fff', borderRadius: '16px', padding: '24px',
-            border: '1px solid rgba(111,175,111,0.15)', textAlign: 'center'
+            background: '#fff', borderRadius: '20px', padding: '24px',
+            border: '1.5px solid rgba(111,175,111,0.15)', textAlign: 'center'
           }}>
             <div style={{ fontSize: '48px', fontWeight: 800, color: '#3B6E3B' }}>
               {reflections.length}
@@ -313,8 +313,8 @@ export default function Streak({ onNavigate }) {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
               {reflections.map((ref, idx) => (
                 <div key={idx} style={{
-                  background: '#fff', borderRadius: '16px', padding: '16px 20px',
-                  border: '1px solid rgba(111,175,111,0.15)',
+                  background: '#fff', borderRadius: '20px', padding: '18px 22px',
+                  border: '1.5px solid rgba(111,175,111,0.15)',
                   display: 'flex', alignItems: 'center', gap: '16px'
                 }}>
                   <div style={{

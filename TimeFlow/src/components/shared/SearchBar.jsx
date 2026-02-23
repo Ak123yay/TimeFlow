@@ -17,18 +17,18 @@ export default function SearchBar({ onSearch, placeholder = "Search tasks..." })
       top: 0,
       zIndex: 10,
       background: isDark ? '#1A1F1A' : '#F8F8F8',
-      padding: '12px 0',
-      marginBottom: '12px'
+      padding: '8px 0',
+      marginBottom: '10px'
     }}>
       <div style={{
         display: 'flex',
         alignItems: 'center',
-        background: isDark ? '#242B24' : '#fff',
-        borderRadius: '12px',
-        padding: '10px 14px',
-        border: `1.5px solid ${isDark ? '#6B7B6B' : '#E5E5E5'}`
+        background: isDark ? '#242B24' : 'rgba(0,0,0,0.04)',
+        borderRadius: '16px',
+        padding: '8px 14px',
+        border: `1px solid ${isDark ? '#4A5A4A' : 'transparent'}`
       }}>
-        <span style={{ fontSize: '16px', marginRight: '8px' }}>🔍</span>
+        <span style={{ fontSize: '14px', marginRight: '8px', opacity: 0.5 }}>🔍</span>
         <input
           type="text"
           value={query}
@@ -39,7 +39,7 @@ export default function SearchBar({ onSearch, placeholder = "Search tasks..." })
             border: 'none',
             outline: 'none',
             background: 'transparent',
-            fontSize: '15px',
+            fontSize: '14px',
             color: isDark ? '#E8F0E8' : '#1A1A1A'
           }}
         />

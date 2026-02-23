@@ -1319,6 +1319,13 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
     const completedCount = tasks.filter(t => t.completed).length;
     const progressPercent = tasks.length > 0 ? Math.round((completedCount / tasks.length) * 100) : 0;
 
+    // Determine the "Up Next" task: first incomplete, non-active task across all visible tasks
+    const allVisibleTasks = [...carriedTasks, ...todayTasks];
+    const upNextTask = !activeTaskId
+      ? allVisibleTasks.find(t => !t.completed)
+      : null;
+    const upNextTaskId = upNextTask?.id ?? null;
+
     // Focus mode filter
     const filterForFocus = (list) => {
       if (!focusModeEnabled) return list;
@@ -1361,51 +1368,54 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
             {/* Top row: greeting + toggles */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '10px' }}>
               <div>
-                <p style={{ fontSize: '12px', color: isDark ? '#9CA59C' : '#8E8E93', margin: 0, fontWeight: 500 }}>{greeting}</p>
-                <h1 style={{ fontSize: '20px', fontWeight: 800, color: isDark ? '#E8F0E8' : '#1A1A1A', margin: '2px 0 0', letterSpacing: '-0.3px' }}>
+                <p style={{ fontSize: '11px', color: isDark ? '#9CA59C' : '#8E8E93', margin: 0, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>{greeting}</p>
+                <h1 style={{ fontSize: '22px', fontWeight: 800, color: isDark ? '#E8F0E8' : '#1A1A1A', margin: '2px 0 0', letterSpacing: '-0.5px' }}>
                   Today's Flow
                 </h1>
               </div>
-              <div style={{ display: 'flex', gap: '6px' }}>
+              <div style={{ display: 'flex', gap: '4px' }}>
                 <button
                   onClick={() => setViewMode(viewMode === 'list' ? 'calendar' : 'list')}
                   style={{
-                    width: '34px', height: '34px', borderRadius: '10px',
+                    width: '30px', height: '30px', borderRadius: '10px',
                     border: 'none',
                     background: viewMode === 'calendar' ? '#3B6E3B' : (isDark ? '#1A1F1A' : '#F0F0F0'),
                     color: viewMode === 'calendar' ? '#fff' : (isDark ? '#9CA59C' : '#8E8E93'),
-                    fontSize: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    fontSize: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center',
                     cursor: 'pointer', touchAction: 'manipulation',
                     boxShadow: viewMode === 'calendar' ? '0 2px 8px rgba(59,110,59,0.25)' : 'none',
-                    transition: 'all 0.2s ease'
+                    transition: 'all 0.2s ease',
+                    opacity: viewMode === 'calendar' ? 1 : 0.7
                   }}
                   aria-label="Toggle calendar"
                 >📅</button>
                 <button
                   onClick={toggleFocusMode}
                   style={{
-                    width: '34px', height: '34px', borderRadius: '10px',
+                    width: '30px', height: '30px', borderRadius: '10px',
                     border: 'none',
                     background: focusModeEnabled ? '#3B6E3B' : (isDark ? '#1A1F1A' : '#F0F0F0'),
                     color: focusModeEnabled ? '#fff' : (isDark ? '#9CA59C' : '#8E8E93'),
-                    fontSize: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    fontSize: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center',
                     cursor: 'pointer', touchAction: 'manipulation',
                     boxShadow: focusModeEnabled ? '0 2px 8px rgba(59,110,59,0.25)' : 'none',
-                    transition: 'all 0.2s ease'
+                    transition: 'all 0.2s ease',
+                    opacity: focusModeEnabled ? 1 : 0.7
                   }}
                   aria-label="Focus mode"
                 >{focusModeEnabled ? '🎯' : '👁️'}</button>
                 <button
                   onClick={toggleNotifications}
                   style={{
-                    width: '34px', height: '34px', borderRadius: '10px',
+                    width: '30px', height: '30px', borderRadius: '10px',
                     border: 'none',
                     background: notificationsEnabled ? '#3B6E3B' : (isDark ? '#1A1F1A' : '#F0F0F0'),
                     color: notificationsEnabled ? '#fff' : (isDark ? '#9CA59C' : '#8E8E93'),
-                    fontSize: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    fontSize: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center',
                     cursor: 'pointer', touchAction: 'manipulation',
                     boxShadow: notificationsEnabled ? '0 2px 8px rgba(59,110,59,0.25)' : 'none',
-                    transition: 'all 0.2s ease'
+                    transition: 'all 0.2s ease',
+                    opacity: notificationsEnabled ? 1 : 0.7
                   }}
                   aria-label="Task notifications"
                 >{notificationsEnabled ? '🔔' : '🔕'}</button>
@@ -1415,14 +1425,13 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
             {/* Progress bar */}
             {tasks.length > 0 && (
               <div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
-                  <span style={{ fontSize: '11px', color: isDark ? '#9CA59C' : '#8E8E93', fontWeight: 500 }}>{completedCount} of {tasks.length} tasks</span>
-                  <span style={{ fontSize: '11px', color: '#3B6E3B', fontWeight: 700 }}>{progressPercent}%</span>
+                <div style={{ marginBottom: '6px' }}>
+                  <span style={{ fontSize: '11px', color: isDark ? '#9CA59C' : '#8E8E93', fontWeight: 500 }}>{completedCount} of {tasks.length} tasks done</span>
                 </div>
-                <div style={{ height: '5px', background: isDark ? 'rgba(107,123,107,0.3)' : '#F0F0F0', borderRadius: '99px', overflow: 'hidden' }}>
+                <div style={{ height: '6px', background: isDark ? 'rgba(107,123,107,0.3)' : '#F0F0F0', borderRadius: '99px', overflow: 'hidden' }}>
                   <div style={{
                     height: '100%', width: `${progressPercent}%`,
-                    background: '#3B6E3B', borderRadius: '99px', transition: 'width 0.4s ease'
+                    background: progressPercent === 100 ? '#10b981' : '#3B6E3B', borderRadius: '99px', transition: 'width 0.4s ease'
                   }} />
                 </div>
               </div>
@@ -1534,10 +1543,10 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
             {filterForFocus(filterTasksBySearch(carriedTasks)).length > 0 && (
               <div style={{ marginBottom: '14px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px', paddingLeft: '2px' }}>
-                  <span style={{ fontSize: '11px', fontWeight: 700, color: '#D97706', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                  <span style={{ fontSize: '11px', fontWeight: 800, color: '#D97706', textTransform: 'uppercase', letterSpacing: '0.8px' }}>
                     Carried Over
                   </span>
-                  <span style={{ fontSize: '10px', fontWeight: 600, background: 'rgba(217,119,6,0.1)', color: '#D97706', padding: '1px 6px', borderRadius: '99px' }}>
+                  <span style={{ fontSize: '10px', fontWeight: 700, background: 'rgba(217,119,6,0.12)', color: '#D97706', padding: '2px 7px', borderRadius: '99px' }}>
                     {filterForFocus(filterTasksBySearch(carriedTasks)).length}
                   </span>
                 </div>
@@ -1556,6 +1565,7 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
                             conflicts: hasConflict(task.id)
                           }}
                           isActive={activeTaskId === task.id}
+                          isUpNext={task.id === upNextTaskId}
                           onStart={() => startTask(task)}
                           onComplete={() => {
                         const isCurrentlyCompleted = task.completed;
@@ -1637,10 +1647,10 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
             {filterForFocus(filterTasksBySearch(todayTasks)).length > 0 && (
               <div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px', paddingLeft: '2px' }}>
-                  <span style={{ fontSize: '11px', fontWeight: 700, color: isDark ? '#E8F0E8' : '#1A1A1A', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                  <span style={{ fontSize: '11px', fontWeight: 800, color: isDark ? '#E8F0E8' : '#1A1A1A', textTransform: 'uppercase', letterSpacing: '0.8px' }}>
                     Tasks
                   </span>
-                  <span style={{ fontSize: '10px', fontWeight: 600, background: 'rgba(59,110,59,0.08)', color: '#3B6E3B', padding: '1px 6px', borderRadius: '99px' }}>
+                  <span style={{ fontSize: '10px', fontWeight: 700, background: 'rgba(59,110,59,0.1)', color: '#3B6E3B', padding: '2px 7px', borderRadius: '99px' }}>
                     {filterForFocus(filterTasksBySearch(todayTasks)).length}
                   </span>
                 </div>
@@ -1659,6 +1669,7 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
                             conflicts: hasConflict(task.id)
                           }}
                           isActive={activeTaskId === task.id}
+                          isUpNext={task.id === upNextTaskId}
                           onStart={() => startTask(task)}
                           onComplete={() => {
                         const isCurrentlyCompleted = task.completed;
@@ -1757,12 +1768,12 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
             type="button"
             onClick={() => { setShowAddSheet(true); haptic.medium(); }}
             style={{
-              position: 'fixed', bottom: '72px', right: '18px',
+              position: 'fixed', bottom: '80px', right: '20px',
               width: '52px', height: '52px', borderRadius: '50%',
               background: '#3B6E3B', color: '#fff', border: 'none',
               fontSize: '26px', fontWeight: 300, lineHeight: 1,
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              boxShadow: '0 4px 14px rgba(59,110,59,0.35)',
+              boxShadow: '0 4px 14px rgba(59,110,59,0.35), 0 8px 28px rgba(59,110,59,0.2)',
               cursor: 'pointer', touchAction: 'manipulation',
               WebkitTapHighlightColor: 'transparent', zIndex: 150
             }}
@@ -2459,8 +2470,8 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
             marginTop: "12px",
             padding: "12px 20px",
             background: "linear-gradient(135deg, rgba(111,175,111,0.15), rgba(59,110,59,0.08))",
-            borderRadius: "12px",
-            border: "1px solid rgba(111,175,111,0.3)",
+            borderRadius: "14px",
+            border: "1.5px solid rgba(111,175,111,0.25)",
             fontSize: "14px",
             fontWeight: "600",
             color: "#3B6E3B",
@@ -2481,11 +2492,11 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
           <div style={{
             marginTop: 12,
             marginBottom: 18,
-            padding: "18px",
-            borderRadius: "16px",
+            padding: "20px",
+            borderRadius: "18px",
             background: "linear-gradient(135deg, rgba(167,211,167,0.15), rgba(111,175,111,0.08))",
-            border: "2px solid rgba(111,175,111,0.2)",
-            boxShadow: "0 4px 16px rgba(59,110,59,0.08)",
+            border: "2px solid rgba(111,175,111,0.18)",
+            boxShadow: "0 4px 12px rgba(59,110,59,0.06), 0 12px 32px rgba(59,110,59,0.1)",
             animation: "fadeIn 0.3s ease-out"
           }}>
             <div style={{ fontSize: "12px", fontWeight: 700, color: "#3B6E3B", textTransform: "uppercase", letterSpacing: "0.5px" }}>🌿 Current Task</div>
@@ -2505,19 +2516,20 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
               </div>
 
               <div style={{ flex: 1 }}>
-                <div style={{ 
-                  height: 10, 
-                  background: "#eaf7ea", 
-                  borderRadius: 9999, 
+                <div style={{
+                  height: 10,
+                  background: "#eaf7ea",
+                  borderRadius: 9999,
                   overflow: "hidden",
-                  boxShadow: "inset 0 2px 4px rgba(0,0,0,0.05)"
+                  boxShadow: "inset 0 1px 3px rgba(0,0,0,0.06)"
                 }}>
                   <div style={{
                     height: "100%",
                     width: `${progressPct}%`,
-                    background: "linear-gradient(90deg,#4F7A4F,#6FAF6F)",
+                    background: "linear-gradient(135deg,#4F7A4F,#6FAF6F)",
                     transition: "width 0.3s ease-out",
-                    boxShadow: "0 0 8px rgba(79,122,79,0.3)"
+                    borderRadius: 9999,
+                    boxShadow: "0 0 8px rgba(79,122,79,0.25)"
                   }} />
                 </div>
                 <div style={{ fontSize: 13, color: "#4B6B4B", marginTop: 8, fontWeight: 600 }}>
@@ -2574,9 +2586,9 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
                       gap: "8px",
                       marginBottom: "12px",
                       padding: "8px 12px",
-                      background: "linear-gradient(90deg, rgba(255,165,0,0.08), rgba(255,165,0,0.04))",
-                      borderRadius: "8px",
-                      border: "1px solid rgba(255,165,0,0.2)"
+                      background: "linear-gradient(135deg, rgba(255,165,0,0.08), rgba(255,165,0,0.04))",
+                      borderRadius: "10px",
+                      border: "1.5px solid rgba(255,165,0,0.18)"
                     }}>
                       <span style={{ fontSize: "16px" }}>🍂</span>
                       <h3 style={{ margin: 0, fontSize: "14px", fontWeight: "700", color: "#d97706" }}>
@@ -2613,32 +2625,32 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
                               sectionHasMultipleItems={hasMultiple}
                               className={isActiveTask ? 'task-focused' : ''}
                             style={{
-                              background: "linear-gradient(90deg, rgba(255,200,150,0.12), rgba(255,210,160,0.08))",
-                              border: `2px solid ${health.color}`,
-                              borderRadius: "12px",
-                              padding: "14px 16px",
-                              display: "flex",
-                              alignItems: "center",
-                              gap: "12px",
-                              position: "relative",
-                              overflow: "hidden",
-                              opacity: shouldDim ? 0.4 : (task.completed ? 0.6 : 1),
-                              transition: "all 0.3s ease",
-                              animation: "slideInFromLeft 0.4s ease-out",
-                              boxShadow: hasConflict(task.id)
-                                ? "0 2px 12px rgba(245,158,11,0.15)"
-                                : isActiveTask
-                                ? "0 0 0 3px rgba(111,175,111,0.3)"
-                                : "0 2px 8px rgba(255,165,0,0.08)"
-                            }}
-                            onMouseEnter={(e) => {
-                              e.currentTarget.style.boxShadow = "0 4px 16px rgba(255,165,0,0.15)";
-                              e.currentTarget.style.transform = "translateX(4px)";
-                            }}
-                            onMouseLeave={(e) => {
-                              e.currentTarget.style.boxShadow = "0 2px 8px rgba(255,165,0,0.08)";
-                              e.currentTarget.style.transform = "translateX(0)";
-                            }}
+                      background: "linear-gradient(135deg, rgba(255,200,150,0.1), rgba(255,210,160,0.06))",
+                      border: `2px solid ${health.color}`,
+                      borderRadius: "16px",
+                      padding: "16px 18px",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "14px",
+                      position: "relative",
+                      overflow: "hidden",
+                      opacity: shouldDim ? 0.4 : (task.completed ? 0.6 : 1),
+                      transition: "all 0.25s cubic-bezier(0.25, 0.46, 0.45, 0.94)",
+                      animation: "slideInFromLeft 0.4s ease-out",
+                      boxShadow: hasConflict(task.id)
+                        ? "0 2px 12px rgba(245,158,11,0.15)"
+                        : isActiveTask
+                        ? "0 0 0 3px rgba(111,175,111,0.3)"
+                        : "0 1px 3px rgba(255,165,0,0.06), 0 4px 12px rgba(255,165,0,0.08)"
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.boxShadow = "0 2px 8px rgba(255,165,0,0.1), 0 8px 24px rgba(255,165,0,0.12)";
+                      e.currentTarget.style.transform = "translateX(4px)";
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.boxShadow = "0 1px 3px rgba(255,165,0,0.06), 0 4px 12px rgba(255,165,0,0.08)";
+                      e.currentTarget.style.transform = "translateX(0)";
+                    }}
                           >
                             <div style={{
                               position: "absolute",
@@ -2772,15 +2784,15 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
                                 }}
                                 style={{
                                   padding: "8px 16px",
-                                  borderRadius: "8px",
-                                  border: "1px solid rgba(245,158,11,0.3)",
+                                  borderRadius: "10px",
+                                  border: "1.5px solid rgba(245,158,11,0.25)",
                                   background: "linear-gradient(135deg, rgba(245,158,11,0.15), rgba(217,119,6,0.1))",
                                   color: "#c2410c",
                                   fontSize: "13px",
                                   fontWeight: "600",
                                   cursor: "pointer",
-                                  transition: "all 0.2s ease",
-                                  boxShadow: "0 2px 4px rgba(245,158,11,0.1)",
+                                  transition: "all 0.25s cubic-bezier(0.25, 0.46, 0.45, 0.94)",
+                                  boxShadow: "0 2px 6px rgba(245,158,11,0.1)",
                                   flexShrink: 0,
                                   position: "relative",
                                   zIndex: 100,
@@ -2818,9 +2830,9 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
                       gap: "8px",
                       marginBottom: "12px",
                       padding: "8px 12px",
-                      background: "linear-gradient(90deg, rgba(111,175,111,0.08), rgba(111,175,111,0.04))",
-                      borderRadius: "8px",
-                      border: "1px solid rgba(111,175,111,0.2)"
+                      background: "linear-gradient(135deg, rgba(111,175,111,0.08), rgba(111,175,111,0.04))",
+                      borderRadius: "10px",
+                      border: "1.5px solid rgba(111,175,111,0.18)"
                     }}>
                       <span style={{ fontSize: "16px" }}>🌿</span>
                       <h3 style={{ margin: 0, fontSize: "14px", fontWeight: "700", color: "#3B6E3B" }}>
@@ -2859,30 +2871,30 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
                       sectionHasMultipleItems={hasMultiple}
                       className={isActiveTask ? 'task-focused' : ''}
                     style={{
-                      background: "linear-gradient(90deg, rgba(167,211,167,0.12), rgba(111,175,111,0.08))",
+                      background: "linear-gradient(135deg, rgba(167,211,167,0.1), rgba(111,175,111,0.06))",
                       border: `2px solid ${health.color}`,
-                      borderRadius: "12px",
-                      padding: "14px 16px",
+                      borderRadius: "16px",
+                      padding: "16px 18px",
                       display: "flex",
                       alignItems: "center",
-                      gap: "12px",
+                      gap: "14px",
                       position: "relative",
                       overflow: "hidden",
                       opacity: shouldDim ? 0.4 : (task.completed ? 0.6 : 1),
-                      transition: "all 0.3s ease",
+                      transition: "all 0.25s cubic-bezier(0.25, 0.46, 0.45, 0.94)",
                       animation: "slideInFromLeft 0.4s ease-out",
                       boxShadow: hasConflict(task.id)
                         ? "0 2px 12px rgba(245,158,11,0.15)"
                         : isActiveTask
                         ? "0 0 0 3px rgba(111,175,111,0.3)"
-                        : "0 2px 8px rgba(59,110,59,0.05)"
+                        : "0 1px 3px rgba(59,110,59,0.04), 0 4px 12px rgba(59,110,59,0.06)"
                     }}
                     onMouseEnter={(e) => {
-                      e.currentTarget.style.boxShadow = "0 4px 16px rgba(59,110,59,0.12)";
+                      e.currentTarget.style.boxShadow = "0 2px 8px rgba(59,110,59,0.08), 0 8px 24px rgba(59,110,59,0.1)";
                       e.currentTarget.style.transform = "translateX(4px)";
                     }}
                     onMouseLeave={(e) => {
-                      e.currentTarget.style.boxShadow = "0 2px 8px rgba(59,110,59,0.05)";
+                      e.currentTarget.style.boxShadow = "0 1px 3px rgba(59,110,59,0.04), 0 4px 12px rgba(59,110,59,0.06)";
                       e.currentTarget.style.transform = "translateX(0)";
                     }}
                   >
@@ -3018,15 +3030,15 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
                         }}
                         style={{
                           padding: "8px 16px",
-                          borderRadius: "8px",
-                          border: "1px solid rgba(111,175,111,0.3)",
+                          borderRadius: "10px",
+                          border: "1.5px solid rgba(111,175,111,0.25)",
                           background: "linear-gradient(135deg, rgba(111,175,111,0.15), rgba(59,110,59,0.1))",
                           color: "#3B6E3B",
                           fontSize: "13px",
                           fontWeight: "600",
                           cursor: "pointer",
-                          transition: "all 0.2s ease",
-                          boxShadow: "0 2px 4px rgba(111,175,111,0.1)",
+                          transition: "all 0.25s cubic-bezier(0.25, 0.46, 0.45, 0.94)",
+                          boxShadow: "0 2px 6px rgba(111,175,111,0.1)",
                           flexShrink: 0
                         }}
                         onMouseEnter={(e) => {
@@ -3111,8 +3123,8 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
               ? "linear-gradient(135deg, #6FAF6F, #3B6E3B)"
               : "linear-gradient(135deg, rgba(167,211,167,0.95), rgba(111,175,111,0.9))",
             color: "#fff",
-            borderRadius: "12px",
-            boxShadow: "0 8px 24px rgba(0,0,0,0.15)",
+            borderRadius: "14px",
+            boxShadow: "0 4px 12px rgba(0,0,0,0.08), 0 12px 32px rgba(0,0,0,0.15)",
             fontSize: "14px",
             fontWeight: "600",
             zIndex: 10000,

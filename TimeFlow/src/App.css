@@ -14,9 +14,16 @@
   --primary-2: #6FAF6F; /* light green */
   --muted: #4B6B4B;
   --vine: #A7D3A7;
-  --soft-shadow: rgba(12, 34, 12, 0.06);
-  --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  --transition-fast: all 0.15s ease;
+  --soft-shadow: rgba(12, 34, 12, 0.05);
+  --transition-smooth: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  --transition-fast: all 0.18s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  --radius-sm: 12px;
+  --radius-md: 16px;
+  --radius-lg: 20px;
+  --radius-xl: 24px;
+  --shadow-card: 0 1px 3px rgba(59,110,59,0.04), 0 4px 12px rgba(59,110,59,0.06);
+  --shadow-card-hover: 0 2px 6px rgba(59,110,59,0.06), 0 8px 24px rgba(59,110,59,0.1);
+  --shadow-elevated: 0 4px 12px rgba(59,110,59,0.06), 0 12px 32px rgba(59,110,59,0.1);
 
   /* Enhanced nature-inspired earthy tones */
   --moss: #7C9A73;           /* Soft moss green */
@@ -55,7 +62,10 @@
     --primary-2: #8BC98B;       /* Brighter accent */
     --muted: #6B7B6B;
     --vine: #4A6B4A;            /* Darker vine */
-    --soft-shadow: rgba(0, 0, 0, 0.3);
+    --soft-shadow: rgba(0, 0, 0, 0.25);
+    --shadow-card: 0 1px 3px rgba(0,0,0,0.12), 0 4px 12px rgba(0,0,0,0.16);
+    --shadow-card-hover: 0 2px 6px rgba(0,0,0,0.14), 0 8px 24px rgba(0,0,0,0.2);
+    --shadow-elevated: 0 4px 12px rgba(0,0,0,0.15), 0 12px 32px rgba(0,0,0,0.22);
 
     /* Adjusted earthy tones for dark */
     --moss: #5B7A52;
@@ -119,12 +129,12 @@ html {
   width: 100%;
   max-width: 960px;
   background: var(--gradient-mist);
-  border-radius: 18px;
-  box-shadow: 0 18px 40px var(--soft-shadow), 0 0 0 1px rgba(167,211,167,0.1);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-elevated), 0 0 0 1px rgba(167,211,167,0.1);
   padding: 28px;
   display:flex;
   flex-direction:column;
-  gap:18px;
+  gap:20px;
   position: relative;
   overflow: visible;
   animation: fadeInUp 0.5s ease-out;
@@ -261,9 +271,9 @@ html {
 .horizontal-scroll::-webkit-scrollbar{ display:none; }
 .preset-pill{
   background: linear-gradient(180deg, rgba(167,211,167,0.12), rgba(111,175,111,0.06));
-  border: 1px solid rgba(111,175,111,0.12);
-  padding:10px 12px;
-  border-radius:14px;
+  border: 1.5px solid rgba(111,175,111,0.12);
+  padding:10px 14px;
+  border-radius: var(--radius-lg);
   display:flex;
   flex-direction:column;
   gap:4px;
@@ -286,7 +296,7 @@ html {
 }
 .preset-pill:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(59,110,59,0.15);
+  box-shadow: var(--shadow-card);
   border-color: rgba(111,175,111,0.25);
 }
 .preset-pill:hover::before {
@@ -336,17 +346,17 @@ html {
   align-items: center;
   gap: 8px;
   background: #fff;
-  border-radius: 10px;
-  padding: 8px 10px;
-  border: 1px solid rgba(111, 175, 111, 0.08);
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+  border: 1.5px solid rgba(111, 175, 111, 0.1);
   width: 100%; /* take full width of parent */
   box-sizing: border-box; /* make padding included in width */
   transition: var(--transition-fast);
 }
 
 .time-input:focus-within {
-  border-color: rgba(111, 175, 111, 0.3);
-  box-shadow: 0 0 0 3px rgba(111, 175, 111, 0.1);
+  border-color: rgba(111, 175, 111, 0.35);
+  box-shadow: 0 0 0 4px rgba(111, 175, 111, 0.08);
 }
 
 .time-input input {
@@ -383,7 +393,7 @@ html {
 .timeline-bar{
   position:relative;
   height:72px;
-  border-radius:14px;
+  border-radius: var(--radius-lg);
   background: linear-gradient(180deg, rgba(250,255,250,1), rgba(240,248,242,1));
   border:1px solid rgba(111,175,111,0.06);
   overflow: visible;
@@ -439,8 +449,8 @@ html {
   position:absolute;
   top:6px;
   transform: translateX(-50%);
-  padding:8px 12px;
-  border-radius:12px;
+  padding:8px 14px;
+  border-radius: var(--radius-md);
   background: linear-gradient(180deg, rgba(255,255,255,0.96), rgba(248,252,246,0.96));
   font-weight:700;
   font-size:13px;
@@ -448,7 +458,7 @@ html {
   white-space:nowrap;
   overflow:hidden;
   text-overflow:ellipsis;
-  box-shadow: 0 8px 22px rgba(12,34,12,0.06);
+  box-shadow: var(--shadow-card);
   max-width: 80%;
 }
 
@@ -497,15 +507,15 @@ html {
 
 /* Primary Save & Continue button */
 .btn.primary {
-  background: linear-gradient(90deg, #3B6E3B, #6FAF6F);
+  background: linear-gradient(135deg, #3B6E3B, #6FAF6F);
   color: white;
   border: none;
-  box-shadow: 0 14px 36px rgba(59,110,59,0.12);
+  box-shadow: var(--shadow-card);
   border-radius: 9999px;
 }
 
 .btn.primary:hover {
-  box-shadow: 0 18px 42px rgba(59,110,59,0.18);
+  box-shadow: var(--shadow-card-hover);
   transform: translateY(-2px);
 }
 
@@ -554,7 +564,7 @@ html {
 
 /* make preset pills softer */
 .preset-pill {
-  border-radius: 18px;
+  border-radius: var(--radius-lg);
 }
 
 /* Mobile: Smaller preset pills */
@@ -809,18 +819,20 @@ input:focus-visible {
 .pool-task-card {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 16px;
-  background: linear-gradient(90deg, rgba(167,211,167,0.08), rgba(111,175,111,0.05));
-  border: 1px solid rgba(111,175,111,0.12);
-  border-radius: 12px;
-  transition: all 0.2s ease;
+  gap: 14px;
+  padding: 16px 18px;
+  background: linear-gradient(135deg, rgba(167,211,167,0.06), rgba(111,175,111,0.03));
+  border: 1.5px solid rgba(111,175,111,0.12);
+  border-radius: var(--radius-lg);
+  transition: var(--transition-fast);
+  box-shadow: var(--shadow-card);
 }
 
 .pool-task-card:hover {
-  background: linear-gradient(90deg, rgba(167,211,167,0.12), rgba(111,175,111,0.08));
-  border-color: rgba(111,175,111,0.2);
+  background: linear-gradient(135deg, rgba(167,211,167,0.1), rgba(111,175,111,0.06));
+  border-color: rgba(111,175,111,0.22);
   transform: translateX(4px);
+  box-shadow: var(--shadow-card-hover);
 }
 
 /* Mobile: Stack pool task card buttons vertically */
@@ -839,10 +851,10 @@ input:focus-visible {
 
 /* Delete button responsive sizing */
 .delete-button {
-  width: 32px;
-  height: 32px;
-  border-radius: 8px;
-  border: 1px solid rgba(220,38,38,0.3);
+  width: 34px;
+  height: 34px;
+  border-radius: var(--radius-sm);
+  border: 1.5px solid rgba(220,38,38,0.25);
   background: rgba(255,255,255,0.9);
   color: #dc2626;
   font-size: 20px;
@@ -851,14 +863,15 @@ input:focus-visible {
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.2s ease;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+  transition: var(--transition-fast);
+  box-shadow: 0 1px 4px rgba(0,0,0,0.04);
 }
 
 .delete-button:hover {
-  background: rgba(220,38,38,0.1);
-  border-color: rgba(220,38,38,0.5);
-  transform: scale(1.1);
+  background: rgba(220,38,38,0.08);
+  border-color: rgba(220,38,38,0.4);
+  transform: scale(1.08);
+  box-shadow: 0 2px 8px rgba(220,38,38,0.12);
 }
 
 @media (max-width: 640px) {
@@ -956,16 +969,14 @@ input:focus-visible {
   .task-card {
     padding: 18px !important;
     margin-bottom: 14px !important;
-    border-radius: 16px !important;
+    border-radius: var(--radius-lg) !important;
     background: linear-gradient(135deg,
       rgba(255,255,255,0.98) 0%,
       rgba(245,253,250,0.95) 100%) !important;
     border: 1.5px solid rgba(111,175,111,0.15) !important;
-    box-shadow:
-      0 2px 8px rgba(59,110,59,0.06),
-      0 0 0 1px rgba(255,255,255,0.5) inset !important;
+    box-shadow: var(--shadow-card) !important;
     border-left: 4px solid var(--primary-2) !important;
-    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    transition: var(--transition-fast) !important;
   }
 
   /* Press feedback */
@@ -979,9 +990,7 @@ input:focus-visible {
   [data-task-active="true"] {
     background: var(--gradient-forest) !important;
     color: white !important;
-    box-shadow:
-      0 8px 24px rgba(59,110,59,0.25),
-      0 0 0 2px rgba(111,175,111,0.4) !important;
+    box-shadow: var(--shadow-elevated) !important;
     border-left-color: rgba(255,255,255,0.8) !important;
   }
 
@@ -1126,12 +1135,10 @@ input:focus-visible {
     z-index: 100 !important;
     margin: -8px 0 24px !important;
     padding: 24px 20px !important;
-    border-radius: 20px !important;
+    border-radius: var(--radius-xl) !important;
     background: var(--gradient-forest) !important;
     color: white !important;
-    box-shadow:
-      0 12px 32px rgba(59, 110, 59, 0.3),
-      0 0 0 1px rgba(255, 255, 255, 0.2) inset !important;
+    box-shadow: var(--shadow-elevated) !important;
     border: 2px solid rgba(255, 255, 255, 0.15) !important;
   }
 
@@ -1181,12 +1188,12 @@ input:focus-visible {
   .timer-actions button {
     flex: 1 !important;
     padding: 14px !important;
-    border-radius: 12px !important;
+    border-radius: var(--radius-md) !important;
     background: rgba(255, 255, 255, 0.2) !important;
     color: white !important;
     border: none !important;
     font-weight: 600 !important;
-    transition: all 0.2s ease !important;
+    transition: var(--transition-fast) !important;
   }
 
   .timer-actions button:active {

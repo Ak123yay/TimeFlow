@@ -157,10 +157,10 @@ export default function Insights({ onNavigate }) {
         {accuracyStats && (
           <div style={{
             background: isDark ? '#242B24' : '#fff',
-            borderRadius: '14px',
-            padding: '16px',
+            borderRadius: '18px',
+            padding: '18px',
             marginBottom: '14px',
-            boxShadow: isDark ? '0 1px 6px rgba(0,0,0,0.3)' : '0 1px 6px rgba(0,0,0,0.04)'
+            boxShadow: isDark ? '0 1px 3px rgba(0,0,0,0.12), 0 4px 12px rgba(0,0,0,0.16)' : '0 1px 3px rgba(0,0,0,0.04), 0 4px 12px rgba(0,0,0,0.06)'
           }}>
             <h3 style={{ fontSize: '14px', fontWeight: 700, color: isDark ? '#E8F0E8' : '#1A1A1A', margin: '0 0 12px' }}>
               Time Estimation Accuracy
@@ -176,7 +176,7 @@ export default function Insights({ onNavigate }) {
               </div>
               <div style={{
                 padding: '8px 12px',
-                borderRadius: '8px',
+                borderRadius: '10px',
                 background: accuracyStats.trend === 'improving' ? 'rgba(16,185,129,0.1)' :
                            accuracyStats.trend === 'declining' ? 'rgba(239,68,68,0.1)' : 'rgba(251,191,36,0.1)',
                 color: accuracyStats.trend === 'improving' ? '#10b981' :
@@ -198,17 +198,17 @@ export default function Insights({ onNavigate }) {
         {estimationBias && (
           <div style={{
             background: isDark ? '#242B24' : '#fff',
-            borderRadius: '14px',
-            padding: '16px',
+            borderRadius: '18px',
+            padding: '18px',
             marginBottom: '14px',
-            boxShadow: isDark ? '0 1px 6px rgba(0,0,0,0.3)' : '0 1px 6px rgba(0,0,0,0.04)'
+            boxShadow: isDark ? '0 1px 3px rgba(0,0,0,0.12), 0 4px 12px rgba(0,0,0,0.16)' : '0 1px 3px rgba(0,0,0,0.04), 0 4px 12px rgba(0,0,0,0.06)'
           }}>
             <h3 style={{ fontSize: '14px', fontWeight: 700, color: isDark ? '#E8F0E8' : '#1A1A1A', margin: '0 0 12px' }}>
               Estimation Bias 🎯
             </h3>
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '10px' }}>
               <div style={{
-                padding: '8px 14px', borderRadius: '10px', fontWeight: 700, fontSize: '13px',
+                padding: '8px 14px', borderRadius: '12px', fontWeight: 700, fontSize: '13px',
                 background: estimationBias.bias === 'accurate' ? 'rgba(16,185,129,0.1)' :
                              estimationBias.bias === 'underestimate' ? 'rgba(245,158,11,0.1)' : 'rgba(99,102,241,0.1)',
                 color: estimationBias.bias === 'accurate' ? '#10b981' :
@@ -232,10 +232,10 @@ export default function Insights({ onNavigate }) {
         {energyPattern && energyPattern.length > 0 && (
           <div style={{
             background: isDark ? '#242B24' : '#fff',
-            borderRadius: '14px',
-            padding: '16px',
+            borderRadius: '18px',
+            padding: '18px',
             marginBottom: '14px',
-            boxShadow: isDark ? '0 1px 6px rgba(0,0,0,0.3)' : '0 1px 6px rgba(0,0,0,0.04)'
+            boxShadow: isDark ? '0 1px 3px rgba(0,0,0,0.12), 0 4px 12px rgba(0,0,0,0.16)' : '0 1px 3px rgba(0,0,0,0.04), 0 4px 12px rgba(0,0,0,0.06)'
           }}>
             <h3 style={{ fontSize: '14px', fontWeight: 700, color: isDark ? '#E8F0E8' : '#1A1A1A', margin: '0 0 12px' }}>
               Your Best Hours ⚡
@@ -246,9 +246,9 @@ export default function Insights({ onNavigate }) {
                   display: 'flex',
                   alignItems: 'center',
                   gap: '12px',
-                  padding: '10px',
+                  padding: '12px',
                   background: isDark ? '#1A1F1A' : '#F5F5F5',
-                  borderRadius: '8px'
+                  borderRadius: '12px'
                 }}>
                   <div style={{
                     width: '32px',
@@ -297,7 +297,7 @@ export default function Insights({ onNavigate }) {
           return (
             <div style={{
               background: isDark ? '#242B24' : '#fff',
-              borderRadius: '14px',
+              borderRadius: '16px',
               padding: '16px',
               marginBottom: '14px',
               boxShadow: isDark ? '0 1px 6px rgba(0,0,0,0.3)' : '0 1px 6px rgba(0,0,0,0.04)'
@@ -333,10 +333,10 @@ export default function Insights({ onNavigate }) {
         {frequentTasks.length > 0 && (
           <div style={{
             background: isDark ? '#242B24' : '#fff',
-            borderRadius: '14px',
-            padding: '16px',
+            borderRadius: '18px',
+            padding: '18px',
             marginBottom: '14px',
-            boxShadow: isDark ? '0 1px 6px rgba(0,0,0,0.3)' : '0 1px 6px rgba(0,0,0,0.04)'
+            boxShadow: isDark ? '0 1px 3px rgba(0,0,0,0.12), 0 4px 12px rgba(0,0,0,0.16)' : '0 1px 3px rgba(0,0,0,0.04), 0 4px 12px rgba(0,0,0,0.06)'
           }}>
             <h3 style={{ fontSize: '14px', fontWeight: 700, color: isDark ? '#E8F0E8' : '#1A1A1A', margin: '0 0 12px' }}>
               Smart Suggestions 💡
@@ -346,9 +346,9 @@ export default function Insights({ onNavigate }) {
                 console.log('Rendering task suggestion:', task);
                 return (
                   <div key={idx} style={{
-                    padding: '12px',
+                    padding: '14px',
                     background: isDark ? '#1A1F1A' : '#F5F5F5',
-                    borderRadius: '10px'
+                    borderRadius: '14px'
                   }}>
                     <div style={{ fontSize: '13px', fontWeight: 600, color: isDark ? '#E8F0E8' : '#1A1A1A', marginBottom: '4px' }}>
                       {task.name}
@@ -398,8 +398,8 @@ export default function Insights({ onNavigate }) {
             </p>
             <div style={{
               background: isDark ? '#242B24' : '#fff',
-              borderRadius: '12px',
-              padding: '16px',
+              borderRadius: '16px',
+              padding: '18px',
               textAlign: 'left',
               maxWidth: '300px',
               margin: '0 auto',

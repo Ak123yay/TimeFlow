@@ -97,18 +97,18 @@ export default function WeeklyView({ onBackToToday }) {
         {/* View Mode Toggle */}
         <div style={{
           display: 'flex', gap: '8px', marginBottom: '14px',
-          background: isDark ? '#1A1F1A' : '#F0F0F0', padding: '4px', borderRadius: '10px'
+          background: isDark ? '#1A1F1A' : '#F0F0F0', padding: '4px', borderRadius: '14px'
         }}>
           <button
             onClick={() => { haptic.light(); setViewMode('week'); }}
             style={{
-              flex: 1, padding: '8px 14px', borderRadius: '8px',
+              flex: 1, padding: '8px 14px', borderRadius: '12px',
               border: 'none', background: viewMode === 'week' ? (isDark ? '#242B24' : '#fff') : 'transparent',
               color: viewMode === 'week' ? (isDark ? '#E8F0E8' : '#1A1A1A') : (isDark ? '#9CA59C' : '#8E8E93'),
               fontSize: '13px', fontWeight: 700,
               cursor: 'pointer', touchAction: 'manipulation',
               boxShadow: viewMode === 'week' ? (isDark ? '0 1px 4px rgba(0,0,0,0.3)' : '0 1px 4px rgba(0,0,0,0.06)') : 'none',
-              transition: 'all 0.2s ease'
+              transition: 'all 0.25s cubic-bezier(0.25, 0.46, 0.45, 0.94)'
             }}
           >
             Week
@@ -116,13 +116,13 @@ export default function WeeklyView({ onBackToToday }) {
           <button
             onClick={() => { haptic.light(); setViewMode('month'); }}
             style={{
-              flex: 1, padding: '8px 14px', borderRadius: '8px',
+              flex: 1, padding: '8px 14px', borderRadius: '12px',
               border: 'none', background: viewMode === 'month' ? (isDark ? '#242B24' : '#fff') : 'transparent',
               color: viewMode === 'month' ? (isDark ? '#E8F0E8' : '#1A1A1A') : (isDark ? '#9CA59C' : '#8E8E93'),
               fontSize: '13px', fontWeight: 700,
               cursor: 'pointer', touchAction: 'manipulation',
               boxShadow: viewMode === 'month' ? (isDark ? '0 1px 4px rgba(0,0,0,0.3)' : '0 1px 4px rgba(0,0,0,0.06)') : 'none',
-              transition: 'all 0.2s ease'
+              transition: 'all 0.25s cubic-bezier(0.25, 0.46, 0.45, 0.94)'
             }}
           >
             Month
@@ -154,10 +154,10 @@ export default function WeeklyView({ onBackToToday }) {
         <div style={{
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
           marginBottom: '14px', padding: '10px 14px',
-          background: isDark ? '#242B24' : '#fff', borderRadius: '12px', boxShadow: isDark ? '0 1px 4px rgba(0,0,0,0.3)' : '0 1px 4px rgba(0,0,0,0.04)'
+          background: isDark ? '#242B24' : '#fff', borderRadius: '16px', boxShadow: isDark ? '0 1px 3px rgba(0,0,0,0.12), 0 4px 12px rgba(0,0,0,0.16)' : '0 1px 3px rgba(0,0,0,0.04), 0 4px 12px rgba(0,0,0,0.06)'
         }}>
           <button onClick={goToPreviousWeek} style={{
-            padding: '6px 10px', borderRadius: '8px', border: 'none',
+            padding: '6px 10px', borderRadius: '12px', border: 'none',
             background: isDark ? '#1A1F1A' : '#F0F0F0', color: isDark ? '#E8F0E8' : '#1A1A1A', fontSize: '12px', fontWeight: 600,
             cursor: 'pointer', touchAction: 'manipulation'
           }}>←</button>
@@ -176,7 +176,7 @@ export default function WeeklyView({ onBackToToday }) {
           </div>
 
           <button onClick={goToNextWeek} style={{
-            padding: '6px 10px', borderRadius: '8px', border: 'none',
+            padding: '6px 10px', borderRadius: '12px', border: 'none',
             background: isDark ? '#1A1F1A' : '#F0F0F0', color: isDark ? '#E8F0E8' : '#1A1A1A', fontSize: '12px', fontWeight: 600,
             cursor: 'pointer', touchAction: 'manipulation'
           }}>→</button>
@@ -196,8 +196,8 @@ export default function WeeklyView({ onBackToToday }) {
                 onClick={() => { if (day.reflection) { setSelectedDay(day); haptic.light(); } }}
                 style={{
                   background: day.isToday ? (isDark ? 'rgba(111,175,111,0.15)' : 'rgba(59,110,59,0.04)') : (isDark ? '#242B24' : '#fff'),
-                  border: day.isToday ? (isDark ? '1.5px solid #6FAF6F' : '1.5px solid #3B6E3B') : (isDark ? '1px solid #6B7B6B' : '1px solid #E5E5E5'),
-                  borderRadius: '12px', padding: '12px 14px',
+                  border: day.isToday ? (isDark ? '1.5px solid #6FAF6F' : '1.5px solid #3B6E3B') : (isDark ? '1.5px solid #6B7B6B' : '1.5px solid #E5E5E5'),
+                  borderRadius: '16px', padding: '14px 16px',
                   cursor: day.reflection ? 'pointer' : 'default',
                   touchAction: 'manipulation'
                 }}
@@ -280,8 +280,8 @@ export default function WeeklyView({ onBackToToday }) {
 
         {/* Summary Stats */}
         <div style={{
-          background: isDark ? '#242B24' : '#fff', borderRadius: '14px', padding: '14px',
-          boxShadow: isDark ? '0 1px 6px rgba(0,0,0,0.3)' : '0 1px 6px rgba(0,0,0,0.04)'
+          background: isDark ? '#242B24' : '#fff', borderRadius: '18px', padding: '16px',
+          boxShadow: isDark ? '0 1px 3px rgba(0,0,0,0.12), 0 4px 12px rgba(0,0,0,0.16)' : '0 1px 3px rgba(0,0,0,0.04), 0 4px 12px rgba(0,0,0,0.06)'
         }}>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px' }}>
             <div style={{ textAlign: 'center' }}>
@@ -350,7 +350,7 @@ export default function WeeklyView({ onBackToToday }) {
           display: "flex", alignItems: "center", justifyContent: "space-between",
           marginBottom: "20px", padding: "12px 16px",
           background: "linear-gradient(135deg, rgba(167,211,167,0.1), rgba(111,175,111,0.05))",
-          borderRadius: "12px", border: "1px solid rgba(111,175,111,0.15)"
+          borderRadius: "16px", border: "1.5px solid rgba(111,175,111,0.15)"
         }}>
           <button onClick={goToPreviousWeek} className="btn ghost" style={{ padding: "8px 16px", fontSize: "14px" }}>
             ← Previous Week
@@ -391,10 +391,10 @@ export default function WeeklyView({ onBackToToday }) {
             return (
               <div key={day.date} onClick={() => setSelectedDay(day)} style={{
                 background: cardBackground, border: `2px solid ${borderColor}`,
-                borderRadius: "14px", padding: "16px", display: "flex", flexDirection: "column",
+                borderRadius: "18px", padding: "18px", display: "flex", flexDirection: "column",
                 gap: "12px", position: "relative", overflow: "hidden",
-                transition: "all 0.2s ease", cursor: "pointer",
-                boxShadow: day.isToday ? "0 4px 16px rgba(111,175,111,0.15)" : "0 2px 8px rgba(0,0,0,0.04)"
+                transition: "all 0.25s cubic-bezier(0.25, 0.46, 0.45, 0.94)", cursor: "pointer",
+                boxShadow: day.isToday ? "0 4px 12px rgba(111,175,111,0.12), 0 12px 32px rgba(111,175,111,0.1)" : "0 1px 3px rgba(0,0,0,0.04), 0 4px 12px rgba(0,0,0,0.06)"
               }}>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                   <div>
@@ -470,7 +470,7 @@ export default function WeeklyView({ onBackToToday }) {
 
         <div style={{
           background: "linear-gradient(135deg, rgba(167,211,167,0.15), rgba(111,175,111,0.08))",
-          borderRadius: "16px", padding: "20px", border: "1px solid rgba(111,175,111,0.2)"
+          borderRadius: "20px", padding: "22px", border: "1.5px solid rgba(111,175,111,0.2)"
         }}>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: "16px" }}>
             <div style={{ textAlign: "center" }}>

@@ -70,7 +70,7 @@ function StatCard({ value, label, severity = 'none' }) {
       className="preset-pill stat-card"
       style={{
         cursor: "default",
-        minWidth: "140px",
+        minWidth: "120px",
         background: getBackgroundColor(),
         boxShadow: "0 2px 8px rgba(59,110,59,0.04)"
       }}
@@ -78,11 +78,11 @@ function StatCard({ value, label, severity = 'none' }) {
     >
       <div
         className="preset-text"
-        style={{ color: getTextColor() }}
+        style={{ color: getTextColor(), fontSize: '16px', fontWeight: 800, letterSpacing: '-0.3px' }}
       >
         {value}
       </div>
-      <div className="preset-sub">{label}</div>
+      <div className="preset-sub" style={{ fontSize: '10px', fontWeight: 500, opacity: 0.65, textTransform: 'uppercase', letterSpacing: '0.4px' }}>{label}</div>
     </div>
   );
 }

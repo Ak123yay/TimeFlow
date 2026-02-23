@@ -74,16 +74,29 @@ export default function MobileLayout({ children, showBottomNav = true, onNavigat
                 padding: '4px 8px',
                 flex: 1,
                 minHeight: '44px',
-                color: activeTab === item.id ? '#6FAF6F' : (isDark ? '#9CA59C' : '#8E8E93'),
+                color: activeTab === item.id ? '#3B6E3B' : (isDark ? '#9CA59C' : '#8E8E93'),
                 fontSize: '9px',
-                fontWeight: activeTab === item.id ? 600 : 400,
+                fontWeight: activeTab === item.id ? 700 : 400,
                 cursor: 'pointer',
                 touchAction: 'manipulation',
                 WebkitTapHighlightColor: 'transparent',
-                transition: 'color 0.2s'
+                transition: 'color 0.2s',
+                position: 'relative'
               }}
             >
-              <span style={{ fontSize: '22px', lineHeight: 1 }}>{item.icon}</span>
+              {/* Active pill indicator at top */}
+              <div style={{
+                position: 'absolute',
+                top: 0,
+                left: '50%',
+                transform: 'translateX(-50%)',
+                width: activeTab === item.id ? '20px' : '0px',
+                height: '3px',
+                borderRadius: '0 0 3px 3px',
+                background: '#3B6E3B',
+                transition: 'width 0.2s ease'
+              }} />
+              <span style={{ fontSize: '20px', lineHeight: 1 }}>{item.icon}</span>
               <span>{item.label}</span>
             </button>
           ))}

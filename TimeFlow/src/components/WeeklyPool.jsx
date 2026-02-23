@@ -160,15 +160,15 @@ export default function WeeklyPool({ onNavigateToToday }) {
 
         {/* Add Task Form */}
         <div style={{
-          background: isDark ? '#242B24' : '#fff', borderRadius: '14px', padding: '14px',
-          marginBottom: '14px', boxShadow: isDark ? '0 1px 6px rgba(0,0,0,0.3)' : '0 1px 6px rgba(0,0,0,0.04)'
+          background: isDark ? '#242B24' : '#fff', borderRadius: '18px', padding: '16px',
+          marginBottom: '14px', boxShadow: isDark ? '0 1px 3px rgba(0,0,0,0.12), 0 4px 12px rgba(0,0,0,0.16)' : '0 1px 3px rgba(0,0,0,0.04), 0 4px 12px rgba(0,0,0,0.06)'
         }}>
           <div style={{
             display: 'flex',
             alignItems: 'center',
             height: '44px',
             border: isDark ? '1.5px solid #6B7B6B' : '1.5px solid #E5E5E5',
-            borderRadius: '10px',
+            borderRadius: '14px',
             background: isDark ? '#1A1F1A' : '#FAFAFA',
             padding: '0 14px',
             boxSizing: 'border-box',
@@ -202,7 +202,7 @@ export default function WeeklyPool({ onNavigateToToday }) {
               alignItems: 'center',
               height: '44px',
               border: isDark ? '1.5px solid #6B7B6B' : '1.5px solid #E5E5E5',
-              borderRadius: '10px',
+              borderRadius: '14px',
               background: isDark ? '#1A1F1A' : '#FAFAFA',
               padding: '0 12px',
               boxSizing: 'border-box'
@@ -231,7 +231,7 @@ export default function WeeklyPool({ onNavigateToToday }) {
             onClick={addTaskToPool}
             style={{
               width: '100%', padding: '12px',
-              borderRadius: '10px', background: '#3B6E3B',
+              borderRadius: '14px', background: '#3B6E3B',
               color: '#fff', fontSize: '14px', fontWeight: 700,
               border: 'none', cursor: 'pointer', touchAction: 'manipulation'
             }}
@@ -266,8 +266,8 @@ export default function WeeklyPool({ onNavigateToToday }) {
                 <div
                   key={task.id}
                   style={{
-                    background: isDark ? '#242B24' : '#fff', borderRadius: '12px',
-                    padding: '12px 14px', boxShadow: isDark ? '0 1px 6px rgba(0,0,0,0.3)' : '0 1px 6px rgba(0,0,0,0.04)',
+                    background: isDark ? '#242B24' : '#fff', borderRadius: '16px',
+                    padding: '14px 16px', boxShadow: isDark ? '0 1px 3px rgba(0,0,0,0.12), 0 4px 12px rgba(0,0,0,0.16)' : '0 1px 3px rgba(0,0,0,0.04), 0 4px 12px rgba(0,0,0,0.06)',
                     display: 'flex', flexDirection: 'column', gap: '10px'
                   }}
                 >
@@ -292,7 +292,7 @@ export default function WeeklyPool({ onNavigateToToday }) {
                     <button
                       onClick={() => handleMoveToToday(task)}
                       style={{
-                        flex: 1, padding: '8px 12px', borderRadius: '8px',
+                        flex: 1, padding: '8px 12px', borderRadius: '12px',
                         background: '#3B6E3B', color: '#fff',
                         border: 'none', fontSize: '12px', fontWeight: 600,
                         cursor: 'pointer', touchAction: 'manipulation'
@@ -303,7 +303,7 @@ export default function WeeklyPool({ onNavigateToToday }) {
                     <button
                       onClick={() => deleteTask(task.id)}
                       style={{
-                        width: '36px', height: '36px', borderRadius: '8px',
+                        width: '36px', height: '36px', borderRadius: '12px',
                         background: '#FEE2E2', color: '#DC2626',
                         border: 'none', fontSize: '18px', fontWeight: 300,
                         cursor: 'pointer', touchAction: 'manipulation',
