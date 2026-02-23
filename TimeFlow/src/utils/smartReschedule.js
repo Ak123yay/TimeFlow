@@ -973,29 +973,70 @@ export const generateSmartRecommendation = ({
   const bestSlot = scoredSlots.length > 0 ? scoredSlots[0] : null;
   const bestDay = weekdayWorkload.length > 0 ? weekdayWorkload[0] : null;
 
+  // ---- Contextual signals ----
+  const currentHour = now.getHours();
+  const elapsedMin = elapsedSeconds ? Math.round(elapsedSeconds / 60) : 0;
+  const estimatedDuration = task.duration || 30;
+  const remaining = task.remaining ?? Math.max(0, estimatedDuration - elapsedMin);
+  const workedFullDuration = elapsedMin >= estimatedDuration * 0.85;
+  const isShortTask = estimatedDuration <= 15;
+  const isMorning = currentHour < 12;
+  const isAfternoon = currentHour >= 12 && currentHour < 17;
+  const isEvening = currentHour >= 17 && currentHour < 20;
+  const isNight = currentHour >= 20;
+  const attempts = task.attempts || 0;
+
+  // Duration insight from historical data (only if enough history exists)
+  const durationInsight = suggestDuration(task.name);
+  const hasDurationInsight = durationInsight && durationInsight.confidence >= 30;
+  // How far off is the user's estimate? >1 = underestimated, <1 = overestimated
+  const durationRatio = hasDurationInsight
+    ? durationInsight.suggested / estimatedDuration
+    : 1;
+
   // ---- Score each option ----
   const optionScores = [];
 
   // --- COMPLETE ---
-  let completeScore = 40; // base
-  let completeReason = 'Mark this task as done to maintain momentum.';
+  // Timer ending ≠ task done. Only recommend when there's real evidence.
+  let completeScore = 15;
+  let completeReason = 'Mark as done if you actually finished.';
+
+  // Short tasks that ran full duration are likely done
+  if (isShortTask && workedFullDuration) {
+    completeScore += 20;
+    completeReason = 'Short task and you worked the full duration - likely done!';
+  } else if (workedFullDuration) {
+    completeScore += 8;
+  }
+
+  // Urgency pushes toward completion
   if (urgency?.level === 'overdue') {
-    completeScore += 40;
+    completeScore += 30;
     completeReason = 'This task is OVERDUE. Completing now prevents further delays.';
   } else if (urgency?.level === 'today') {
-    completeScore += 35;
-    completeReason = 'Due today - finishing now saves you from deadline stress.';
+    completeScore += 22;
+    completeReason = 'Due today - finishing now avoids deadline stress.';
   } else if (urgency?.level === 'tomorrow') {
-    completeScore += 20;
+    completeScore += 12;
     completeReason = 'Due tomorrow - completing today gives you breathing room.';
   }
-  if (task.attempts >= 3) {
-    completeScore += 15;
-    completeReason += ' Breaking the reschedule cycle builds confidence.';
-  }
-  if (completionProb.probability > 0.6) {
+
+  if (attempts >= 4) {
     completeScore += 10;
+    completeReason += ' Time to break the reschedule cycle.';
+  } else if (attempts >= 2) {
+    completeScore += 5;
   }
+
+  // Duration insight: if user overestimated (task usually shorter), more likely done
+  if (hasDurationInsight && durationRatio < 0.75) {
+    completeScore += 12;
+    completeReason = `This usually takes ~${durationInsight.suggested}min (shorter than your ${estimatedDuration}min estimate). Probably done!`;
+  } else if (hasDurationInsight && durationRatio < 0.9) {
+    completeScore += 5;
+  }
+
   optionScores.push({
     option: 'complete',
     score: completeScore,
@@ -1006,18 +1047,52 @@ export const generateSmartRecommendation = ({
   });
 
   // --- CONTINUE ---
-  let continueScore = 35;
+  // Default best option: timer ended = user was working and needs more time.
+  let continueScore = 42;
   let continueReason = `Add ${continueDuration.suggestedMinutes} more minutes. ${continueDuration.reason}`;
-  if (continueDuration.confidence === 'high') {
-    continueScore += 20;
-  } else if (continueDuration.confidence === 'moderate') {
-    continueScore += 10;
-  }
-  // Boost if almost done
+
+  // Almost done → strong push to continue
   if (continueDuration.suggestedMinutes <= 5) {
-    continueScore += 15;
+    continueScore += 18;
     continueReason = `Almost done! Just ~${continueDuration.suggestedMinutes} more minutes.`;
+  } else if (continueDuration.confidence === 'high') {
+    continueScore += 12;
+  } else if (continueDuration.confidence === 'moderate') {
+    continueScore += 6;
   }
+
+  // User was actually working (spent most of the time) → in flow
+  if (workedFullDuration) {
+    continueScore += 8;
+    continueReason = `You've been focused. ${continueDuration.suggestedMinutes} more minutes to finish.`;
+  }
+
+  // Time of day affects energy to continue
+  if (isNight) {
+    continueScore -= 15; // Tired, don't push it
+  } else if (isEvening) {
+    continueScore -= 5;
+  }
+
+  // Chronic avoidance: continuing won't help, user needs a different approach
+  if (procrastination.severity === 'chronic' || procrastination.severity === 'severe') {
+    continueScore -= 12;
+  }
+
+  // User historically prefers to continue
+  const continuePreferRate = _getOptionPreferenceRate('continue', profile);
+  if (continuePreferRate > 0.25) {
+    continueScore += 5;
+  }
+
+  // Duration insight: if user underestimated (task usually takes longer), push to continue
+  if (hasDurationInsight && durationRatio > 1.3) {
+    continueScore += 12;
+    continueReason = `This usually takes ~${durationInsight.suggested}min (you estimated ${estimatedDuration}min). Keep going!`;
+  } else if (hasDurationInsight && durationRatio > 1.1) {
+    continueScore += 5;
+  }
+
   optionScores.push({
     option: 'continue',
     score: continueScore,
@@ -1028,28 +1103,44 @@ export const generateSmartRecommendation = ({
   });
 
   // --- LATER TODAY ---
+  // Good when user needs a break but can come back today.
   if (bestSlot) {
-    let laterScore = 30;
+    let laterScore = 32;
     let laterReason = `Free slot at ${bestSlot.startTime}`;
 
     if (bestSlot.score >= 75) {
-      laterScore += 25;
+      laterScore += 18;
       laterReason += ' - optimal time for this type of task.';
     } else if (bestSlot.score >= 50) {
-      laterScore += 15;
+      laterScore += 10;
       laterReason += ' - good fit.';
     } else {
       laterReason += '.';
     }
 
-    if (urgency?.level === 'today') {
-      laterScore += 15; // Prefer keeping it today if due today
+    // Time of day: plenty of day left → good option; evening → less viable
+    if (isMorning || isAfternoon) {
+      laterScore += 8;
+    } else if (isEvening) {
+      laterScore -= 5;
+    } else if (isNight) {
+      laterScore -= 15; // Slots at night are bad
     }
 
-    // Boost if user historically prefers this option
+    if (urgency?.level === 'today') {
+      laterScore += 15; // Must stay today if due today
+    }
+
+    // User historically picks this
     const preferRate = _getOptionPreferenceRate('later_today', profile);
     if (preferRate > 0.2) {
-      laterScore += 10;
+      laterScore += 8;
+    }
+
+    // Duration insight: task usually takes longer → rescheduling to a dedicated slot makes sense
+    if (hasDurationInsight && durationRatio > 1.3) {
+      laterScore += 8;
+      laterReason += ` This usually takes ~${durationInsight.suggested}min — a fresh slot helps.`;
     }
 
     if (bestSlot.reasons.length > 0) {
@@ -1067,23 +1158,53 @@ export const generateSmartRecommendation = ({
   }
 
   // --- TOMORROW ---
-  let tomorrowScore = 20;
+  // Best when the day is winding down or there's no deadline pressure.
+  let tomorrowScore = 25;
   let tomorrowReason = 'Move to tomorrow for a fresh start.';
+
+  // Time of day: THE biggest factor for choosing tomorrow
+  if (isNight) {
+    tomorrowScore += 25;
+    tomorrowReason = 'It\'s late. A fresh start tomorrow will be more productive.';
+  } else if (isEvening) {
+    tomorrowScore += 15;
+    tomorrowReason = 'Day is winding down. Tomorrow you\'ll have more energy.';
+  } else if (isMorning) {
+    tomorrowScore -= 8; // It's morning! Don't give up on today yet.
+  }
+
+  // Urgency: penalize for urgent, boost for no deadline
   if (urgency?.level === 'overdue' || urgency?.level === 'today') {
-    tomorrowScore -= 15; // Discourage for urgent tasks
+    tomorrowScore -= 20;
     tomorrowReason = 'Not ideal - this task is due today or overdue!';
   } else if (urgency?.level === 'tomorrow') {
-    tomorrowScore -= 8;
-    tomorrowReason = 'Risky - this task is due tomorrow.';
-  }
-  if (bestDay && bestDay.score > 60 && bestDay.dayName !== DAY_NAMES[(now.getDay() + 1) % 7]) {
-    tomorrowReason += ` (${bestDay.dayName} might be better)`;
-  }
-  const tomorrowPreferRate = _getOptionPreferenceRate('tomorrow', profile);
-  if (tomorrowPreferRate > 0.3) {
+    tomorrowScore -= 10;
+    tomorrowReason = 'Risky - due tomorrow, you\'ll be under pressure.';
+  } else if (!urgency) {
     tomorrowScore += 8;
-    tomorrowReason = 'You often move tasks to tomorrow. Fresh start can help.';
+    tomorrowReason = 'No deadline pressure. A fresh start tomorrow often helps.';
   }
+
+  // Best day analysis
+  if (bestDay && bestDay.score > 60 && bestDay.dayName !== DAY_NAMES[(now.getDay() + 1) % 7]) {
+    tomorrowReason += ` (${bestDay.dayName} might be even better)`;
+  }
+  if (bestDay && bestDay.freeMinutes >= (task.remaining || task.duration || 30) * 2) {
+    tomorrowScore += 5;
+  }
+
+  // User tendency
+  const tomorrowPreferRate = _getOptionPreferenceRate('tomorrow', profile);
+  if (tomorrowPreferRate > 0.25) {
+    tomorrowScore += 6;
+  }
+
+  // Duration insight: big underestimate → plan a proper time block tomorrow
+  if (hasDurationInsight && durationRatio > 1.5) {
+    tomorrowScore += 8;
+    tomorrowReason += ` Usually takes ~${durationInsight.suggested}min — schedule a proper block.`;
+  }
+
   optionScores.push({
     option: 'tomorrow',
     score: Math.max(0, tomorrowScore),
@@ -1095,16 +1216,28 @@ export const generateSmartRecommendation = ({
   });
 
   // --- BACK TO POOL ---
-  let poolScore = 15;
+  // Honest option for low-priority / chronically-avoided tasks.
+  let poolScore = 18;
   let poolReason = 'Return to the pool for later. No pressure.';
   if (urgency) {
-    poolScore -= 10; // Don't recommend pool for tasks with deadlines
+    poolScore -= 12;
     poolReason = 'Has a deadline - pool might cause you to miss it.';
+  } else {
+    poolScore += 8; // No deadline → pool is perfectly fine
   }
-  if (task.attempts >= 5) {
-    poolScore += 10; // If chronic, pool might be honest
-    poolReason = 'This task keeps getting rescheduled. Pool lets you reconsider if it matters.';
+  if (attempts >= 5) {
+    poolScore += 15;
+    poolReason = 'Rescheduled 5+ times. Maybe this task doesn\'t need to happen right now.';
+  } else if (attempts >= 3) {
+    poolScore += 7;
+    poolReason = 'Been put off multiple times. Pool lets you revisit when you\'re ready.';
   }
+  // User preference
+  const poolPreferRate = _getOptionPreferenceRate('back_to_pool', profile);
+  if (poolPreferRate > 0.15) {
+    poolScore += 5;
+  }
+
   optionScores.push({
     option: 'back_to_pool',
     score: Math.max(0, poolScore),
@@ -1114,21 +1247,24 @@ export const generateSmartRecommendation = ({
   });
 
   // --- BREAK TASK ---
+  // Only surfaces strongly when there's real avoidance or the task is huge.
   let breakScore = 10;
   let breakReason = 'Split into smaller, more manageable pieces.';
   if (procrastination.severity === 'chronic' || procrastination.severity === 'severe') {
-    breakScore += 35;
+    breakScore += 40;
     breakReason = 'Strong avoidance detected. Breaking it down makes each piece achievable.';
   } else if (procrastination.severity === 'moderate') {
-    breakScore += 20;
+    breakScore += 22;
     breakReason = 'You\'ve been putting this off. Smaller tasks are easier to start.';
-  } else if (task.attempts >= 3) {
+  } else if (attempts >= 3) {
     breakScore += 15;
-    breakReason = `Rescheduled ${task.attempts} times. Smaller pieces may be easier.`;
+    breakReason = `Rescheduled ${attempts} times. Smaller pieces may be easier.`;
   }
   if ((task.duration || 30) >= 60) {
-    breakScore += 10;
-    breakReason += ` At ${task.duration}min, it\'s a big block.`;
+    breakScore += 12;
+    breakReason += ` At ${task.duration}min, it's a big block.`;
+  } else if ((task.duration || 30) >= 45) {
+    breakScore += 5;
   }
   optionScores.push({
     option: 'break_task',
@@ -1136,11 +1272,11 @@ export const generateSmartRecommendation = ({
     label: 'Break into smaller tasks',
     icon: '🔨',
     reason: breakReason,
-    show: task.attempts >= 2 || (task.duration || 0) >= 60 || procrastination.severity !== 'none',
+    show: attempts >= 2 || (task.duration || 0) >= 45 || procrastination.severity !== 'none',
   });
 
   // --- PICK TIME ---
-  let pickTimeScore = 10;
+  let pickTimeScore = 12;
   optionScores.push({
     option: 'pick_time',
     score: pickTimeScore,

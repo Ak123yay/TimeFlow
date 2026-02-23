@@ -192,18 +192,17 @@ export default function RescheduleModal({
             </div>
 
             {/* title block + meta chips inline */}
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, marginBottom: aiRec?.summary ? 14 : 20 }}>
-              <div>
-                <div style={{ fontSize: 11, fontWeight: 600, color: mutedCol, letterSpacing: 0.4, textTransform: 'uppercase', marginBottom: 3 }}>
-                  Time's up
-                </div>
+            <div style={{ marginBottom: aiRec?.summary ? 14 : 20 }}>
+              <div style={{ fontSize: 11, fontWeight: 600, color: mutedCol, letterSpacing: 0.4, textTransform: 'uppercase', marginBottom: 6 }}>
+                Time's up
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
                 <div style={{
                   fontSize: isMobile ? 20 : 22, fontWeight: 900,
                   color: titleCol, lineHeight: 1.25, wordBreak: 'break-word',
                 }}>
                   {task.name}
                 </div>
-              </div>
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 5, flexShrink: 0 }}>
                 <span style={{ fontSize: 12, fontWeight: 600, color: mutedCol, background: chipBg, padding: '3px 9px', borderRadius: 7 }}>
                   {remaining} min left
@@ -237,6 +236,7 @@ export default function RescheduleModal({
                   </span>
                 )}
               </div>
+            </div>
             </div>
 
             {/* AI hint bar */}
