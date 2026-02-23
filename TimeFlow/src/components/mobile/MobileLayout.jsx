@@ -16,7 +16,7 @@ export default function MobileLayout({ children, showBottomNav = true, onNavigat
       display: 'flex',
       flexDirection: 'column',
       minHeight: '100dvh',
-      background: isDark ? '#1A1F1A' : '#F8F8F8',
+      background: isDark ? '#1A1F1A' : '#f0f4f1',
       paddingTop: 'env(safe-area-inset-top)',
       paddingBottom: 'env(safe-area-inset-bottom)'
     }}>
@@ -27,7 +27,7 @@ export default function MobileLayout({ children, showBottomNav = true, onNavigat
         overflowX: 'hidden',
         WebkitOverflowScrolling: 'touch',
         padding: '20px 16px',
-        paddingBottom: showBottomNav ? '90px' : '20px'
+        paddingBottom: showBottomNav ? '110px' : '20px'
       }}>
         {children}
       </main>
@@ -36,19 +36,19 @@ export default function MobileLayout({ children, showBottomNav = true, onNavigat
       {showBottomNav && (
         <nav style={{
           position: 'fixed',
-          bottom: 0,
-          left: 0,
-          right: 0,
-          height: 'calc(56px + env(safe-area-inset-bottom))',
-          background: isDark ? 'rgba(36,43,36,0.92)' : 'rgba(255,255,255,0.92)',
+          bottom: 'max(16px, env(safe-area-inset-bottom))',
+          left: '12px',
+          right: '12px',
+          borderRadius: '20px',
+          background: isDark ? 'rgba(36,43,36,0.96)' : 'rgba(255,255,255,0.96)',
           backdropFilter: 'blur(20px)',
           WebkitBackdropFilter: 'blur(20px)',
-          borderTop: isDark ? '0.5px solid rgba(255,255,255,0.1)' : '0.5px solid rgba(0,0,0,0.08)',
+          border: isDark ? '0.5px solid rgba(255,255,255,0.08)' : '0.5px solid rgba(0,0,0,0.06)',
+          boxShadow: '0 8px 32px rgba(0,0,0,0.14)',
           display: 'flex',
           justifyContent: 'space-around',
-          alignItems: 'flex-start',
-          paddingTop: '8px',
-          paddingBottom: 'max(8px, env(safe-area-inset-bottom))',
+          alignItems: 'center',
+          padding: '10px 4px',
           zIndex: 200
         }}>
           {[

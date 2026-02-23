@@ -1347,6 +1347,23 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
 
     const hour = new Date().getHours();
     const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
+    const dateStr = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' });
+    const capacityPercent = totalMinutes > 0 && freeTime >= 0
+      ? Math.min(100, Math.round(totalMinutes / (totalMinutes + freeTime) * 100))
+      : totalMinutes > 0 ? 100 : 0;
+    const currentHour = new Date().getHours();
+    const scheduledTaskHours = new Set(tasks.filter(t => t.startTime).map(t => parseInt((t.startTime || '0').split(':')[0])));
+    const timeMarkers = Array.from({ length: 8 }, (_, i) => {
+      const h = currentHour - 1 + i;
+      if (h < 0 || h > 23) return null;
+      const d = new Date(); d.setHours(h, 0, 0, 0);
+      return {
+        hour: h,
+        label: d.toLocaleTimeString('en-US', { hour: 'numeric', hour12: true }),
+        isCurrent: h === currentHour,
+        hasTask: scheduledTaskHours.has(h)
+      };
+    }).filter(Boolean);
 
     return (
       <DndContext
@@ -1356,95 +1373,72 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
       >
         <MobileLayout showBottomNav={!activeTaskId} onNavigate={handleMobileNav}>
 
-        {/* ---- Hero Card ---- */}
+        {/* ---- Header ---- */}
         {!activeTask ? (
-          <div style={{
-            background: isDark ? '#242B24' : '#fff',
-            borderRadius: '16px',
-            padding: '16px',
-            marginBottom: '12px',
-            boxShadow: isDark ? '0 1px 8px rgba(0,0,0,0.3)' : '0 1px 8px rgba(0,0,0,0.05)'
-          }}>
-            {/* Top row: greeting + toggles */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '10px' }}>
+          <>
+            {/* Top: date + greeting + avatar + toggles */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px', marginTop: '12px' }}>
               <div>
-                <p style={{ fontSize: '11px', color: isDark ? '#9CA59C' : '#8E8E93', margin: 0, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>{greeting}</p>
-                <h1 style={{ fontSize: '22px', fontWeight: 800, color: isDark ? '#E8F0E8' : '#1A1A1A', margin: '2px 0 0', letterSpacing: '-0.5px' }}>
-                  Today's Flow
-                </h1>
+                <p style={{ fontSize: '11px', color: isDark ? '#6B9E6B' : '#6B8C73', margin: 0, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.8px' }}>{dateStr}</p>
+                <h1 style={{ fontSize: '22px', fontWeight: 800, color: isDark ? '#E8F0E8' : '#1A1A1A', margin: '2px 0 0', letterSpacing: '-0.5px' }}>{greeting}</h1>
               </div>
-              <div style={{ display: 'flex', gap: '4px' }}>
-                <button
-                  onClick={() => setViewMode(viewMode === 'list' ? 'calendar' : 'list')}
-                  style={{
-                    width: '30px', height: '30px', borderRadius: '10px',
-                    border: 'none',
-                    background: viewMode === 'calendar' ? '#3B6E3B' : (isDark ? '#1A1F1A' : '#F0F0F0'),
-                    color: viewMode === 'calendar' ? '#fff' : (isDark ? '#9CA59C' : '#8E8E93'),
-                    fontSize: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    cursor: 'pointer', touchAction: 'manipulation',
-                    boxShadow: viewMode === 'calendar' ? '0 2px 8px rgba(59,110,59,0.25)' : 'none',
-                    transition: 'all 0.2s ease',
-                    opacity: viewMode === 'calendar' ? 1 : 0.7
-                  }}
-                  aria-label="Toggle calendar"
-                >📅</button>
-                <button
-                  onClick={toggleFocusMode}
-                  style={{
-                    width: '30px', height: '30px', borderRadius: '10px',
-                    border: 'none',
-                    background: focusModeEnabled ? '#3B6E3B' : (isDark ? '#1A1F1A' : '#F0F0F0'),
-                    color: focusModeEnabled ? '#fff' : (isDark ? '#9CA59C' : '#8E8E93'),
-                    fontSize: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    cursor: 'pointer', touchAction: 'manipulation',
-                    boxShadow: focusModeEnabled ? '0 2px 8px rgba(59,110,59,0.25)' : 'none',
-                    transition: 'all 0.2s ease',
-                    opacity: focusModeEnabled ? 1 : 0.7
-                  }}
-                  aria-label="Focus mode"
-                >{focusModeEnabled ? '🎯' : '👁️'}</button>
-                <button
-                  onClick={toggleNotifications}
-                  style={{
-                    width: '30px', height: '30px', borderRadius: '10px',
-                    border: 'none',
-                    background: notificationsEnabled ? '#3B6E3B' : (isDark ? '#1A1F1A' : '#F0F0F0'),
-                    color: notificationsEnabled ? '#fff' : (isDark ? '#9CA59C' : '#8E8E93'),
-                    fontSize: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    cursor: 'pointer', touchAction: 'manipulation',
-                    boxShadow: notificationsEnabled ? '0 2px 8px rgba(59,110,59,0.25)' : 'none',
-                    transition: 'all 0.2s ease',
-                    opacity: notificationsEnabled ? 1 : 0.7
-                  }}
-                  aria-label="Task notifications"
-                >{notificationsEnabled ? '🔔' : '🔕'}</button>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <button onClick={() => setViewMode(viewMode === 'list' ? 'calendar' : 'list')} style={{ width: '30px', height: '30px', borderRadius: '10px', border: 'none', background: viewMode === 'calendar' ? '#3B6E3B' : (isDark ? '#1A1F1A' : '#F0F0F0'), color: viewMode === 'calendar' ? '#fff' : (isDark ? '#9CA59C' : '#8E8E93'), fontSize: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', touchAction: 'manipulation', transition: 'all 0.2s ease', opacity: viewMode === 'calendar' ? 1 : 0.6 }} aria-label="Toggle calendar">📅</button>
+                <button onClick={toggleFocusMode} style={{ width: '30px', height: '30px', borderRadius: '10px', border: 'none', background: focusModeEnabled ? '#3B6E3B' : (isDark ? '#1A1F1A' : '#F0F0F0'), color: focusModeEnabled ? '#fff' : (isDark ? '#9CA59C' : '#8E8E93'), fontSize: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', touchAction: 'manipulation', transition: 'all 0.2s ease', opacity: focusModeEnabled ? 1 : 0.6 }} aria-label="Focus mode">{focusModeEnabled ? '🎯' : '👁️'}</button>
+                <button onClick={toggleNotifications} style={{ width: '30px', height: '30px', borderRadius: '10px', border: 'none', background: notificationsEnabled ? '#3B6E3B' : (isDark ? '#1A1F1A' : '#F0F0F0'), color: notificationsEnabled ? '#fff' : (isDark ? '#9CA59C' : '#8E8E93'), fontSize: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', touchAction: 'manipulation', transition: 'all 0.2s ease', opacity: notificationsEnabled ? 1 : 0.6 }} aria-label="Task notifications">{notificationsEnabled ? '🔔' : '🔕'}</button>
+                <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: 'linear-gradient(135deg, #3B6E3B, #6FAF6F)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '16px', marginLeft: '4px', flexShrink: 0, boxShadow: '0 2px 8px rgba(59,110,59,0.3)' }}>🌿</div>
               </div>
             </div>
 
-            {/* Progress bar */}
+            {/* Progress card */}
             {tasks.length > 0 && (
-              <div>
-                <div style={{ marginBottom: '6px' }}>
-                  <span style={{ fontSize: '11px', color: isDark ? '#9CA59C' : '#8E8E93', fontWeight: 500 }}>{completedCount} of {tasks.length} tasks done</span>
+              <div style={{ background: isDark ? '#242B24' : '#fff', borderRadius: '16px', padding: '14px 16px', marginBottom: '12px', boxShadow: isDark ? '0 1px 8px rgba(0,0,0,0.3)' : '0 2px 12px rgba(0,0,0,0.06)', display: 'flex', alignItems: 'center', gap: '14px', border: isDark ? 'none' : '1px solid rgba(0,0,0,0.04)' }}>
+                <div style={{ flex: 1 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                    <span style={{ fontSize: '13px', fontWeight: 700, color: isDark ? '#E8F0E8' : '#1A1A1A' }}>{completedCount}/{tasks.length} tasks done</span>
+                    <span style={{ fontSize: '11px', fontWeight: 600, color: isDark ? '#9CA59C' : '#8E8E93' }}>{capacityPercent}% capacity</span>
+                  </div>
+                  <div style={{ height: '7px', background: isDark ? 'rgba(107,123,107,0.3)' : '#F0F0F0', borderRadius: '99px', overflow: 'hidden' }}>
+                    <div style={{ height: '100%', width: `${progressPercent}%`, background: progressPercent === 100 ? '#10b981' : '#3B6E3B', borderRadius: '99px', transition: 'width 0.6s ease' }} />
+                  </div>
                 </div>
-                <div style={{ height: '6px', background: isDark ? 'rgba(107,123,107,0.3)' : '#F0F0F0', borderRadius: '99px', overflow: 'hidden' }}>
-                  <div style={{
-                    height: '100%', width: `${progressPercent}%`,
-                    background: progressPercent === 100 ? '#10b981' : '#3B6E3B', borderRadius: '99px', transition: 'width 0.4s ease'
-                  }} />
+                <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: isDark ? 'rgba(59,110,59,0.2)' : 'rgba(59,110,59,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '18px', flexShrink: 0 }}>🌿</div>
+              </div>
+            )}
+
+            {/* Horizontal Timeline */}
+            {scheduledTaskHours.size > 0 && (
+              <div style={{ background: isDark ? '#242B24' : '#fff', borderRadius: '16px', padding: '14px 16px', marginBottom: '12px', boxShadow: isDark ? '0 1px 8px rgba(0,0,0,0.3)' : '0 2px 12px rgba(0,0,0,0.06)', border: isDark ? 'none' : '1px solid rgba(0,0,0,0.04)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                  <span style={{ fontSize: '13px', fontWeight: 700, color: isDark ? '#E8F0E8' : '#1A1A1A' }}>Timeline</span>
+                  <span style={{ fontSize: '10px', fontWeight: 700, color: '#3B6E3B', background: isDark ? 'rgba(59,110,59,0.2)' : 'rgba(59,110,59,0.1)', padding: '2px 8px', borderRadius: '6px' }}>
+                    Now: {new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}
+                  </span>
+                </div>
+                <div style={{ overflowX: 'auto', msOverflowStyle: 'none', scrollbarWidth: 'none', WebkitOverflowScrolling: 'touch' }}>
+                  <div style={{ display: 'flex', gap: '20px', minWidth: 'max-content', alignItems: 'flex-end', height: '52px', paddingBottom: '2px' }}>
+                    {timeMarkers.map((marker, i) => (
+                      <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '5px' }}>
+                        <div style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                          <div style={{ width: marker.isCurrent ? '5px' : '3px', height: marker.isCurrent ? '32px' : marker.hasTask ? '22px' : '12px', borderRadius: '99px', background: marker.isCurrent ? '#3B6E3B' : marker.hasTask ? (isDark ? 'rgba(111,175,111,0.5)' : 'rgba(59,110,59,0.35)') : (isDark ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.1)'), transition: 'height 0.3s ease' }} />
+                          {marker.isCurrent && <div style={{ position: 'absolute', width: '10px', height: '10px', borderRadius: '50%', background: '#fff', border: '2.5px solid #3B6E3B', boxShadow: '0 0 6px rgba(59,110,59,0.4)' }} />}
+                        </div>
+                        <span style={{ fontSize: '10px', fontWeight: marker.isCurrent ? 700 : 500, color: marker.isCurrent ? '#3B6E3B' : (isDark ? '#9CA59C' : '#8E8E93'), whiteSpace: 'nowrap' }}>{marker.label}</span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </div>
             )}
 
             {/* Streak */}
             {streak && streak.current > 0 && (
-              <div style={{ marginTop: '10px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+              <div style={{ marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '4px' }}>
                 <span style={{ fontSize: '14px' }}>🌿</span>
                 <span style={{ fontSize: '11px', fontWeight: 600, color: '#3B6E3B' }}>{streak.current} day streak</span>
               </div>
             )}
-          </div>
+          </>
         ) : (
           /* Active Timer Hero */
           <div style={{
@@ -1541,10 +1535,16 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
 
             {/* Carried Over */}
             {filterForFocus(filterTasksBySearch(carriedTasks)).length > 0 && (
-              <div style={{ marginBottom: '14px' }}>
+              <div style={{
+                marginBottom: '14px',
+                padding: '14px',
+                borderRadius: '20px',
+                background: isDark ? 'rgba(217,119,6,0.08)' : 'rgba(251,191,36,0.07)',
+                border: `1px solid ${isDark ? 'rgba(217,119,6,0.15)' : 'rgba(217,119,6,0.14)'}`
+              }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px', paddingLeft: '2px' }}>
                   <span style={{ fontSize: '11px', fontWeight: 800, color: '#D97706', textTransform: 'uppercase', letterSpacing: '0.8px' }}>
-                    Carried Over
+                    🍂 Carried Over
                   </span>
                   <span style={{ fontSize: '10px', fontWeight: 700, background: 'rgba(217,119,6,0.12)', color: '#D97706', padding: '2px 7px', borderRadius: '99px' }}>
                     {filterForFocus(filterTasksBySearch(carriedTasks)).length}
@@ -1648,7 +1648,7 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
               <div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px', paddingLeft: '2px' }}>
                   <span style={{ fontSize: '11px', fontWeight: 800, color: isDark ? '#E8F0E8' : '#1A1A1A', textTransform: 'uppercase', letterSpacing: '0.8px' }}>
-                    Tasks
+                    🌿 Today
                   </span>
                   <span style={{ fontSize: '10px', fontWeight: 700, background: 'rgba(59,110,59,0.1)', color: '#3B6E3B', padding: '2px 7px', borderRadius: '99px' }}>
                     {filterForFocus(filterTasksBySearch(todayTasks)).length}

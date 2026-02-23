@@ -16,17 +16,17 @@ export default function SearchBar({ onSearch, placeholder = "Search tasks..." })
       position: 'sticky',
       top: 0,
       zIndex: 10,
-      background: isDark ? '#1A1F1A' : '#F8F8F8',
+      background: isDark ? '#1A1F1A' : '#f0f4f1',
       padding: '8px 0',
       marginBottom: '10px'
     }}>
       <div style={{
         display: 'flex',
         alignItems: 'center',
-        background: isDark ? '#242B24' : 'rgba(0,0,0,0.04)',
+        background: isDark ? '#242B24' : 'rgba(255,255,255,0.82)',
         borderRadius: '16px',
         padding: '8px 14px',
-        border: `1px solid ${isDark ? '#4A5A4A' : 'transparent'}`
+        border: `1px solid ${isDark ? '#4A5A4A' : 'rgba(0,0,0,0.06)'}`
       }}>
         <span style={{ fontSize: '14px', marginRight: '8px', opacity: 0.5 }}>🔍</span>
         <input
