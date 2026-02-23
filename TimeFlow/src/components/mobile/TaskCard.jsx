@@ -46,7 +46,6 @@ export default function TaskCard({
         background: isActive ? '#3B6E3B' : (isDark ? '#242B24' : '#fff'),
         boxShadow: isActive
           ? '0 4px 12px rgba(59,110,59,0.15), 0 12px 32px rgba(59,110,59,0.2)'
-          : isUpNext ? (isDark ? '0 0 0 1.5px #5A9A5A, 0 4px 16px rgba(59,110,59,0.18)' : '0 0 0 1.5px #3B6E3B, 0 4px 16px rgba(59,110,59,0.14)')
           : task.conflicts ? '0 1px 4px rgba(220,38,38,0.08), 0 4px 12px rgba(220,38,38,0.1)' : (isDark ? '0 1px 3px rgba(0,0,0,0.12), 0 4px 12px rgba(0,0,0,0.16)' : '0 1px 3px rgba(0,0,0,0.04), 0 4px 12px rgba(0,0,0,0.06)'),
         transition: 'all 0.25s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
         color: isActive ? '#fff' : (isDark ? '#E8F0E8' : '#1A1A1A'),
@@ -188,9 +187,9 @@ export default function TaskCard({
           style={{
             padding: '6px 14px',
             borderRadius: '9999px',
-            background: isUpNext ? '#3B6E3B' : 'transparent',
-            color: isUpNext ? '#fff' : (isDark ? '#5A9A5A' : '#3B6E3B'),
-            border: isUpNext ? 'none' : `1.5px solid ${isDark ? '#5A9A5A' : '#3B6E3B'}`,
+            background: '#3B6E3B',
+            color: '#fff',
+            border: 'none',
             fontSize: '12px',
             fontWeight: 600,
             cursor: 'pointer',
