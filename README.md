@@ -1,7 +1,7 @@
 # TimeFlow (Beta V1.1)
 
 **A mobile optimized nature-themed intelligent task scheduler that helps you flow through your day with calm productivity.**
-**Now with the smartest rescheduling yet!**
+**Now with AI like rescheduling!**
 
 ## What is TimeFlow?
 
