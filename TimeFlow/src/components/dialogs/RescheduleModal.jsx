@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { useDarkMode } from "../../utils/useDarkMode";
 import { getDeadlineUrgency } from "../../utils/scheduler";
 import {
@@ -61,12 +62,12 @@ export default function RescheduleModal({
   const [aiRec, setAiRec] = useState(null);
   const [showDetails, setShowDetails] = useState(false);
   const [isMobile, setIsMobile] = useState(
-    () => window.matchMedia('(max-width: 640px)').matches
+    () => window.matchMedia('(max-width: 768px)').matches
   );
   const isDark = useDarkMode();
 
   useEffect(() => {
-    const mqMobile = window.matchMedia('(max-width: 640px)');
+    const mqMobile = window.matchMedia('(max-width: 768px)');
     const hMobile = e => setIsMobile(e.matches);
     mqMobile.addEventListener('change', hMobile);
     return () => mqMobile.removeEventListener('change', hMobile);
@@ -139,7 +140,7 @@ export default function RescheduleModal({
     ? 'rgba(110,175,110,0.38)'
     : 'rgba(59,110,59,0.35)';
   const textPrimary = isDark ? '#E8F0E8' : '#0F2B0F';
-  const textMuted = isDark ? '#7A8A7A' : '#6B8070';
+  const textMuted = isDark ? '#7A8A7A' : '#5A6A5A'; // Slightly darker in light mode
   const green = isDark ? '#6FAF6F' : '#3B7A3B';
   const greenDark = isDark ? '#4e8f4e' : '#2D622D';
   const divider = isDark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.07)';
@@ -173,7 +174,8 @@ export default function RescheduleModal({
 
   const px = isMobile ? 18 : 22;
 
-  return (
+  // Use Portal for absolute viewport positioning
+  return createPortal(
     <>
       <style>{ANIM_CSS}</style>
 
@@ -208,7 +210,7 @@ export default function RescheduleModal({
           {/* ─── HEADER CHIPS ─────────────────────────────────────────────── */}
           <div style={{
             display: 'flex', gap: 10, alignItems: 'center',
-            padding: `${isMobile ? 14 : 22}px ${px}px 0`,
+            padding: `${isMobile ? 10 : 16}px ${px}px 0`,
             flexWrap: 'wrap',
           }}>
             {/* category chip */}
@@ -265,14 +267,14 @@ export default function RescheduleModal({
           </div>
 
           {/* ─── TITLE ────────────────────────────────────────────────────── */}
-          <div style={{ padding: `14px ${px}px 0` }}>
-            <div style={{ fontSize: 13, fontWeight: 600, color: textMuted, marginBottom: 4 }}>
+          <div style={{ padding: `4px ${px}px 0` }}>
+            <div style={{ fontSize: 13, fontWeight: 600, color: textMuted, marginBottom: 2 }}>
               Time's up:
             </div>
             <div style={{
               fontSize: isMobile ? 26 : 30, fontWeight: 900,
               color: green, lineHeight: 1.15,
-              wordBreak: 'break-word', marginBottom: 18,
+              wordBreak: 'break-word', marginBottom: 12,
             }}>
               {task.name}
             </div>
@@ -284,13 +286,13 @@ export default function RescheduleModal({
               display: 'grid',
               gridTemplateColumns: (probPct !== null && procLabel) ? '1fr 1fr' : '1fr',
               gap: 10,
-              padding: `0 ${px}px 16px`,
+              padding: `0 ${px}px 12px`,
             }}>
               {probPct !== null && (
                 <div style={{
                   background: surface,
                   border: `1px solid ${border}`,
-                  borderRadius: 16, padding: '14px 14px 12px',
+                  borderRadius: 16, padding: '10px 12px',
                   display: 'flex', flexDirection: 'column', gap: 2,
                 }}>
                   {/* mini donut-style ring via border trick */}
@@ -323,7 +325,7 @@ export default function RescheduleModal({
                 <div style={{
                   background: surface,
                   border: `1px solid ${border}`,
-                  borderRadius: 16, padding: '14px 14px 12px',
+                  borderRadius: 16, padding: '10px 12px',
                   display: 'flex', flexDirection: 'column', gap: 2,
                 }}>
                   <div style={{ fontSize: 22, marginBottom: 4 }}>
@@ -347,14 +349,14 @@ export default function RescheduleModal({
           {/* ─── AI RECOMMENDATION CARD ───────────────────────────────────── */}
           {aiRec?.summary && (
             <div style={{
-              margin: `0 ${px}px 16px`,
+              margin: `0 ${px}px 12px`,
               position: 'relative', overflow: 'hidden',
               borderRadius: 18,
               background: isDark
                 ? 'linear-gradient(135deg, rgba(110,175,110,0.18) 0%, rgba(110,175,110,0.06) 100%)'
                 : 'linear-gradient(135deg, rgba(59,122,59,0.1) 0%, rgba(59,122,59,0.03) 100%)',
               border: `1px solid rgba(110,175,110,0.3)`,
-              padding: '16px 16px 14px',
+              padding: '12px 14px 10px',
               animation: 'aiPulse 3s infinite ease-in-out',
             }}>
               {/* decorative star */}
@@ -386,8 +388,8 @@ export default function RescheduleModal({
           {/* procrastination warning banner (severe/chronic) */}
           {procrastination && procrastination.severity !== 'none' && procrastination.severity !== 'mild' && (
             <div style={{
-              margin: `0 ${px}px 14px`,
-              padding: '10px 14px', borderRadius: 12,
+              margin: `0 ${px}px 10px`,
+              padding: '8px 12px', borderRadius: 12,
               background: procrastination.severity === 'chronic'
                 ? 'rgba(220,38,38,0.1)' : 'rgba(245,158,11,0.1)',
               border: `1px solid ${procrastination.severity === 'chronic'
@@ -412,7 +414,7 @@ export default function RescheduleModal({
           {/* ─── ACTION GRID (2x2) ────────────────────────────────────────── */}
           <div style={{
             display: 'grid', gridTemplateColumns: '1fr 1fr',
-            gap: 10, padding: `0 ${px}px 10px`,
+            gap: 10, padding: `0 ${px}px 8px`,
           }}>
             <ActionCard
               onClick={() => onContinue(continueDur?.suggestedMinutes > 1 ? continueDur.suggestedMinutes : 1)}
@@ -422,6 +424,7 @@ export default function RescheduleModal({
               hint={continueDur ? `+${continueDur.suggestedMinutes} min` : '+1 min'}
               green={green} greenBorder={greenBorder} surface={surface}
               border={border} textPrimary={textPrimary} textMuted={textMuted}
+              isDark={isDark}
             />
             <ActionCard
               onClick={() => bestSlot && onLaterToday(bestSlot)}
@@ -432,6 +435,7 @@ export default function RescheduleModal({
               hint={bestSlot ? `${bestSlot.startTime}${bestSlot.score >= 70 ? ' ★' : ''}` : 'No slots'}
               green={green} greenBorder={greenBorder} surface={surface}
               border={border} textPrimary={textPrimary} textMuted={textMuted}
+              isDark={isDark}
             />
             <ActionCard
               onClick={onTomorrow}
@@ -442,6 +446,7 @@ export default function RescheduleModal({
               hint={urgentLevel === 'overdue' || urgentLevel === 'today' ? '⚠ risky' : 'fresh start'}
               green={green} greenBorder={greenBorder} surface={surface}
               border={border} textPrimary={textPrimary} textMuted={textMuted}
+              isDark={isDark}
             />
             <ActionCard
               onClick={onBackToPool}
@@ -451,11 +456,12 @@ export default function RescheduleModal({
               hint="save for later"
               green={green} greenBorder={greenBorder} surface={surface}
               border={border} textPrimary={textPrimary} textMuted={textMuted}
+              isDark={isDark}
             />
           </div>
 
           {/* ─── SECONDARY BUTTONS ────────────────────────────────────────── */}
-          <div style={{ display: 'flex', gap: 8, padding: `0 ${px}px 16px` }}>
+          <div style={{ display: 'flex', gap: 8, padding: `0 ${px}px 12px` }}>
             <GhostBtn onClick={onPickTime} green={green} textMuted={textMuted}>
               🎯 Pick a time
             </GhostBtn>
@@ -471,11 +477,11 @@ export default function RescheduleModal({
           </div>
 
           {/* ─── MARK COMPLETE (full-width pill) ──────────────────────────── */}
-          <div style={{ padding: `0 ${px}px 16px` }}>
+          <div style={{ padding: `0 ${px}px 12px` }}>
             <button
               onClick={onComplete}
               style={{
-                width: '100%', height: 58,
+                width: '100%', height: 52,
                 borderRadius: 9999,
                 background: `linear-gradient(135deg, ${greenDark}, ${green})`,
                 color: '#fff',
@@ -513,7 +519,7 @@ export default function RescheduleModal({
           {/* ─── AI ANALYSIS FOOTER ───────────────────────────────────────── */}
           <div style={{
             borderTop: `1px solid ${divider}`,
-            padding: `8px ${px}px ${isMobile ? 10 : 16}px`,
+            padding: `6px ${px}px ${isMobile ? 8 : 12}px`,
           }}>
             <button
               onClick={() => setShowDetails(v => !v)}
@@ -603,7 +609,8 @@ export default function RescheduleModal({
 
         </div>
       </div>
-    </>
+    </>,
+    document.body
   );
 }
 
@@ -612,7 +619,7 @@ export default function RescheduleModal({
 function ActionCard({
   onClick, isTop, disabled, warn,
   icon, label, hint,
-  green, greenBorder, surface, border, textPrimary, textMuted,
+  green, greenBorder, surface, border, textPrimary, textMuted, isDark,
 }) {
   const cardBorder = isTop ? greenBorder
     : warn ? 'rgba(245,158,11,0.3)'
@@ -645,10 +652,10 @@ function ActionCard({
         background: cardBg,
         border: `1.5px solid ${cardBorder}`,
         borderRadius: 18,
-        padding: '16px 14px 14px',
+        padding: '12px 12px 10px',
         display: 'flex', flexDirection: 'column',
         alignItems: 'flex-start', justifyContent: 'space-between',
-        minHeight: 110,
+        minHeight: 100,
         cursor: disabled ? 'not-allowed' : 'pointer',
         opacity: disabled ? 0.35 : 1,
         position: 'relative',
@@ -675,14 +682,14 @@ function ActionCard({
       <div>
         <div style={{
           fontSize: 15, fontWeight: 700,
-          color: isTop ? '#fff' : textPrimary,
+          color: isTop ? (isDark ? '#fff' : '#0a1d0a') : textPrimary, // Harder contrast in light
           lineHeight: 1.2, marginBottom: 2,
         }}>
           {label}
         </div>
         <div style={{
           fontSize: 12, fontWeight: 500,
-          color: isTop ? green : warn ? '#d97706' : textMuted,
+          color: isTop ? (isDark ? green : '#1a3a1a') : (warn ? '#d97706' : textMuted),
           lineHeight: 1.2,
         }}>
           {hint}

@@ -221,35 +221,19 @@ function MobileSortableTask({ task, isActive, children }) {
     isDragging,
   } = useSortable({ id: task.id });
 
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-    opacity: isDragging ? 0.5 : 1,
-    touchAction: 'none', // Prevent default touch behavior during drag
-  };
-
   return (
-    <div ref={setNodeRef} style={style}>
-      <div style={{ display: 'flex', gap: '0px', alignItems: 'stretch' }}>
-        {/* Invisible Drag Handle - only show if not active */}
-        {!isActive && (
-          <div {...attributes} {...listeners} style={{
-            width: '16px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            cursor: 'grab',
-            touchAction: 'none',
-            WebkitTapHighlightColor: 'transparent',
-            opacity: 0
-          }} />
-        )}
-
-        {/* Task Card Content */}
-        <div style={{ flex: 1 }}>
-          {children}
-        </div>
-      </div>
+    <div
+      ref={setNodeRef}
+      {...(!isActive ? attributes : {})}
+      {...(!isActive ? listeners : {})}
+      style={{
+        transform: CSS.Transform.toString(transform),
+        transition,
+        opacity: isDragging ? 0.5 : 1,
+        touchAction: isActive ? 'auto' : 'manipulation',
+      }}
+    >
+      {children}
     </div>
   );
 }
@@ -1473,7 +1457,7 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
 
           {/* ---- Stat Pills ---- */}
           {!activeTask && tasks.length > 0 && !(focusModeEnabled && activeTaskId) && (
-            <div style={{ display: 'flex', gap: '8px', marginBottom: '14px' }}>
+            <div style={{ display: 'flex', gap: '8px', marginBottom: '8px' }}>
               {[
                 { label: `${Math.floor(totalMinutes / 60)}h ${totalMinutes % 60}m`, sub: 'Scheduled' },
                 { label: `${Math.floor(Math.abs(freeTime) / 60)}h ${Math.abs(freeTime) % 60}m`, sub: overflowing ? 'Overflow' : 'Free', warn: overflowing },
@@ -1495,7 +1479,7 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
           {/* ---- Overflow Warning ---- */}
           {overflowing && !activeTask && !(focusModeEnabled && activeTaskId) && (
             <div style={{
-              padding: '10px 14px', marginBottom: '12px', borderRadius: '10px',
+              padding: '10px 14px', marginBottom: '8px', borderRadius: '10px',
               background: overflowData.severity === 'critical' ? 'rgba(220,38,38,0.06)' : 'rgba(245,158,11,0.06)',
               display: 'flex', alignItems: 'center', gap: '8px',
               fontSize: '12px', fontWeight: 600,
@@ -1509,7 +1493,7 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
           {/* ---- Focus Mode Indicator ---- */}
           {focusModeEnabled && (
             <div style={{
-              padding: '8px 12px', marginBottom: '12px', borderRadius: '10px',
+              padding: '8px 12px', marginBottom: '8px', borderRadius: '10px',
               background: 'rgba(59,110,59,0.06)', textAlign: 'center',
               fontSize: '12px', fontWeight: 600, color: '#3B6E3B'
             }}>
@@ -1536,8 +1520,8 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
 
               {/* Carried Over */}
               {filterForFocus(filterTasksBySearch(carriedTasks)).length > 0 && (
-                <div style={{ marginBottom: '14px' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px', paddingLeft: '2px' }}>
+                <div style={{ marginBottom: '8px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '6px', paddingLeft: '2px' }}>
                     <span style={{ fontSize: '11px', fontWeight: 800, color: '#D97706', textTransform: 'uppercase', letterSpacing: '0.8px' }}>
                       Carried Over
                     </span>
@@ -1549,7 +1533,7 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
                     items={filterForFocus(filterTasksBySearch(carriedTasks)).map(t => t.id)}
                     strategy={verticalListSortingStrategy}
                   >
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                       {filterForFocus(filterTasksBySearch(carriedTasks)).map((task, i) => (
                         <MobileSortableTask key={task.id} task={task} isActive={activeTaskId === task.id}>
                           <TaskCard
@@ -1641,7 +1625,7 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
               {/* Today's Tasks */}
               {filterForFocus(filterTasksBySearch(todayTasks)).length > 0 && (
                 <div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px', paddingLeft: '2px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '6px', paddingLeft: '2px' }}>
                     <span style={{ fontSize: '11px', fontWeight: 800, color: isDark ? '#E8F0E8' : '#1A1A1A', textTransform: 'uppercase', letterSpacing: '0.8px' }}>
                       Today
                     </span>
@@ -1653,7 +1637,7 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
                     items={filterForFocus(filterTasksBySearch(todayTasks)).map(t => t.id)}
                     strategy={verticalListSortingStrategy}
                   >
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                       {filterForFocus(filterTasksBySearch(todayTasks)).map((task, i) => (
                         <MobileSortableTask key={task.id} task={task} isActive={activeTaskId === task.id}>
                           <TaskCard
@@ -1960,37 +1944,37 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
             </>
           )}
 
-          {/* ---- Modals ---- */}
-          <Suspense fallback={<div />}>
-            {showRescheduleModal && activeTask && (
-              <RescheduleModal
-                task={activeTask}
-                availability={availability}
-                existingTasks={taskBlocks}
-                onComplete={handleComplete}
-                onContinue={handleContinue}
-                onLaterToday={handleLaterToday}
-                onTomorrow={handleTomorrow}
-                onBackToPool={handleBackToPool}
-                onPickTime={handlePickTime}
-                onBreakTask={handleBreakTask}
-                onClose={() => setShowRescheduleModal(false)}
-              />
-            )}
-
-            {showEditDialog && editingTask && (
-              <EditTaskDialog
-                task={editingTask}
-                onSave={handleSaveEditedTask}
-                onClose={() => { setShowEditDialog(false); setEditingTask(null); }}
-              />
-            )}
-          </Suspense>
-
           {showCelebration && (
             <Celebration type={showCelebration} onComplete={() => setShowCelebration(null)} />
           )}
         </MobileLayout>
+
+        {/* ---- Modals (outside layout to avoid transform containment) ---- */}
+        <Suspense fallback={<div />}>
+          {showRescheduleModal && activeTask && (
+            <RescheduleModal
+              task={activeTask}
+              availability={availability}
+              existingTasks={taskBlocks}
+              onComplete={handleComplete}
+              onContinue={handleContinue}
+              onLaterToday={handleLaterToday}
+              onTomorrow={handleTomorrow}
+              onBackToPool={handleBackToPool}
+              onPickTime={handlePickTime}
+              onBreakTask={handleBreakTask}
+              onClose={() => setShowRescheduleModal(false)}
+            />
+          )}
+
+          {showEditDialog && editingTask && (
+            <EditTaskDialog
+              task={editingTask}
+              onSave={handleSaveEditedTask}
+              onClose={() => { setShowEditDialog(false); setEditingTask(null); }}
+            />
+          )}
+        </Suspense>
       </DndContext>
     );
   }
@@ -3066,76 +3050,76 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
 
           </>
         )}
+      </div>
 
-        {/* ---------- Reschedule Modal ---------- */}
-        <Suspense fallback={<div />}>
-          {showRescheduleModal && activeTask && (
-            <RescheduleModal
-              task={activeTask}
-              availability={availability}
-              existingTasks={taskBlocks}
-              onComplete={handleComplete}
-              onContinue={handleContinue}
-              onLaterToday={handleLaterToday}
-              onTomorrow={handleTomorrow}
-              onBackToPool={handleBackToPool}
-              onPickTime={handlePickTime}
-              onBreakTask={handleBreakTask}
-              onClose={() => setShowRescheduleModal(false)}
-            />
-          )}
-
-          {/* ---------- Edit Task Dialog ---------- */}
-          {showEditDialog && editingTask && (
-            <EditTaskDialog
-              task={editingTask}
-              onSave={handleSaveEditedTask}
-              onClose={() => {
-                setShowEditDialog(false);
-                setEditingTask(null);
-              }}
-            />
-          )}
-        </Suspense>
-
-        {/* ---------- Celebration Animation ---------- */}
-        {showCelebration && (
-          <Celebration
-            type={showCelebration}
-            onComplete={() => setShowCelebration(null)}
+      {/* ---------- Modals (outside transformed container) ---------- */}
+      <Suspense fallback={<div />}>
+        {showRescheduleModal && activeTask && (
+          <RescheduleModal
+            task={activeTask}
+            availability={availability}
+            existingTasks={taskBlocks}
+            onComplete={handleComplete}
+            onContinue={handleContinue}
+            onLaterToday={handleLaterToday}
+            onTomorrow={handleTomorrow}
+            onBackToPool={handleBackToPool}
+            onPickTime={handlePickTime}
+            onBreakTask={handleBreakTask}
+            onClose={() => setShowRescheduleModal(false)}
           />
         )}
 
-        {/* Focus Mode Toast */}
-        {showFocusModeToast && (
-          <div style={{
-            position: "fixed",
-            bottom: "24px",
-            left: "50%",
-            transform: "translateX(-50%)",
-            padding: "12px 24px",
-            background: focusModeEnabled
-              ? "linear-gradient(135deg, #6FAF6F, #3B6E3B)"
-              : "linear-gradient(135deg, rgba(167,211,167,0.95), rgba(111,175,111,0.9))",
-            color: "#fff",
-            borderRadius: "14px",
-            boxShadow: "0 4px 12px rgba(0,0,0,0.08), 0 12px 32px rgba(0,0,0,0.15)",
-            fontSize: "14px",
-            fontWeight: "600",
-            zIndex: 10000,
-            animation: "fadeInToast 0.2s ease-out",
-            display: "flex",
-            alignItems: "center",
-            gap: "8px"
-          }}>
-            <span>{focusModeEnabled ? "🎯" : "👁️"}</span>
-            <span>{focusModeEnabled ? "Focus Mode ON" : "Focus Mode OFF"}</span>
-            <span style={{ fontSize: "12px", opacity: 0.8 }}>
-              {focusModeEnabled ? "(Press F to exit)" : "(Press F to enable)"}
-            </span>
-          </div>
+        {/* ---------- Edit Task Dialog ---------- */}
+        {showEditDialog && editingTask && (
+          <EditTaskDialog
+            task={editingTask}
+            onSave={handleSaveEditedTask}
+            onClose={() => {
+              setShowEditDialog(false);
+              setEditingTask(null);
+            }}
+          />
         )}
-      </div>
+      </Suspense>
+
+      {/* ---------- Celebration Animation ---------- */}
+      {showCelebration && (
+        <Celebration
+          type={showCelebration}
+          onComplete={() => setShowCelebration(null)}
+        />
+      )}
+
+      {/* Focus Mode Toast */}
+      {showFocusModeToast && (
+        <div style={{
+          position: "fixed",
+          bottom: "24px",
+          left: "50%",
+          transform: "translateX(-50%)",
+          padding: "12px 24px",
+          background: focusModeEnabled
+            ? "linear-gradient(135deg, #6FAF6F, #3B6E3B)"
+            : "linear-gradient(135deg, rgba(167,211,167,0.95), rgba(111,175,111,0.9))",
+          color: "#fff",
+          borderRadius: "14px",
+          boxShadow: "0 4px 12px rgba(0,0,0,0.08), 0 12px 32px rgba(0,0,0,0.15)",
+          fontSize: "14px",
+          fontWeight: "600",
+          zIndex: 10000,
+          animation: "fadeInToast 0.2s ease-out",
+          display: "flex",
+          alignItems: "center",
+          gap: "8px"
+        }}>
+          <span>{focusModeEnabled ? "🎯" : "👁️"}</span>
+          <span>{focusModeEnabled ? "Focus Mode ON" : "Focus Mode OFF"}</span>
+          <span style={{ fontSize: "12px", opacity: 0.8 }}>
+            {focusModeEnabled ? "(Press F to exit)" : "(Press F to enable)"}
+          </span>
+        </div>
+      )}
     </div>
   );
 }

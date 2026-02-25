@@ -27,29 +27,35 @@ export default function MobileLayout({ children, showBottomNav = true, onNavigat
         overflowY: 'auto',
         overflowX: 'hidden',
         WebkitOverflowScrolling: 'touch',
-        padding: '20px 16px',
-        paddingBottom: showBottomNav ? '110px' : '20px'
+        paddingBottom: showBottomNav ? 'calc(70px + env(safe-area-inset-bottom))' : '20px'
       }}>
-        {children}
+        <div style={{
+          maxWidth: '480px',
+          margin: '0 auto',
+          padding: '20px 16px',
+          paddingBottom: 0
+        }}>
+          {children}
+        </div>
       </main>
 
       {/* Bottom Navigation */}
       {showBottomNav && (
         <nav style={{
           position: 'fixed',
-          bottom: 'max(16px, env(safe-area-inset-bottom))',
-          left: '12px',
-          right: '12px',
-          borderRadius: '20px',
-          background: isDark ? 'rgba(36,43,36,0.96)' : 'rgba(255,255,255,0.96)',
+          bottom: 0,
+          left: 0,
+          right: 0,
+          borderRadius: 0,
+          background: isDark ? 'rgba(26,31,26,0.97)' : 'rgba(255,255,255,0.97)',
           backdropFilter: 'blur(20px)',
           WebkitBackdropFilter: 'blur(20px)',
-          border: isDark ? '0.5px solid rgba(255,255,255,0.08)' : '0.5px solid rgba(0,0,0,0.06)',
-          boxShadow: '0 8px 32px rgba(0,0,0,0.14)',
+          borderTop: isDark ? '0.5px solid rgba(255,255,255,0.08)' : '0.5px solid rgba(0,0,0,0.08)',
+          boxShadow: 'none',
           display: 'flex',
           justifyContent: 'space-around',
           alignItems: 'center',
-          padding: '10px 4px',
+          padding: `10px 4px max(10px, env(safe-area-inset-bottom))`,
           zIndex: 200
         }}>
           {[
@@ -85,15 +91,15 @@ export default function MobileLayout({ children, showBottomNav = true, onNavigat
                 position: 'relative'
               }}
             >
-              {/* Active pill indicator at top */}
+      {/* Active indicator - top line */}
               <div style={{
                 position: 'absolute',
                 top: 0,
                 left: '50%',
                 transform: 'translateX(-50%)',
-                width: activeTab === item.id ? '20px' : '0px',
-                height: '3px',
-                borderRadius: '0 0 3px 3px',
+                width: activeTab === item.id ? '24px' : '0px',
+                height: '2px',
+                borderRadius: '0 0 2px 2px',
                 background: '#3B6E3B',
                 transition: 'width 0.2s ease'
               }} />
