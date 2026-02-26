@@ -21,7 +21,7 @@ TimeFlow prevents this by:
 
 ## Core Features
 
-### 🎯 Time-Blocked Scheduling
+### Time-Blocked Scheduling
 Assign specific start times and durations to tasks. See your entire day visually with a timeline showing exactly when each task happens. TimeFlow blocks conflicts automatically - you can't schedule two things at once.
 
 ### 🔍 Search & Filter
