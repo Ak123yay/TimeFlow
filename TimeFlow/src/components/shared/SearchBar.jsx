@@ -7,7 +7,7 @@ export default function SearchBar({ onSearch, placeholder = "Search tasks..." })
 
   useEffect(() => {
     const debounce = setTimeout(() => {
-      onSearch(query.toLowerCase().trim());
+      onSearch && onSearch(query.toLowerCase().trim());
     }, 300);
     return () => clearTimeout(debounce);
   }, [query, onSearch]);

@@ -180,6 +180,10 @@ export default function App() {
     window.location.hash = '#/today';
   };
 
+  const showInsights = () => {
+    window.location.hash = '#/insights';
+  };
+
   return (
     <div className={`App app-${timePeriod}`}>
       {/* Floating leaves background */}
@@ -242,6 +246,7 @@ export default function App() {
               else if (view === 'week') showWeek();
               else if (view === 'pool') showPool();
               else if (view === 'streak') showStreak();
+              else if (view === 'stats') showReflection();
             }} />
           </Suspense>
         </ErrorBoundary>

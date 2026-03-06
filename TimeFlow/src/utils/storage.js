@@ -143,6 +143,10 @@ export const getUnfinishedTasksFromPreviousDays = () => {
 
     const tasks = loadTasksForDate(date);
     tasks.forEach(task => {
+      // Skip tasks that were already moved to another day to prevent duplicate carry-overs
+      if (task.movedToTodayCount && task.movedToTodayCount > 0) return;
+      if (task.carriedMarked) return;
+
       if (!task.completed && task.remaining > 0) {
         unfinished.push({
           ...task,

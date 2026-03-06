@@ -17,6 +17,7 @@ function LeafIcon({ className = "", size = 18, fill = "#3B6E3B" }) {
 }
 
 export default function DayReflection({ todayDate, onComplete }) {
+  const isDark = useDarkMode();
   const tasks = loadTasksForDate(todayDate);
   const completedTasks = tasks.filter(t => t.completed);
   const unfinishedTasks = tasks.filter(t => !t.completed);

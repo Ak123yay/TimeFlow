@@ -38,7 +38,6 @@ import {
   closestCenter,
   KeyboardSensor,
   PointerSensor,
-  TouchSensor,
   useSensor,
   useSensors,
 } from '@dnd-kit/core';
@@ -416,12 +415,13 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
   const [showFocusModeToast, setShowFocusModeToast] = useState(false);
 
   // Drag and drop sensors
+  // NOTE: TouchSensor removed — it registers on document and calls preventDefault on touchstart,
+  // which suppresses click events on the entire page including bottom nav buttons.
+  // PointerSensor handles both mouse and touch (via pointer events) with the same result.
   const sensors = useSensors(
-    useSensor(PointerSensor),
-    useSensor(TouchSensor, {
+    useSensor(PointerSensor, {
       activationConstraint: {
-        delay: 200,      // 200ms hold before drag starts
-        tolerance: 5,    // 5px movement tolerance
+        distance: 8,  // must move 8px before drag starts — prevents swallowing button clicks
       },
     }),
     useSensor(KeyboardSensor, {
@@ -1293,9 +1293,9 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
 
     const handleMobileNav = (tab) => {
       haptic.light();
-      if (tab === 'week') onShowWeek();
-      else if (tab === 'pool') onShowPool();
-      else if (tab === 'stats') onEndDay();
+      if (tab === 'week') window.location.hash = '#/week';
+      else if (tab === 'pool') window.location.hash = '#/pool';
+      else if (tab === 'stats') window.location.hash = '#/reflection';
       else if (tab === 'streak') window.location.hash = '#/streak';
     };
 
@@ -1351,12 +1351,13 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
     }).filter(Boolean);
 
     return (
-      <DndContext
-        sensors={sensors}
-        collisionDetection={closestCenter}
-        onDragEnd={handleDragEnd}
-      >
+      <>
         <MobileLayout showBottomNav={!activeTaskId} onNavigate={handleMobileNav}>
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCenter}
+            onDragEnd={handleDragEnd}
+          >
 
           {/* ---- Header ---- */}
           {!activeTask ? (
@@ -1947,6 +1948,7 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
           {showCelebration && (
             <Celebration type={showCelebration} onComplete={() => setShowCelebration(null)} />
           )}
+          </DndContext>
         </MobileLayout>
 
         {/* ---- Modals (outside layout to avoid transform containment) ---- */}
@@ -1975,7 +1977,7 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
             />
           )}
         </Suspense>
-      </DndContext>
+      </>
     );
   }
 
