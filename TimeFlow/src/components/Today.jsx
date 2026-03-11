@@ -762,6 +762,10 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
     return calculateOverflow(tasks, availability);
   }, [tasks, availability]);
 
+  // Memoize carried/today splits — used in both mobile and desktop renders
+  const carriedTasksMemo = useMemo(() => taskBlocks.filter(t => t.carriedOver), [taskBlocks]);
+  const todayTasksMemo = useMemo(() => taskBlocks.filter(t => !t.carriedOver), [taskBlocks]);
+
   const overflowing = overflowData.severity !== 'none';
   const freeTime = Math.max(0, timeBoundaries.availableM - totalMinutes);
 
@@ -907,6 +911,7 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
     // ANALYTICS: Save to history for future duration predictions
     const taskToSave = {
       ...completedTask,
+      completed: true,
       completedAt,
       actualDuration,
       durationAccuracy
@@ -1299,8 +1304,8 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
       else if (tab === 'streak') window.location.hash = '#/streak';
     };
 
-    const carriedTasks = taskBlocks.filter(t => t.carriedOver);
-    const todayTasks = taskBlocks.filter(t => !t.carriedOver);
+    const carriedTasks = carriedTasksMemo;
+    const todayTasks = todayTasksMemo;
     const completedCount = tasks.filter(t => t.completed).length;
     const progressPercent = tasks.length > 0 ? Math.round((completedCount / tasks.length) * 100) : 0;
 
@@ -1591,6 +1596,7 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
                                 // Save analytics
                                 const taskToSave = {
                                   ...task,
+                                  completed: true,
                                   completedAt,
                                   actualDuration,
                                   durationAccuracy
@@ -1695,6 +1701,7 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
                                 // Save analytics
                                 const taskToSave = {
                                   ...task,
+                                  completed: true,
                                   completedAt,
                                   actualDuration,
                                   durationAccuracy
@@ -2260,7 +2267,7 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
                     }}>
                       {overflowData.overflowMinutes > 0
                         ? `You've scheduled ${Math.floor(overflowData.overflowMinutes / 60)}h ${overflowData.overflowMinutes % 60}m more than available time.`
-                        : `Your schedule is at ${Math.round((totalMinutes / availableM) * 100)}% capacity.`
+                        : `Your schedule is at ${Math.round((totalMinutes / timeBoundaries.availableM) * 100)}% capacity.`
                       }
                       {overflowData.severity === 'critical' && ' Some tasks need to be rescheduled.'}
                     </div>
@@ -2559,7 +2566,7 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
                   >
                     <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
                       {/* Carried Over Tasks Section */}
-                      {taskBlocks.filter(t => t.carriedOver).length > 0 && (
+                      {carriedTasksMemo.length > 0 && (
                         <div>
                           <div style={{
                             display: "flex",
@@ -2573,16 +2580,16 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
                           }}>
                             <span style={{ fontSize: "16px" }}>🍂</span>
                             <h3 style={{ margin: 0, fontSize: "14px", fontWeight: "700", color: "#d97706" }}>
-                              Carried from previous days ({taskBlocks.filter(t => t.carriedOver).length})
+                              Carried from previous days ({carriedTasksMemo.length})
                             </h3>
                           </div>
                           <SortableContext
-                            items={taskBlocks.filter(t => t.carriedOver).map(t => t.id)}
+                            items={carriedTasksMemo.map(t => t.id)}
                             strategy={verticalListSortingStrategy}
                           >
                             <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
                               {(() => {
-                                const carriedTasks = taskBlocks.filter(task => task.carriedOver).filter(task => {
+                                const carriedTasks = carriedTasksMemo.filter(task => {
                                   if (focusModeEnabled && activeTaskId) {
                                     if (task.id === activeTaskId) return true;
                                     if (task.completed) return false;
@@ -2803,7 +2810,7 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
                       )}
 
                       {/* Today's Tasks Section */}
-                      {taskBlocks.filter(t => !t.carriedOver).length > 0 && (
+                      {todayTasksMemo.length > 0 && (
                         <div>
                           <div style={{
                             display: "flex",
@@ -2817,16 +2824,16 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
                           }}>
                             <span style={{ fontSize: "16px" }}>🌿</span>
                             <h3 style={{ margin: 0, fontSize: "14px", fontWeight: "700", color: "#3B6E3B" }}>
-                              Today's tasks ({taskBlocks.filter(t => !t.carriedOver).length})
+                              Today's tasks ({todayTasksMemo.length})
                             </h3>
                           </div>
                           <SortableContext
-                            items={taskBlocks.filter(t => !t.carriedOver).map(t => t.id)}
+                            items={todayTasksMemo.map(t => t.id)}
                             strategy={verticalListSortingStrategy}
                           >
                             <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
                               {(() => {
-                                const todayTasks = taskBlocks.filter(task => !task.carriedOver).filter(task => {
+                                const todayTasks = todayTasksMemo.filter(task => {
                                   // In focus mode, hide completed tasks and future tasks (but show active task)
                                   if (focusModeEnabled && activeTaskId) {
                                     if (task.id === activeTaskId) return true;

@@ -1324,11 +1324,14 @@ input:focus-visible {
     line-height: inherit !important;
   }
 
-  /* Let modal buttons use their own sizing */
+  /* Let modal buttons use their own sizing and layout */
   .reschedule-modal button {
     min-height: unset !important;
     font-size: inherit !important;
     font-weight: inherit !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
   }
 
   /* But keep the primary button properly sized */

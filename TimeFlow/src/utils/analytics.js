@@ -40,12 +40,14 @@ export const saveTaskToHistory = (task) => {
 
     history.push(entry);
 
-    // Keep only last 300 entries for richer pattern analysis
-    if (history.length > 300) {
-      history.shift();
-    }
+    // Keep only last 300 entries AND entries within last 90 days
+    const cutoff = new Date();
+    cutoff.setDate(cutoff.getDate() - 90);
+    const cutoffStr = cutoff.toISOString().slice(0, 10);
+    const pruned = history.filter(e => e.date >= cutoffStr);
+    const final = pruned.length > 300 ? pruned.slice(-300) : pruned;
 
-    localStorage.setItem('timeflow-task-history', JSON.stringify(history));
+    localStorage.setItem('timeflow-task-history', JSON.stringify(final));
   } catch (e) {
     console.error('Failed to save task history', e);
   }

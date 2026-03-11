@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   loadWeeklyPool,
   addTaskToWeeklyPool,
@@ -63,12 +63,12 @@ export default function WeeklyPool({ onNavigateToToday }) {
     );
   };
 
-  useState(() => {
+  useEffect(() => {
     const mq = window.matchMedia('(max-width: 768px)');
     const handler = (e) => setIsMobile(e.matches);
     mq.addEventListener('change', handler);
     return () => mq.removeEventListener('change', handler);
-  });
+  }, []);
 
   const addTaskToPool = (e) => {
     if (e && e.preventDefault) e.preventDefault();
@@ -338,7 +338,7 @@ export default function WeeklyPool({ onNavigateToToday }) {
       <div className="setup-inner nat-card">
         <div className="setup-header" style={{ marginBottom: "22px" }}>
           <div className="header-left">
-            <h1 className="title" style={{ fontSize: "24px" }}>Week ly Pool 🌊</h1>
+            <h1 className="title" style={{ fontSize: "24px" }}>Weekly Pool 🌊</h1>
             <p className="muted" style={{ display: "flex", alignItems: "center", gap: "6px" }}>
               <LeafIconLocal size={14} fill="#6B8E6B" />
               Tasks you want to work on this week ({poolTasks.length})

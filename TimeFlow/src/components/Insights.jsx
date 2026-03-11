@@ -9,6 +9,22 @@ import {
   getRescheduleOptionFrequencies,
 } from '../utils/analytics';
 
+// Pure helpers — defined outside component so they aren't recreated on every render
+function calculateTrend(values) {
+  if (values.length < 5) return 'neutral';
+  const recent = values.slice(-5).reduce((a, b) => a + b, 0) / 5;
+  const older = values.slice(-10, -5).reduce((a, b) => a + b, 0) / 5;
+  if (recent - older > 5) return 'improving';
+  if (older - recent > 5) return 'declining';
+  return 'stable';
+}
+
+function formatHour(hour) {
+  const ampm = hour >= 12 ? 'PM' : 'AM';
+  const h = hour % 12 || 12;
+  return `${h}${ampm}`;
+}
+
 export default function Insights({ onNavigate }) {
   const isDark = useDarkMode();
   const [isMobile, setIsMobile] = useState(() => window.matchMedia('(max-width: 768px)').matches);
@@ -114,21 +130,6 @@ export default function Insights({ onNavigate }) {
     if (Object.keys(freqs).length > 0) setRescheduleHabits(freqs);
 
   }, []);
-
-  const calculateTrend = (values) => {
-    if (values.length < 5) return 'neutral';
-    const recent = values.slice(-5).reduce((a, b) => a + b, 0) / 5;
-    const older = values.slice(-10, -5).reduce((a, b) => a + b, 0) / 5;
-    if (recent - older > 5) return 'improving';
-    if (older - recent > 5) return 'declining';
-    return 'stable';
-  };
-
-  const formatHour = (hour) => {
-    const ampm = hour >= 12 ? 'PM' : 'AM';
-    const h = hour % 12 || 12;
-    return `${h}${ampm}`;
-  };
 
   if (isMobile) {
 
@@ -344,7 +345,6 @@ export default function Insights({ onNavigate }) {
             </h3>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
               {frequentTasks.map((task, idx) => {
-                console.log('Rendering task suggestion:', task);
                 return (
                   <div key={idx} style={{
                     padding: '14px',
