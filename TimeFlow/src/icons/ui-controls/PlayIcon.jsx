@@ -1,12 +1,19 @@
 import React from 'react';
+import { useIconContext } from '../IconContext';
 
+/**
+ * PlayIcon - Play action (outline only)
+ */
 const PlayIcon = React.memo(({
   size = 24,
   fill = null,
   isDark = null,
   className = '',
 }) => {
-  const resolvedFill = fill ?? '#52B788';
+  const context = useIconContext();
+  const resolvedIsDark = isDark ?? context?.isDark ?? false;
+  const resolvedFill = fill ?? (resolvedIsDark ? '#888' : '#999');
+
   return (
     <svg
       className={className}
@@ -17,23 +24,14 @@ const PlayIcon = React.memo(({
       xmlns="http://www.w3.org/2000/svg"
       aria-hidden="true"
     >
-      <defs>
-        <linearGradient id="playGradient" x1="50%" y1="0%" x2="50%" y2="100%">
-          <stop offset="0%" stopColor={resolvedFill} stopOpacity="0.95" />
-          <stop offset="100%" stopColor={resolvedFill} stopOpacity="0.75" />
-        </linearGradient>
-      </defs>
-      {/* Play triangle with rounded effect */}
+      {/* Play triangle outline */}
       <polygon
         points="7,5 7,19 19,12"
-        fill="url(#playGradient)"
-        opacity="0.9"
-      />
-      {/* Inner highlight for depth */}
-      <polygon
-        points="9,8 9,16 16,12"
-        fill={resolvedFill}
-        opacity="0.4"
+        fill="none"
+        stroke={resolvedFill}
+        strokeWidth="1.3"
+        strokeLinecap="round"
+        strokeLinejoin="round"
       />
     </svg>
   );

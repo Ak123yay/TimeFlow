@@ -134,6 +134,22 @@ TimeFlow prevents common mistakes:
 - **Persistent** - Never shows again once dismissed
 - **5 key areas**: Today, Week, Pool, Stats (Reflection), and Streak
 
+### 🎨 Minimalistic Icon System
+- **60+ custom SVG icons** - All designed with minimalistic outline-only aesthetic
+- **Consistent stroke styling** - Uniform 1.1-1.3px strokes across all icons
+- **Grey color scheme** - Professional #999 (light mode) and #888 (dark mode) icons
+- **Dark mode support** - Automatic context-based icon coloring
+- **Categories** - Growth, Status, Emotions, UI Controls, Achievements, Categories, and more
+
+## Reliability & Data Integrity
+
+### ✅ Carried-Over Task Persistence
+- **ID-based matching** - Uses unique task IDs instead of fragile name-based matching
+- **Immediate persistence** - Deletions save immediately to prevent loss on page close
+- **Duplicate prevention** - Carried tasks tracked by originalDate + originalTaskId to prevent re-carrying
+- **Cross-date synchronization** - Completing/uncompleting carried tasks properly updates original dates
+- **Safe deletion** - Deleting a carried task automatically marks the original as completed
+
 ## How It Works
 
 **Morning:** Open TimeFlow → See carried-over tasks → Add new tasks with times → Review visual timeline → Adjust if overbooked
@@ -222,6 +238,9 @@ TimeFlow embraces **calm productivity** over hustle culture:
 - **Automatic theming** - Light/dark based on system
 - **5 first-time tooltips** - Helpful guidance on first use
 - **Persistent bottom nav** - Always accessible navigation
+- **60+ custom icons** - Minimalistic outline-only design with grey color scheme
+- **Clean tab bar** - 70px fixed bottom navigation with solid backgrounds
+- **ID-based task tracking** - Prevents task multiplication on carried-over tasks
 
 ## Get Started
 

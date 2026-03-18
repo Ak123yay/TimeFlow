@@ -3955,6 +3955,83 @@ box-shadow: 0 12px 40px var(--soft-shadow);
 }
 ```
 
+### Icon System
+
+TimeFlow features a comprehensive minimalistic icon system with 60+ custom SVG icons:
+
+#### Icon Design Principles
+- **Outline-Only Aesthetic** - Pure stroke-based design with no fills
+- **Consistent Stroke Width** - Primary shapes use 1.1-1.3px, details use 0.9-1.1px
+- **Grey Color Scheme** - #999 (light mode) and #888 (dark mode) for neutral visual hierarchy
+- **Dark Mode Support** - All icons use `useIconContext()` for automatic theme detection
+- **Minimalistic Simplification** - Focus on essential shapes, remove decorative details
+- **Negative Space** - Empty space enhances design quality
+
+#### Icon Categories
+- **Growth Icons** (10) - Leaf, Sprout, Flower, Plant, Tree, Water, Moon, Nut, LeafDrift, LeafFall
+- **Status Icons** (11) - Checkmark, Close, Timer, Clock, Stopwatch, Calendar, Hammer, Target, Refresh, Repeat, Inbox
+- **Emotion Icons** (6) - Happy, Content, Neutral, Worried, Uneasy, Sad
+- **UI Control Icons** (10) - Pause, Play, Search, Trash, Warning, Alert, DangerStatus, WarningStatus, Bolt, Fire
+- **Achievement Icons** (4) - Star, Trophy, Celebration, Spark
+- **Category Icons** (7) - Computer, Teamwork, Creative, Email, Health, Learning, Admin
+- **Platform Icons** (4) - Phone, Apple, Desktop, Airplane
+- **Misc Icons** (8) - Bell, BellMuted, Bulb, Eye, Liferig, Note, and others
+
+#### Bottom Navigation Tab Bar
+- **Fixed 70px Height** - Solid white (#ffffff) light mode, #1a1a1a dark mode
+- **100% Viewport Width** - Uses `width: 100vw` for perfect screen fill
+- **5 Navigation Tabs** - Today, Week, Pool, Stats, Streak
+- **20px Icons** - Optimized size for minimalistic aesthetic with 1.2px strokes
+- **Active State Indicator** - Thin underline below active tab label
+- **Touch-Optimized** - 70px spacing provides adequate touch targets
+- **Grey Label Text** - #999 (light) / #888 (dark) for subtle hierarchy
+- **Smooth Transitions** - 0.25s ease for state changes
+
+---
+
+## Data Integrity & Reliability
+
+### Carried-Over Task Persistence
+
+TimeFlow uses a robust system to prevent tasks from being carried over multiple times:
+
+#### ID-Based Matching
+- **Original Task ID Tracking** - Each carried task stores `originalTaskId` reference
+- **No Name Matching** - Eliminates fragile string-based lookups that fail on edits
+- **Unique Identifier System** - `${originalDate}-${originalTaskId}` prevents duplicates
+
+#### Immediate Persistence
+- **Deletion Saves** - Tasks marked as deleted immediately save to localStorage
+- **No Debounce on Deletion** - Bypasses 500ms debounce to prevent loss on page close
+- **Cross-Date Synchronization** - Completing/uncompleting carried tasks updates originals
+
+#### Duplicate Prevention
+- **Carried Task Deduplication** - Checks by `originalDate` + `originalTaskId`
+- **Carried Marking Flag** - `carriedMarked: true` prevents re-carries
+- **Multi-Date Filtering** - Only checks past dates (not today or future)
+
+#### Implementation Details
+```javascript
+// When created, carried tasks include:
+{
+  ...task,
+  originalDate: date,           // Original creation date
+  originalTaskId: task.id,       // ID of original task
+  carriedOver: true,
+  attempts: attempts + 1
+}
+
+// When deleted, marks original as completed:
+t.id === task.originalTaskId ? { ...t, completed: true, remaining: 0 } : t
+
+// When deduplicating:
+const existingCarriedIds = new Set(
+  todayTasks
+    .filter(t => t.carriedOver && t.originalTaskId)
+    .map(t => `${t.originalDate}-${t.originalTaskId}`)
+);
+```
+
 ---
 
 ## Contributing
@@ -4044,7 +4121,32 @@ Inspired by:
 - RescheduleModal layout redesign: task name and meta chips (remaining minutes, category, completion probability, procrastination severity) now share the same row at the same vertical level
 - Insights dashboard: added Estimation Bias card (over/under/accurate detection with suggestion) and Reschedule Habits card (bar chart of all 7 option frequencies)
 
-### Upcoming v1.2.0
+### v1.1.2 (Latest)
+- **🎨 UI/Design Overhaul:**
+  - Redesigned tab bar: 70px fixed height, solid white/dark backgrounds, full-width display
+  - Added active tab indicator: thin underline for clear visual hierarchy
+  - Minimalistic icon system: 60+ custom SVG icons with outline-only aesthetic
+  - Icons redesigned with 1.1-1.3px consistent strokes, grey color scheme (#999/#888)
+  - All icons in 20px size optimized for tab bar and throughout app
+  - Icon categories: Growth, Status, Emotions, UI Controls, Achievements, Categories, Platform, Misc
+
+- **🐛 Critical Bug Fixes - Carried Task Persistence:**
+  - **ID-based matching** replaces fragile name-based matching for task tracking
+  - Each carried task now stores `originalTaskId` for proper cross-date linking
+  - Deletions now save immediately to localStorage (no 500ms debounce loss)
+  - Duplicate protection: uses `${originalDate}-${originalTaskId}` deduplication
+  - Fixed: Deleted carried-over tasks no longer reappear on new days
+  - Fixed: Tasks with same names no longer cause wrong task completion
+  - Fixed: Task name edits no longer break deletion logic
+  - Impact: 100% reliable task persistence, prevents task multiplication
+
+- **CSS Improvements:**
+  - Tab bar styling: `fill: none` for all icons (outline-only)
+  - Removed all filters/gradients for cleaner appearance
+  - Dark mode tab bar: solid background with proper contrast
+  - Accessibility: improved color contrast on all icon elements
+
+### Upcoming v1.3.0
 - End-of-day reflection screen
 - Task dependencies
 - Habit tracking

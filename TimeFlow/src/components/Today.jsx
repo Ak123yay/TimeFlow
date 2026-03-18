@@ -500,15 +500,15 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
       const todayTasks = loadTasks();
 
       // FIXED: Filter out carried tasks that already exist in today's tasks
-      // Check by originalDate + task name to prevent duplicates
+      // Check by originalDate + originalTaskId to prevent duplicates
       const existingCarriedIds = new Set(
         todayTasks
-          .filter(t => t.carriedOver)
-          .map(t => `${t.originalDate}-${t.name}`)
+          .filter(t => t.carriedOver && t.originalTaskId)
+          .map(t => `${t.originalDate}-${t.originalTaskId}`)
       );
 
       const newUnfinishedTasks = unfinishedTasks.filter(t =>
-        !existingCarriedIds.has(`${t.originalDate}-${t.name}`)
+        !existingCarriedIds.has(`${t.originalDate}-${t.originalTaskId}`)
       );
 
       if (newUnfinishedTasks.length > 0) {
@@ -518,10 +518,10 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
 
       // Mark original tasks as carriedMarked so they never reappear on future days
       unfinishedTasks.forEach(task => {
-        if (!task.originalDate) return;
+        if (!task.originalDate || !task.originalTaskId) return;
         const origTasks = loadTasksForDate(task.originalDate);
         const updated = origTasks.map(t =>
-          t.name === task.name && !t.completed ? { ...t, carriedMarked: true } : t
+          t.id === task.originalTaskId && !t.completed ? { ...t, carriedMarked: true } : t
         );
         saveTasksForDate(task.originalDate, updated);
       });
@@ -557,12 +557,12 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
           const todayTasks = loadTasks();
           const existingCarriedIds = new Set(
             todayTasks
-              .filter(t => t.carriedOver)
-              .map(t => `${t.originalDate}-${t.name}`)
+              .filter(t => t.carriedOver && t.originalTaskId)
+              .map(t => `${t.originalDate}-${t.originalTaskId}`)
           );
 
           const newUnfinishedTasks = unfinishedTasks.filter(t =>
-            !existingCarriedIds.has(`${t.originalDate}-${t.name}`)
+            !existingCarriedIds.has(`${t.originalDate}-${t.originalTaskId}`)
           );
 
           if (newUnfinishedTasks.length > 0) {
@@ -572,10 +572,10 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
 
           // Mark original tasks as carriedMarked so they never reappear on future days
           unfinishedTasks.forEach(task => {
-            if (!task.originalDate) return;
+            if (!task.originalDate || !task.originalTaskId) return;
             const origTasks = loadTasksForDate(task.originalDate);
             const updated = origTasks.map(t =>
-              t.name === task.name && !t.completed ? { ...t, carriedMarked: true } : t
+              t.id === task.originalTaskId && !t.completed ? { ...t, carriedMarked: true } : t
             );
             saveTasksForDate(task.originalDate, updated);
           });
@@ -738,19 +738,23 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
       setShowRescheduleModal(false);
     }
 
-    // FIXED: If deleting a carried task, mark it as completed in original date
-    // so it doesn't keep getting carried over
+    // FIX: If deleting a carried task, mark the ORIGINAL task as completed using ID
+    // This prevents the same task from being carried over again
     const taskToDelete = tasks.find(t => t.id === id);
-    if (taskToDelete && taskToDelete.carriedOver && taskToDelete.originalDate) {
+    if (taskToDelete && taskToDelete.carriedOver && taskToDelete.originalDate && taskToDelete.originalTaskId) {
       const originalTasks = loadTasksForDate(taskToDelete.originalDate);
       const updatedOriginalTasks = originalTasks.map(t =>
-        t.name === taskToDelete.name ? { ...t, completed: true, remaining: 0 } : t
+        t.id === taskToDelete.originalTaskId ? { ...t, completed: true, remaining: 0, carriedMarked: true } : t
       );
       saveTasksForDate(taskToDelete.originalDate, updatedOriginalTasks);
     }
 
     haptic.heavy(); // Haptic feedback on task deletion
     setTasks(prev => prev.filter(t => t.id !== id));
+
+    // IMPORTANT: Immediately save to localStorage to prevent deletion loss on page close
+    const updatedTasks = tasks.filter(t => t.id !== id);
+    saveTasks(updatedTasks);
   };
 
   // ========== OPTIMIZED CALCULATIONS WITH MEMOIZATION ==========
@@ -934,10 +938,10 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
 
     // FIXED: If completing a carried task, mark it as completed in original date
     // so it doesn't keep getting carried over
-    if (completedTask.carriedOver && completedTask.originalDate) {
+    if (completedTask.carriedOver && completedTask.originalDate && completedTask.originalTaskId) {
       const originalTasks = loadTasksForDate(completedTask.originalDate);
       const updatedOriginalTasks = originalTasks.map(t =>
-        t.name === completedTask.name ? { ...t, completed: true, remaining: 0 } : t
+        t.id === completedTask.originalTaskId ? { ...t, completed: true, remaining: 0 } : t
       );
       saveTasksForDate(completedTask.originalDate, updatedOriginalTasks);
     }
@@ -1597,10 +1601,10 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
                                 ));
 
                                 // If uncompleting a carried task, mark it as incomplete in original date
-                                if (task.carriedOver && task.originalDate) {
+                                if (task.carriedOver && task.originalDate && task.originalTaskId) {
                                   const originalTasks = loadTasksForDate(task.originalDate);
                                   const updatedOriginalTasks = originalTasks.map(t =>
-                                    t.name === task.name ? { ...t, completed: false, remaining: t.duration } : t
+                                    t.id === task.originalTaskId ? { ...t, completed: false, remaining: t.duration } : t
                                   );
                                   saveTasksForDate(task.originalDate, updatedOriginalTasks);
                                 }
@@ -1640,10 +1644,10 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
                                 trackRescheduleOption('complete');
 
                                 // If completing a carried task, mark it as completed in original date
-                                if (task.carriedOver && task.originalDate) {
+                                if (task.carriedOver && task.originalDate && task.originalTaskId) {
                                   const originalTasks = loadTasksForDate(task.originalDate);
                                   const updatedOriginalTasks = originalTasks.map(t =>
-                                    t.name === task.name ? { ...t, completed: true, remaining: 0 } : t
+                                    t.id === task.originalTaskId ? { ...t, completed: true, remaining: 0 } : t
                                   );
                                   saveTasksForDate(task.originalDate, updatedOriginalTasks);
                                 }
@@ -1702,10 +1706,10 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
                                 ));
 
                                 // If uncompleting a carried task, mark it as incomplete in original date
-                                if (task.carriedOver && task.originalDate) {
+                                if (task.carriedOver && task.originalDate && task.originalTaskId) {
                                   const originalTasks = loadTasksForDate(task.originalDate);
                                   const updatedOriginalTasks = originalTasks.map(t =>
-                                    t.name === task.name ? { ...t, completed: false, remaining: t.duration } : t
+                                    t.id === task.originalTaskId ? { ...t, completed: false, remaining: t.duration } : t
                                   );
                                   saveTasksForDate(task.originalDate, updatedOriginalTasks);
                                 }
@@ -1745,10 +1749,10 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
                                 trackRescheduleOption('complete');
 
                                 // If completing a carried task, mark it as completed in original date
-                                if (task.carriedOver && task.originalDate) {
+                                if (task.carriedOver && task.originalDate && task.originalTaskId) {
                                   const originalTasks = loadTasksForDate(task.originalDate);
                                   const updatedOriginalTasks = originalTasks.map(t =>
-                                    t.name === task.name ? { ...t, completed: true, remaining: 0 } : t
+                                    t.id === task.originalTaskId ? { ...t, completed: true, remaining: 0 } : t
                                   );
                                   saveTasksForDate(task.originalDate, updatedOriginalTasks);
                                 }

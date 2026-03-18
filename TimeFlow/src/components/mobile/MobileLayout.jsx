@@ -33,23 +33,23 @@ export default function MobileLayout({ children, showBottomNav = true, onNavigat
 
   const tabItems = [
     {
-      icon: <LeafIcon size={24} />,
+      icon: <LeafIcon size={20} />,
       label: 'Today'
     },
     {
-      icon: <CalendarIcon size={24} />,
+      icon: <CalendarIcon size={20} />,
       label: 'Week'
     },
     {
-      icon: <TargetIcon size={24} />,
+      icon: <TargetIcon size={20} />,
       label: 'Pool'
     },
     {
-      icon: <ChartIcon size={24} />,
+      icon: <ChartIcon size={20} />,
       label: 'Stats'
     },
     {
-      icon: <FireIcon size={24} />,
+      icon: <FireIcon size={20} />,
       label: 'Streak'
     }
   ];
@@ -71,7 +71,7 @@ export default function MobileLayout({ children, showBottomNav = true, onNavigat
         overflowY: 'auto',
         overflowX: 'hidden',
         WebkitOverflowScrolling: 'touch',
-        paddingBottom: showBottomNav ? 'calc(70px + env(safe-area-inset-bottom))' : '20px'
+        paddingBottom: showBottomNav ? '70px' : '20px'
       }}>
         <div style={{
           maxWidth: '480px',
@@ -84,25 +84,15 @@ export default function MobileLayout({ children, showBottomNav = true, onNavigat
       </main>
 
       {/* Native iOS SwiftUI Tab Bar */}
-      {showBottomNav && (
-        <div style={{
-          position: 'fixed',
-          bottom: 0,
-          left: 0,
-          right: 0,
-          zIndex: 200
-        }}>
-          <SwiftUITabBar
-            items={tabItems}
-            activeIndex={currentIndex}
-            onChange={(index) => {
-              haptic.light();
-              if (onNavigate) onNavigate(tabIds[index]);
-            }}
-            style="default"
-          />
-        </div>
-      )}
+      {showBottomNav && <SwiftUITabBar
+        items={tabItems}
+        activeIndex={currentIndex}
+        onChange={(index) => {
+          haptic.light();
+          if (onNavigate) onNavigate(tabIds[index]);
+        }}
+        style="default"
+      />}
     </div>
   );
 }

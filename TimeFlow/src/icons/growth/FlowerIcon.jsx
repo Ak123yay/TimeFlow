@@ -1,9 +1,19 @@
 import React from 'react';
 import { useIconContext } from '../IconContext';
 
-const FlowerIcon = React.memo(({ size = 24, fill = null, isDark = null, className = '' }) => {
+/**
+ * FlowerIcon - Flower and bloom (outline only)
+ */
+const FlowerIcon = React.memo(({
+  size = 24,
+  fill = null,
+  isDark = null,
+  className = '',
+}) => {
   const context = useIconContext();
-  const resolvedFill = fill ?? '#52B788';
+  const resolvedIsDark = isDark ?? context?.isDark ?? false;
+  const resolvedFill = fill ?? (resolvedIsDark ? '#888' : '#999');
+
   return (
     <svg
       className={className}
@@ -14,29 +24,20 @@ const FlowerIcon = React.memo(({ size = 24, fill = null, isDark = null, classNam
       xmlns="http://www.w3.org/2000/svg"
       aria-hidden="true"
     >
-      <defs>
-        <linearGradient id="flowerGradient" x1="50%" y1="0%" x2="50%" y2="100%">
-          <stop offset="0%" stopColor={resolvedFill} stopOpacity="0.95" />
-          <stop offset="100%" stopColor={resolvedFill} stopOpacity="0.7" />
-        </linearGradient>
-      </defs>
-      {/* Petals - outer ring */}
-      <circle cx="12" cy="6" r="2.2" fill="url(#flowerGradient)" opacity="0.9" />
-      <circle cx="18" cy="10" r="2.2" fill="url(#flowerGradient)" opacity="0.9" />
-      <circle cx="16" cy="17" r="2.2" fill="url(#flowerGradient)" opacity="0.9" />
-      <circle cx="8" cy="17" r="2.2" fill="url(#flowerGradient)" opacity="0.9" />
-      <circle cx="6" cy="10" r="2.2" fill="url(#flowerGradient)" opacity="0.9" />
+      {/* Petals - circle outlines */}
+      <circle cx="12" cy="6" r="2.2" fill="none" stroke={resolvedFill} strokeWidth="1.1" />
+      <circle cx="18" cy="10" r="2.2" fill="none" stroke={resolvedFill} strokeWidth="1.1" />
+      <circle cx="16" cy="17" r="2.2" fill="none" stroke={resolvedFill} strokeWidth="1.1" />
+      <circle cx="8" cy="17" r="2.2" fill="none" stroke={resolvedFill} strokeWidth="1.1" />
+      <circle cx="6" cy="10" r="2.2" fill="none" stroke={resolvedFill} strokeWidth="1.1" />
       {/* Center stamen */}
-      <circle cx="12" cy="12.5" r="3.2" fill={resolvedFill} opacity="0.85" />
-      {/* Inner center highlight */}
-      <circle cx="12" cy="12.5" r="2" fill={resolvedFill} opacity="0.4" />
+      <circle cx="12" cy="12.5" r="3.2" fill="none" stroke={resolvedFill} strokeWidth="1.3" />
       {/* Stem */}
       <path
         d="M12 15.5Q11 17 12 20.5"
         stroke={resolvedFill}
-        strokeWidth="1.8"
+        strokeWidth="1.1"
         strokeLinecap="round"
-        opacity="0.8"
       />
     </svg>
   );

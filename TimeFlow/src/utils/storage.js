@@ -151,6 +151,7 @@ export const getUnfinishedTasksFromPreviousDays = () => {
         unfinished.push({
           ...task,
           originalDate: date,
+          originalTaskId: task.id,  // FIX: Store original task ID for proper deletion tracking
           carriedOver: true,
           attempts: (task.attempts || 0) + 1 // Track reschedule attempts
         });

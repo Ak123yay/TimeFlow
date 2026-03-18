@@ -1,7 +1,19 @@
 import React from 'react';
+import { useIconContext } from '../IconContext';
 
-const TrashIcon = React.memo(({ size = 24, fill = null, isDark = null, className = '' }) => {
-  const resolvedFill = fill ?? '#FF6B6B';
+/**
+ * TrashIcon - Delete action (outline only)
+ */
+const TrashIcon = React.memo(({
+  size = 24,
+  fill = null,
+  isDark = null,
+  className = '',
+}) => {
+  const context = useIconContext();
+  const resolvedIsDark = isDark ?? context?.isDark ?? false;
+  const resolvedFill = fill ?? (resolvedIsDark ? '#888' : '#999');
+
   return (
     <svg
       className={className}
@@ -12,12 +24,6 @@ const TrashIcon = React.memo(({ size = 24, fill = null, isDark = null, className
       xmlns="http://www.w3.org/2000/svg"
       aria-hidden="true"
     >
-      <defs>
-        <linearGradient id="trashGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor={resolvedFill} stopOpacity="0.85" />
-          <stop offset="100%" stopColor={resolvedFill} stopOpacity="0.65" />
-        </linearGradient>
-      </defs>
       {/* Top line/handle area */}
       <line
         x1="3"
@@ -25,29 +31,28 @@ const TrashIcon = React.memo(({ size = 24, fill = null, isDark = null, className
         x2="21"
         y2="6"
         stroke={resolvedFill}
-        strokeWidth="1.5"
+        strokeWidth="1.3"
         strokeLinecap="round"
       />
-      {/* Handle */}
+      {/* Handle outline */}
       <path
         d="M8 6V4C8 3 8.9 2 10 2H14C15.1 2 16 3 16 4V6"
         stroke={resolvedFill}
-        strokeWidth="1.5"
+        strokeWidth="1.3"
         strokeLinecap="round"
         strokeLinejoin="round"
         fill="none"
       />
-      {/* Trash can body */}
+      {/* Trash can body outline */}
       <rect
         x="4.5"
         y="6.5"
         width="15"
         height="12"
         rx="1"
-        fill="url(#trashGradient)"
+        fill="none"
         stroke={resolvedFill}
-        strokeWidth="1"
-        opacity="0.7"
+        strokeWidth="1.3"
       />
       {/* Vertical lines for detail */}
       <line
@@ -56,8 +61,7 @@ const TrashIcon = React.memo(({ size = 24, fill = null, isDark = null, className
         x2="9"
         y2="17"
         stroke={resolvedFill}
-        strokeWidth="0.8"
-        opacity="0.5"
+        strokeWidth="1"
         strokeLinecap="round"
       />
       <line
@@ -66,8 +70,7 @@ const TrashIcon = React.memo(({ size = 24, fill = null, isDark = null, className
         x2="12"
         y2="17"
         stroke={resolvedFill}
-        strokeWidth="0.8"
-        opacity="0.5"
+        strokeWidth="1"
         strokeLinecap="round"
       />
       <line
@@ -76,8 +79,7 @@ const TrashIcon = React.memo(({ size = 24, fill = null, isDark = null, className
         x2="15"
         y2="17"
         stroke={resolvedFill}
-        strokeWidth="0.8"
-        opacity="0.5"
+        strokeWidth="1"
         strokeLinecap="round"
       />
     </svg>

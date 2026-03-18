@@ -1,7 +1,16 @@
 import React from 'react';
+import { useIconContext } from '../IconContext';
 
-const TargetIcon = React.memo(({ size = 24, fill = null, isDark = null, className = '' }) => {
-  const resolvedFill = fill ?? '#F9C74F';
+const TargetIcon = React.memo(({
+  size = 24,
+  fill = null,
+  isDark = null,
+  className = ''
+}) => {
+  const context = useIconContext();
+  const resolvedIsDark = isDark ?? context?.isDark ?? false;
+  const resolvedFill = fill ?? (resolvedIsDark ? '#888' : '#999');
+
   return (
     <svg
       className={className}
@@ -12,47 +21,37 @@ const TargetIcon = React.memo(({ size = 24, fill = null, isDark = null, classNam
       xmlns="http://www.w3.org/2000/svg"
       aria-hidden="true"
     >
-      <defs>
-        <linearGradient id="targetGradient" x1="50%" y1="0%" x2="50%" y2="100%">
-          <stop offset="0%" stopColor={resolvedFill} stopOpacity="0.9" />
-          <stop offset="100%" stopColor={resolvedFill} stopOpacity="0.6" />
-        </linearGradient>
-      </defs>
-      {/* Outer ring - bold */}
+      {/* Outer ring */}
       <circle
         cx="12"
         cy="12"
-        r="10.5"
-        fill="none"
+        r="10"
         stroke={resolvedFill}
-        strokeWidth="2"
-        opacity="0.85"
+        strokeWidth="1.3"
+        opacity="0.8"
+        strokeLinecap="round"
       />
-      {/* Middle ring - bold */}
+
+      {/* Inner ring */}
       <circle
         cx="12"
         cy="12"
-        r="6.5"
-        fill="none"
+        r="6"
         stroke={resolvedFill}
-        strokeWidth="1.8"
-        opacity="0.9"
+        strokeWidth="1.3"
+        opacity="0.8"
+        strokeLinecap="round"
       />
-      {/* Center dot - bold */}
+
+      {/* Center dot - small circle outline */}
       <circle
         cx="12"
         cy="12"
-        r="3.5"
-        fill="url(#targetGradient)"
-        opacity="0.98"
-      />
-      {/* Inner highlight */}
-      <circle
-        cx="12"
-        cy="12"
-        r="1.8"
-        fill={resolvedFill}
-        opacity="0.6"
+        r="2"
+        stroke={resolvedFill}
+        strokeWidth="1.1"
+        opacity="0.8"
+        strokeLinecap="round"
       />
     </svg>
   );
