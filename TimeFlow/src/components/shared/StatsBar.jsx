@@ -72,8 +72,12 @@ function StatCard({ value, label, severity = 'none' }) {
       style={{
         cursor: "default",
         minWidth: "120px",
-        background: getBackgroundColor(),
-        boxShadow: "0 2px 8px rgba(59,110,59,0.04)"
+        background: getBackgroundColor() || 'rgba(255,255,255,0.6)',
+        backdropFilter: getBackgroundColor() ? 'blur(8px)' : 'blur(8px)',
+        WebkitBackdropFilter: getBackgroundColor() ? 'blur(8px)' : 'blur(8px)',
+        boxShadow: "0 2px 8px rgba(59,110,59,0.1)",
+        border: '1px solid rgba(255,255,255,0.4)',
+        transition: 'all 0.2s'
       }}
       role="listitem"
     >
@@ -108,23 +112,28 @@ export function OverflowWarning({ overflowData, freeTime }) {
       display: "flex",
       alignItems: "center",
       gap: "10px",
-      animation: "fadeIn 0.3s ease-out"
+      animation: "fadeIn 0.3s ease-out",
+      backdropFilter: 'blur(10px)',
+      WebkitBackdropFilter: 'blur(10px)',
+      transition: 'all 0.2s'
     };
 
     if (severity === 'critical') {
       return {
         ...baseStyle,
-        background: "linear-gradient(90deg, rgba(255,200,200,0.15), rgba(255,220,220,0.1))",
-        border: "1px solid rgba(220,38,38,0.3)",
-        color: "#b91c1c"
+        background: "linear-gradient(90deg, rgba(255,200,200,0.2), rgba(255,220,220,0.15))",
+        border: "1.5px solid rgba(220,38,38,0.35)",
+        color: "#b91c1c",
+        boxShadow: '0 4px 12px rgba(220,38,38,0.15)'
       };
     }
 
     return {
       ...baseStyle,
-      background: "linear-gradient(90deg, rgba(255,230,200,0.12), rgba(255,240,220,0.08))",
-      border: "1px solid rgba(234,88,12,0.25)",
-      color: "#ea580c"
+      background: "linear-gradient(90deg, rgba(255,230,200,0.18), rgba(255,240,220,0.12))",
+      border: "1.5px solid rgba(234,88,12,0.3)",
+      color: "#ea580c",
+      boxShadow: '0 4px 12px rgba(234,88,12,0.1)'
     };
   };
 

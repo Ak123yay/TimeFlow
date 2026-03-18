@@ -1,4 +1,7 @@
-/* src/App.css — Nature-themed Setup screen styles */
+/* src/App.css — SwiftUI-style Nature-themed App */
+
+/* Import SwiftUI design system */
+@import url('./styles/swiftui.css');
 
 /* Import mobile-first CSS system */
 @import url('./styles/mobile.css');
@@ -1346,4 +1349,205 @@ input:focus-visible {
     padding: 0 !important;
     max-width: 100% !important;
   }
+}
+
+/* ============================================
+   iOS-STYLE ANIMATIONS & INTERACTIONS
+   Apple Design System animations with spring physics
+   ============================================ */
+
+/* Spring animation for buttons and interactive elements */
+@keyframes iosButtonPress {
+  0% { transform: scale(1); }
+  50% { transform: scale(0.95); }
+  100% { transform: scale(1); }
+}
+
+/* Smooth spring entrance */
+@keyframes iosSpringIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.95) translateY(10px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+/* Sheet slide up animation */
+@keyframes iosSheetSlideUp {
+  0% {
+    opacity: 0;
+    transform: translateY(100%);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Modal fade with scale */
+@keyframes iosModalAppear {
+  0% {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* iOS haptic-style tap feedback */
+@keyframes iosTapFeedback {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(0.92); }
+}
+
+/* Slide in from right */
+@keyframes iosSlideInRight {
+  0% {
+    opacity: 0;
+    transform: translateX(100%);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Slide in from left */
+@keyframes iosSlideInLeft {
+  0% {
+    opacity: 0;
+    transform: translateX(-100%);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Bounce entrance */
+@keyframes iosBounceIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.3);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.05);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* Smooth fade transition */
+@keyframes iosFadeIn {
+  0% { opacity: 0; }
+  100% { opacity: 1; }
+}
+
+/* Pulse effect for notifications */
+@keyframes iosPulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
+/* Subtle scale hover effect */
+@keyframes iosHoverScale {
+  0% { transform: scale(1); }
+  100% { transform: scale(1.02); }
+}
+
+/* Button press with haptic feel */
+button:active {
+  animation: iosTapFeedback 0.2s ease-out;
+}
+
+/* Interactive element hover */
+button:hover {
+  animation: iosHoverScale 0.2s ease-out forwards;
+}
+
+/* Smooth transitions for all interactive elements */
+button, [role="button"], a {
+  transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+/* Sheet slide animation */
+.sheet-modal {
+  animation: iosSheetSlideUp 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* Modal dialog spring animation */
+.modal-dialog {
+  animation: iosModalAppear 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* Spring entry for cards */
+.card-item {
+  animation: iosSpringIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* Notification pulse */
+.notification {
+  animation: iosPulse 2s ease-in-out infinite;
+}
+
+/* iOS gesture feedback - swipe zones */
+[data-swipe] {
+  touch-action: pan-y;
+  user-select: none;
+}
+
+/* Long press indicator */
+[data-long-press] {
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+
+/* Smooth scroll behavior */
+* {
+  scroll-behavior: smooth;
+}
+
+/* Reduce motion for accessibility */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* iOS-style focus state */
+button:focus-visible,
+[role="button"]:focus-visible,
+a:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+/* Haptic feedback visual indicator */
+.haptic-feedback {
+  animation: iosTapFeedback 0.15s ease-out;
+}
+
+/* Spring scale transition */
+.spring-scale {
+  animation: iosSpringIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* Navigation transition */
+.nav-transition {
+  animation: iosSlideInRight 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* Bounce effect for important updates */
+.bounce-update {
+  animation: iosBounceIn 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
 }

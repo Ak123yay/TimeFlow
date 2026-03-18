@@ -102,7 +102,9 @@ export default function BottomSheet({ isOpen, onClose, title, actions }) {
           bottom: 0,
           left: 0,
           right: 0,
-          background: 'linear-gradient(180deg, #FFFFFF 0%, #FAFCFB 100%)',
+          background: isDark ? 'rgba(26,31,26,0.98)' : 'linear-gradient(180deg, #FFFFFF 0%, #FAFCFB 100%)',
+          backdropFilter: 'blur(20px)',
+          WebkitBackdropFilter: 'blur(20px)',
           borderRadius: '24px 24px 0 0',
           padding: '24px 20px',
           paddingBottom: 'calc(24px + env(safe-area-inset-bottom))',
@@ -113,7 +115,8 @@ export default function BottomSheet({ isOpen, onClose, title, actions }) {
           WebkitOverflowScrolling: 'touch',
           touchAction: 'pan-y',
           opacity,
-          y
+          y,
+          border: isDark ? '1px solid rgba(255,255,255,0.08)' : 'none'
         }}
       >
         {/* Drag Handle - Larger touch target */}
@@ -171,14 +174,14 @@ export default function BottomSheet({ isOpen, onClose, title, actions }) {
                 border: 'none',
                 background:
                   action.variant === 'primary'
-                    ? 'var(--gradient-forest)'
+                    ? 'linear-gradient(135deg, #6FAF6F, #3B6E3B)'
                     : action.variant === 'danger'
                     ? 'linear-gradient(135deg, #FF6B6B, #DC2626)'
-                    : 'rgba(111, 175, 111, 0.08)',
+                    : isDark ? 'rgba(255,255,255,0.08)' : 'rgba(111, 175, 111, 0.08)',
                 color:
                   action.variant === 'primary' || action.variant === 'danger'
                     ? 'white'
-                    : 'var(--primary)',
+                    : isDark ? '#A8D4A8' : '#3B6E3B',
                 fontSize: '16px',
                 fontWeight: 600,
                 textAlign: 'left',
@@ -187,7 +190,11 @@ export default function BottomSheet({ isOpen, onClose, title, actions }) {
                 gap: '12px',
                 cursor: 'pointer',
                 touchAction: 'manipulation',
-                WebkitTapHighlightColor: 'transparent'
+                WebkitTapHighlightColor: 'transparent',
+                backdropFilter: action.variant ? 'none' : 'blur(8px)',
+                WebkitBackdropFilter: action.variant ? 'none' : 'blur(8px)',
+                boxShadow: action.variant === 'primary' ? '0 4px 12px rgba(59,110,59,0.3)' : 'none',
+                transition: 'all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1)'
               }}
             >
               {/* Icon */}
@@ -236,15 +243,18 @@ export default function BottomSheet({ isOpen, onClose, title, actions }) {
               padding: '16px',
               minHeight: '56px',
               borderRadius: '14px',
-              border: '1px solid rgba(111, 175, 111, 0.2)',
-              background: 'transparent',
-              color: 'var(--muted)',
+              border: `1px solid ${isDark ? 'rgba(255,255,255,0.12)' : 'rgba(111, 175, 111, 0.2)'}`,
+              background: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(255,255,255,0.6)',
+              backdropFilter: 'blur(8px)',
+              WebkitBackdropFilter: 'blur(8px)',
+              color: isDark ? '#A8D4A8' : '#6B8E6B',
               fontSize: '16px',
               fontWeight: 600,
               width: '100%',
               cursor: 'pointer',
               touchAction: 'manipulation',
-              WebkitTapHighlightColor: 'transparent'
+              WebkitTapHighlightColor: 'transparent',
+              transition: 'all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1)'
             }}
           >
             Cancel

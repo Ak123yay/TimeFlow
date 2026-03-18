@@ -84,10 +84,13 @@ export default function Onboarding({ onComplete }) {
 
             <div style={{
               background: "linear-gradient(135deg, rgba(167,211,167,0.15), rgba(111,175,111,0.08))",
+              backdropFilter: 'blur(10px)',
+              WebkitBackdropFilter: 'blur(10px)',
               borderRadius: "16px",
               padding: "24px",
               marginBottom: "32px",
-              textAlign: "left"
+              textAlign: "left",
+              border: '1px solid rgba(255,255,255,0.4)'
             }}>
               <div style={{ display: "flex", alignItems: "flex-start", gap: "16px", marginBottom: "16px" }}>
                 <ClockIcon size={32} />
@@ -484,23 +487,85 @@ export default function Onboarding({ onComplete }) {
           {step > 0 && (
             <button
               onClick={handlePrevious}
-              className="btn ghost"
-              style={{ flex: 1 }}
+              style={{
+                flex: 1,
+                padding: '14px 20px',
+                borderRadius: '12px',
+                border: '1.5px solid rgba(59,110,59,0.4)',
+                background: 'rgba(255,255,255,0.7)',
+                backdropFilter: 'blur(8px)',
+                WebkitBackdropFilter: 'blur(8px)',
+                color: '#3B6E3B',
+                fontSize: '15px',
+                fontWeight: '600',
+                cursor: 'pointer',
+                transition: 'all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1)',
+                WebkitTapHighlightColor: 'transparent'
+              }}
+              onMouseEnter={(e) => {
+                e.target.style.background = 'rgba(255,255,255,0.9)';
+                e.target.style.boxShadow = '0 4px 12px rgba(0,0,0,0.1)';
+              }}
+              onMouseLeave={(e) => {
+                e.target.style.background = 'rgba(255,255,255,0.7)';
+                e.target.style.boxShadow = 'none';
+              }}
             >
               ← Back
             </button>
           )}
           <button
             onClick={handleSkip}
-            className="btn ghost"
-            style={{ flex: 1 }}
+            style={{
+              flex: 1,
+              padding: '14px 20px',
+              borderRadius: '12px',
+              border: '1.5px solid rgba(59,110,59,0.4)',
+              background: 'rgba(255,255,255,0.7)',
+              backdropFilter: 'blur(8px)',
+              WebkitBackdropFilter: 'blur(8px)',
+              color: '#3B6E3B',
+              fontSize: '15px',
+              fontWeight: '600',
+              cursor: 'pointer',
+              transition: 'all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1)',
+              WebkitTapHighlightColor: 'transparent'
+            }}
+            onMouseEnter={(e) => {
+              e.target.style.background = 'rgba(255,255,255,0.9)';
+              e.target.style.boxShadow = '0 4px 12px rgba(0,0,0,0.1)';
+            }}
+            onMouseLeave={(e) => {
+              e.target.style.background = 'rgba(255,255,255,0.7)';
+              e.target.style.boxShadow = 'none';
+            }}
           >
             Skip
           </button>
           <button
             onClick={handleNext}
-            className="btn primary"
-            style={{ flex: 2 }}
+            style={{
+              flex: 2,
+              padding: '14px 20px',
+              borderRadius: '12px',
+              border: 'none',
+              background: 'linear-gradient(135deg, #6FAF6F, #3B6E3B)',
+              color: '#fff',
+              fontSize: '15px',
+              fontWeight: '600',
+              cursor: 'pointer',
+              transition: 'all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1)',
+              boxShadow: '0 4px 12px rgba(59,110,59,0.3)',
+              WebkitTapHighlightColor: 'transparent'
+            }}
+            onMouseEnter={(e) => {
+              e.target.style.boxShadow = '0 6px 16px rgba(59,110,59,0.4)';
+              e.target.style.transform = 'scale(1.02)';
+            }}
+            onMouseLeave={(e) => {
+              e.target.style.boxShadow = '0 4px 12px rgba(59,110,59,0.3)';
+              e.target.style.transform = 'scale(1)';
+            }}
           >
             {step === 4 ? "Get Started →" : "Next →"}
           </button>

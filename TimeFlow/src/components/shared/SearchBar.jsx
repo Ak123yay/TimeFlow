@@ -25,10 +25,14 @@ export default function SearchBar({ onSearch, placeholder = "Search tasks..." })
       <div style={{
         display: 'flex',
         alignItems: 'center',
-        background: isDark ? '#242B24' : 'rgba(255,255,255,0.82)',
-        borderRadius: '16px',
-        padding: '8px 14px',
-        border: `1px solid ${isDark ? '#4A5A4A' : 'rgba(0,0,0,0.06)'}`
+        background: isDark ? 'rgba(36,43,36,0.8)' : 'rgba(255,255,255,0.88)',
+        backdropFilter: 'blur(12px)',
+        WebkitBackdropFilter: 'blur(12px)',
+        borderRadius: '12px',
+        padding: '10px 14px',
+        border: `1.5px solid ${isDark ? 'rgba(255,255,255,0.08)' : 'rgba(59,110,59,0.1)'}`,
+        boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
+        transition: 'all 0.2s'
       }}>
         <SearchIcon size={14} style={{ marginRight: '8px', opacity: 0.5 }} />
         <input

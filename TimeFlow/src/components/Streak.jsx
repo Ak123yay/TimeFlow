@@ -115,8 +115,15 @@ export default function Streak({ onNavigate }) {
         {/* Stats Grid */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '10px', marginBottom: '14px' }}>
           <div style={{
-            background: isDark ? '#242B24' : '#fff', borderRadius: '18px', padding: '18px',
-            boxShadow: isDark ? '0 1px 3px rgba(0,0,0,0.12), 0 4px 12px rgba(0,0,0,0.16)' : '0 1px 3px rgba(0,0,0,0.04), 0 4px 12px rgba(0,0,0,0.06)', textAlign: 'center'
+            background: isDark ? 'rgba(36,43,36,0.8)' : 'rgba(255,255,255,0.85)',
+            backdropFilter: 'blur(12px)',
+            WebkitBackdropFilter: 'blur(12px)',
+            borderRadius: '18px',
+            padding: '18px',
+            boxShadow: '0 2px 8px rgba(59,110,59,0.1)',
+            border: `1px solid ${isDark ? 'rgba(255,255,255,0.08)' : 'rgba(59,110,59,0.1)'}`,
+            textAlign: 'center',
+            transition: 'all 0.2s'
           }}>
             <div style={{ fontSize: '28px', fontWeight: 800, color: '#3B6E3B' }}>
               {streak.longest}
@@ -125,8 +132,15 @@ export default function Streak({ onNavigate }) {
           </div>
 
           <div style={{
-            background: isDark ? '#242B24' : '#fff', borderRadius: '18px', padding: '18px',
-            boxShadow: isDark ? '0 1px 3px rgba(0,0,0,0.12), 0 4px 12px rgba(0,0,0,0.16)' : '0 1px 3px rgba(0,0,0,0.04), 0 4px 12px rgba(0,0,0,0.06)', textAlign: 'center'
+            background: isDark ? 'rgba(36,43,36,0.8)' : 'rgba(255,255,255,0.85)',
+            backdropFilter: 'blur(12px)',
+            WebkitBackdropFilter: 'blur(12px)',
+            borderRadius: '18px',
+            padding: '18px',
+            boxShadow: '0 2px 8px rgba(59,110,59,0.1)',
+            border: `1px solid ${isDark ? 'rgba(255,255,255,0.08)' : 'rgba(59,110,59,0.1)'}`,
+            textAlign: 'center',
+            transition: 'all 0.2s'
           }}>
             <div style={{ fontSize: '28px', fontWeight: 800, color: '#3B6E3B' }}>
               {reflections.length}
@@ -142,17 +156,19 @@ export default function Streak({ onNavigate }) {
             window.location.hash = '#/insights';
           }}
           style={{
-            background: isDark ? '#242B24' : '#fff',
+            background: isDark ? 'rgba(36,43,36,0.8)' : 'rgba(255,255,255,0.85)',
+            backdropFilter: 'blur(12px)',
+            WebkitBackdropFilter: 'blur(12px)',
             borderRadius: '18px',
             padding: '16px',
             marginBottom: '14px',
-            boxShadow: isDark ? '0 1px 3px rgba(0,0,0,0.12), 0 4px 12px rgba(0,0,0,0.16)' : '0 1px 3px rgba(0,0,0,0.04), 0 4px 12px rgba(0,0,0,0.06)',
+            boxShadow: '0 2px 8px rgba(59,110,59,0.1)',
+            border: `1.5px solid ${isDark ? 'rgba(255,255,255,0.08)' : 'rgba(59,110,59,0.1)'}`,
             display: 'flex',
             alignItems: 'center',
             gap: '12px',
             cursor: 'pointer',
-            transition: 'all 0.25s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
-            border: `1.5px solid ${isDark ? '#6B7B6B' : '#E5E5E5'}`
+            transition: 'all 0.25s cubic-bezier(0.25, 0.46, 0.45, 0.94)'
           }}
         >
           <div style={{
@@ -183,9 +199,18 @@ export default function Streak({ onNavigate }) {
         {/* Next Milestone */}
         {getDaysUntilMilestone() && (
           <div style={{
-            background: isDark ? '#242B24' : '#fff', borderRadius: '16px', padding: '14px',
-            marginBottom: '14px', boxShadow: '0 1px 6px rgba(0,0,0,0.04)',
-            display: 'flex', alignItems: 'center', gap: '12px'
+            background: isDark ? 'rgba(36,43,36,0.8)' : 'rgba(255,255,255,0.85)',
+            backdropFilter: 'blur(12px)',
+            WebkitBackdropFilter: 'blur(12px)',
+            borderRadius: '16px',
+            padding: '14px',
+            marginBottom: '14px',
+            boxShadow: '0 2px 8px rgba(59,110,59,0.1)',
+            border: `1px solid ${isDark ? 'rgba(255,255,255,0.08)' : 'rgba(59,110,59,0.1)'}`,
+            display: 'flex',
+            alignItems: 'center',
+            gap: '12px',
+            transition: 'all 0.2s'
           }}>
             <div style={{
               width: '40px', height: '40px', borderRadius: '50%',

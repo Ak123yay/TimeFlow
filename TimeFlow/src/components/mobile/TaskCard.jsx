@@ -51,12 +51,14 @@ export default function TaskCard({
         borderRadius: '18px',
         background: isActive
           ? (isDark ? 'rgba(59,110,59,0.15)' : 'rgba(59,110,59,0.07)')
-          : (isDark ? '#242B24' : '#fff'),
+          : (isDark ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.9)'),
+        backdropFilter: 'blur(10px)',
+        WebkitBackdropFilter: 'blur(10px)',
         border: isActive
           ? '2px solid #3B6E3B'
           : task.conflicts
             ? '1.5px solid rgba(220,38,38,0.3)'
-            : `1px solid ${isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'} `,
+            : `1px solid ${isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)'} `,
         boxShadow: isActive
           ? '0 2px 12px rgba(59,110,59,0.12)'
           : task.conflicts
@@ -192,7 +194,7 @@ export default function TaskCard({
         </div>
       </div>
 
-      {/* Start Button - circular icon */}
+      {/* Start Button - iOS style circular */}
       {!task.completed && !isActive && onStart && (
         <button
           onClick={(e) => {
@@ -200,20 +202,30 @@ export default function TaskCard({
             onStart(task);
           }}
           style={{
-            width: '36px',
-            height: '36px',
+            width: '44px',
+            height: '44px',
             borderRadius: '50%',
-            background: '#3B6E3B',
+            background: 'linear-gradient(135deg, #6FAF6F, #3B6E3B)',
             color: '#fff',
             border: 'none',
-            fontSize: '13px',
+            fontSize: '16px',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             cursor: 'pointer',
             touchAction: 'manipulation',
             flexShrink: 0,
-            boxShadow: '0 2px 8px rgba(59,110,59,0.3)'
+            boxShadow: '0 4px 12px rgba(59,110,59,0.3)',
+            transition: 'all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1)',
+            fontWeight: 600
+          }}
+          onMouseEnter={(e) => {
+            e.target.style.boxShadow = '0 6px 16px rgba(59,110,59,0.4)';
+            e.target.style.transform = 'scale(1.05)';
+          }}
+          onMouseLeave={(e) => {
+            e.target.style.boxShadow = '0 4px 12px rgba(59,110,59,0.3)';
+            e.target.style.transform = 'scale(1)';
           }}
         >
           ▶
