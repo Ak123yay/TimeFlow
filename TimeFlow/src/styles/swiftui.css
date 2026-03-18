@@ -214,25 +214,22 @@
   bottom: 0;
   left: 0;
   right: 0;
-  height: calc(56px + var(--safe-area-inset-bottom));
-  backdrop-filter: blur(20px) saturate(180%);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
-  background: rgba(255, 255, 255, 0.82);
-  border-top: 0.5px solid rgba(0, 0, 0, 0.08);
+  height: calc(70px + var(--safe-area-inset-bottom));
+  background: rgba(255, 255, 255, 0.95);
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
   display: flex;
   justify-content: space-around;
-  align-items: flex-start;
-  padding-top: 8px;
-  padding-bottom: max(8px, var(--safe-area-inset-bottom));
+  align-items: center;
+  padding-bottom: max(12px, var(--safe-area-inset-bottom));
   z-index: 100;
-  box-shadow: 0 -1px 4px rgba(0, 0, 0, 0.03), 0 -4px 16px rgba(0, 0, 0, 0.04);
+  box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.08);
 }
 
 @media (prefers-color-scheme: dark) {
   .swiftui-tabbar {
-    background: rgba(28, 28, 30, 0.8);
-    border-top: 0.5px solid rgba(255, 255, 255, 0.1);
-    box-shadow: 0 -1px 4px rgba(0, 0, 0, 0.15), 0 -4px 16px rgba(0, 0, 0, 0.3);
+    background: rgba(20, 20, 22, 0.95);
+    border-top: 1px solid rgba(255, 255, 255, 0.12);
+    box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.4);
   }
 }
 
@@ -241,40 +238,59 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 4px;
-  min-width: var(--touch-min);
-  min-height: var(--touch-min);
-  padding: 4px 12px;
-  background: none;
+  gap: 6px;
+  min-width: 60px;
+  min-height: 60px;
+  padding: 8px 12px;
+  background: transparent;
   border: none;
-  color: #8E8E93;
-  font-size: var(--font-xs);
+  color: #999;
+  font-size: 11px;
   font-weight: 500;
   cursor: pointer;
-  transition: color 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.25s ease;
   touch-action: manipulation;
   -webkit-user-select: none;
   user-select: none;
+  border-radius: 12px;
+}
+
+.swiftui-tab-item:hover {
+  color: #666;
 }
 
 .swiftui-tab-item.active {
-  color: var(--primary, #3B6E3B);
+  color: #3B6E3B;
+  font-weight: 600;
+  background: rgba(59, 110, 59, 0.1);
+}
+
+@media (prefers-color-scheme: dark) {
+  .swiftui-tab-item.active {
+    background: rgba(107, 175, 107, 0.15);
+  }
 }
 
 .swiftui-tab-item:active {
-  transform: scale(0.94);
-  transition: transform 0.1s;
+  transform: scale(0.92);
+  transition: transform 0.15s;
 }
 
 /* iOS Tab Icon Style */
 .swiftui-tab-item svg,
 .swiftui-tab-item > div:first-child {
-  width: 24px;
-  height: 24px;
+  width: 28px;
+  height: 28px;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+  transition: all 0.25s ease;
+}
+
+.swiftui-tab-item.active svg,
+.swiftui-tab-item.active > div:first-child {
+  filter: brightness(0.9);
 }
 
 /* SwiftUI Toggle/Switch */
