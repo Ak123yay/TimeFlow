@@ -9,9 +9,11 @@ const WeeklyPool = lazy(() => import("./components/WeeklyPool"));
 const Insights = lazy(() => import("./components/Insights"));
 import Onboarding from "./components/Onboarding";
 import InstallPrompt from "./components/InstallPrompt";
+import { IconProvider } from "./icons/IconContext";
 import { loadAvailability } from "./utils/storage";
 import { getTimePeriod } from "./utils/timeUtils";
 import { useDarkMode } from "./utils/useDarkMode";
+import { WarningIcon } from "./icons";
 import "./App.css";
 
 // Error view used by the class component above (wraps in hook-aware functional comp)
@@ -28,7 +30,7 @@ function ErrorFallback() {
       background: isDark ? '#1A1F1A' : '#F8F8F8',
       color: isDark ? '#E8F0E8' : '#1A1A1A'
     }}>
-      <div style={{ fontSize: '48px', marginBottom: '16px' }}>⚠️</div>
+      <div style={{ fontSize: '48px', marginBottom: '16px' }}><WarningIcon size={48} /></div>
       <div style={{ fontSize: '18px', fontWeight: 600, marginBottom: '8px' }}>
         Something went wrong
       </div>
@@ -185,79 +187,81 @@ export default function App() {
   };
 
   return (
-    <div className={`App app-${timePeriod}`}>
-      {/* Floating leaves background */}
-      <div className="floating-leaves" aria-hidden="true">
-        {[...Array(5)].map((_, i) => (
-          <div
-            key={i}
-            className="floating-leaf"
-            style={{
-              left: `${20 + i * 20}%`,
-              animationDelay: `${i * 4}s`,
-              '--drift': `${(Math.random() - 0.5) * 200}px`
-            }}
-          >
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <ellipse cx="12" cy="12" rx="8" ry="4" transform="rotate(-45 12 12)" fill="#6FAF6F" opacity="0.3" />
-              <line x1="6" y1="18" x2="18" y2="6" stroke="#2E6B2E" strokeWidth="1" strokeLinecap="round" opacity="0.3" />
-            </svg>
-          </div>
-        ))}
-      </div>
+    <IconProvider>
+      <div className={`App app-${timePeriod}`}>
+        {/* Floating leaves background */}
+        <div className="floating-leaves" aria-hidden="true">
+          {[...Array(5)].map((_, i) => (
+            <div
+              key={i}
+              className="floating-leaf"
+              style={{
+                left: `${20 + i * 20}%`,
+                animationDelay: `${i * 4}s`,
+                '--drift': `${(Math.random() - 0.5) * 200}px`
+              }}
+            >
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <ellipse cx="12" cy="12" rx="8" ry="4" transform="rotate(-45 12 12)" fill="#6FAF6F" opacity="0.3" />
+                <line x1="6" y1="18" x2="18" y2="6" stroke="#2E6B2E" strokeWidth="1" strokeLinecap="round" opacity="0.3" />
+              </svg>
+            </div>
+          ))}
+        </div>
 
-      {!onboardingDone ? (
-        <Onboarding onComplete={() => setOnboardingDone(true)} />
-      ) : !setupDone ? (
-        <Setup onDone={() => setSetupDone(true)} />
-      ) : currentView === 'reflection' ? (
-        <ErrorBoundary>
-          <DayReflection
-            todayDate={new Date().toISOString().slice(0, 10)}
-            onComplete={showToday}
-          />
-        </ErrorBoundary>
-      ) : currentView === 'week' ? (
-        <ErrorBoundary>
-          <Suspense fallback={<LoadingFallback />}>
-            <WeeklyView onBackToToday={showToday} />
-          </Suspense>
-        </ErrorBoundary>
-      ) : currentView === 'pool' ? (
-        <ErrorBoundary>
-          <Suspense fallback={<LoadingFallback />}>
-            <WeeklyPool onNavigateToToday={showToday} />
-          </Suspense>
-        </ErrorBoundary>
-      ) : currentView === 'streak' ? (
-        <ErrorBoundary>
-          <Streak onNavigate={(view) => {
-            if (view === 'today') showToday();
-            else if (view === 'week') showWeek();
-            else if (view === 'pool') showPool();
-            else if (view === 'stats') showReflection();
-          }} />
-        </ErrorBoundary>
-      ) : currentView === 'insights' ? (
-        <ErrorBoundary>
-          <Suspense fallback={<LoadingFallback />}>
-            <Insights onNavigate={(view) => {
+        {!onboardingDone ? (
+          <Onboarding onComplete={() => setOnboardingDone(true)} />
+        ) : !setupDone ? (
+          <Setup onDone={() => setSetupDone(true)} />
+        ) : currentView === 'reflection' ? (
+          <ErrorBoundary>
+            <DayReflection
+              todayDate={new Date().toISOString().slice(0, 10)}
+              onComplete={showToday}
+            />
+          </ErrorBoundary>
+        ) : currentView === 'week' ? (
+          <ErrorBoundary>
+            <Suspense fallback={<LoadingFallback />}>
+              <WeeklyView onBackToToday={showToday} />
+            </Suspense>
+          </ErrorBoundary>
+        ) : currentView === 'pool' ? (
+          <ErrorBoundary>
+            <Suspense fallback={<LoadingFallback />}>
+              <WeeklyPool onNavigateToToday={showToday} />
+            </Suspense>
+          </ErrorBoundary>
+        ) : currentView === 'streak' ? (
+          <ErrorBoundary>
+            <Streak onNavigate={(view) => {
               if (view === 'today') showToday();
               else if (view === 'week') showWeek();
               else if (view === 'pool') showPool();
-              else if (view === 'streak') showStreak();
               else if (view === 'stats') showReflection();
             }} />
-          </Suspense>
-        </ErrorBoundary>
-      ) : (
-        <ErrorBoundary>
-          <Today onEndDay={showReflection} onShowWeek={showWeek} onShowPool={showPool} />
-        </ErrorBoundary>
-      )}
+          </ErrorBoundary>
+        ) : currentView === 'insights' ? (
+          <ErrorBoundary>
+            <Suspense fallback={<LoadingFallback />}>
+              <Insights onNavigate={(view) => {
+                if (view === 'today') showToday();
+                else if (view === 'week') showWeek();
+                else if (view === 'pool') showPool();
+                else if (view === 'streak') showStreak();
+                else if (view === 'stats') showReflection();
+              }} />
+            </Suspense>
+          </ErrorBoundary>
+        ) : (
+          <ErrorBoundary>
+            <Today onEndDay={showReflection} onShowWeek={showWeek} onShowPool={showPool} />
+          </ErrorBoundary>
+        )}
 
-      {/* PWA Install Prompt */}
-      {onboardingDone && setupDone && <InstallPrompt />}
-    </div>
+        {/* PWA Install Prompt */}
+        {onboardingDone && setupDone && <InstallPrompt />}
+      </div>
+    </IconProvider>
   );
 }

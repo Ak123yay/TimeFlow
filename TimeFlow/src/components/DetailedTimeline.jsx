@@ -2,6 +2,11 @@ import React, { useState, useEffect } from "react";
 import { minutesToHHMM } from "../utils/timeUtils";
 import { throttle } from "../utils/timeUtils";
 import "../App.css";
+import {
+  CheckmarkIcon,
+  LeafFallIcon,
+  RepeatIcon,
+} from '../icons';
 
 export default function DetailedTimeline({ tasks = [], availability = { start: "09:00", end: "17:00" } }) {
   const [windowWidth, setWindowWidth] = useState(typeof window !== 'undefined' ? window.innerWidth : 1024);
@@ -95,11 +100,11 @@ export default function DetailedTimeline({ tasks = [], availability = { start: "
             <div style={{ fontSize: "11px", opacity: 0.9 }}>
               {taskStart} - {taskEnd} ({task.duration} min)
             </div>
-            {task.completed && <div style={{ fontSize: "10px", marginTop: "2px" }}>✓ Completed</div>}
-            {task.carriedOver && <div style={{ fontSize: "10px", marginTop: "2px" }}>🍂 Carried over</div>}
+            {task.completed && <div style={{ fontSize: "10px", marginTop: "2px" }}><CheckmarkIcon size={10} style={{ display: 'inline', marginRight: '3px', verticalAlign: 'middle' }} /> Completed</div>}
+            {task.carriedOver && <div style={{ fontSize: "10px", marginTop: "2px" }}><LeafFallIcon size={10} style={{ display: 'inline', marginRight: '3px', verticalAlign: 'middle' }} /> Carried over</div>}
             {task.attempts > 0 && (
               <div style={{ fontSize: "10px", marginTop: "2px" }}>
-                🔁 Rescheduled {task.attempts}x
+                <RepeatIcon size={10} style={{ display: 'inline', marginRight: '3px', verticalAlign: 'middle' }} /> Rescheduled {task.attempts}x
               </div>
             )}
           </div>

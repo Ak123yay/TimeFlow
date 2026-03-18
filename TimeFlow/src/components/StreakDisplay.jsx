@@ -1,4 +1,9 @@
 import { getPlantEmoji, getStreakMessage, getPlantColors } from '../utils/streaks';
+import {
+  TrophyIcon,
+  CalendarIcon,
+  LiferingIcon,
+} from '../icons';
 
 export default function StreakDisplay({ streak, compact = false }) {
   if (!streak || streak.current === 0) {
@@ -142,7 +147,7 @@ export default function StreakDisplay({ streak, compact = false }) {
                 alignItems: 'center',
                 gap: '3px'
               }}>
-                <span style={{ fontSize: '14px' }}>🏆</span>
+                <span style={{ fontSize: '14px' }}><TrophyIcon size={14} /></span>
                 <span>Best: {streak.longest}</span>
               </div>
             )}
@@ -151,7 +156,7 @@ export default function StreakDisplay({ streak, compact = false }) {
               alignItems: 'center',
               gap: '3px'
             }}>
-              <span style={{ fontSize: '14px' }}>📅</span>
+              <span style={{ fontSize: '14px' }}><CalendarIcon size={14} /></span>
               <span>Total: {streak.totalActiveDays}</span>
             </div>
           </div>
@@ -170,7 +175,7 @@ export default function StreakDisplay({ streak, compact = false }) {
             alignItems: 'center',
             gap: '6px'
           }}>
-            <span>🛟</span>
+            <span><LiferingIcon size={16} /></span>
             <span>Grace used this week • Resets Monday</span>
           </div>
         )}
@@ -184,7 +189,7 @@ export default function StreakDisplay({ streak, compact = false }) {
             alignItems: 'center',
             gap: '6px'
           }}>
-            <span>🛟</span>
+            <span><LiferingIcon size={16} /></span>
             <span>1 grace day available</span>
           </div>
         )}

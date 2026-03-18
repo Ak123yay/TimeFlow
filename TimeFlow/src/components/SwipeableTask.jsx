@@ -1,5 +1,9 @@
 import { useState, useRef } from 'react';
 import { haptic } from '../utils/haptics';
+import {
+  CheckmarkIcon,
+  TrashIcon,
+} from '../icons';
 
 /**
  * SwipeableTask - iOS-style swipe-to-reveal actions
@@ -161,7 +165,7 @@ export default function SwipeableTask({ task, onComplete, onDelete, children }) 
             padding: '16px 8px'
           }}
         >
-          <span>✓</span>
+          <span><CheckmarkIcon size={16} /></span>
           <span style={{ fontSize: '11px', fontWeight: 600, letterSpacing: '0.3px' }}>
             Done
           </span>
@@ -186,7 +190,7 @@ export default function SwipeableTask({ task, onComplete, onDelete, children }) 
             padding: '16px 8px'
           }}
         >
-          <span>🗑️</span>
+          <span><TrashIcon size={16} /></span>
           <span style={{ fontSize: '11px', fontWeight: 600, letterSpacing: '0.3px' }}>
             Delete
           </span>

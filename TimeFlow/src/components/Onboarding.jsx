@@ -1,14 +1,22 @@
 import { useState, useEffect } from "react";
 import "../App.css";
-
-function LeafIcon({ size = 24, fill = "#6FAF6F" }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <ellipse cx="12" cy="12" rx="8" ry="4" transform="rotate(-45 12 12)" fill={fill} opacity="0.9" />
-      <line x1="6" y1="18" x2="18" y2="6" stroke="#2E6B2E" strokeWidth="1" strokeLinecap="round" />
-    </svg>
-  );
-}
+import {
+  LeafIcon,
+  ClockIcon,
+  TargetIcon,
+  MoonIcon,
+  RefreshIcon,
+  WaterIcon,
+  ChartIcon,
+  SproutIcon,
+  WarningIcon,
+  AirplaneIcon,
+  PhoneIcon,
+  AppleIcon,
+  ComputerIcon,
+  BulbIcon,
+  AdminIcon,
+} from "../icons";
 
 function ProgressDots({ currentStep, totalSteps }) {
   return (
@@ -67,7 +75,7 @@ export default function Onboarding({ onComplete }) {
 
         {step === 0 && (
           <div style={{ textAlign: "center" }}>
-            <div style={{ fontSize: "72px", marginBottom: "16px" }}>🌿</div>
+            <div style={{ fontSize: "72px", marginBottom: "16px" }}><LeafIcon size={72} /></div>
             <h1 className="title" style={{ fontSize: "32px", marginBottom: "16px" }}>Welcome to TimeFlow</h1>
             <p className="muted" style={{ fontSize: "17px", lineHeight: "1.7", marginBottom: "32px" }}>
               Your calm, nature-inspired companion for<br />
@@ -82,7 +90,7 @@ export default function Onboarding({ onComplete }) {
               textAlign: "left"
             }}>
               <div style={{ display: "flex", alignItems: "flex-start", gap: "16px", marginBottom: "16px" }}>
-                <div style={{ fontSize: "32px" }}>⏰</div>
+                <ClockIcon size={32} />
                 <div>
                   <div style={{ fontSize: "16px", fontWeight: "700", color: "#3B6E3B", marginBottom: "4px" }}>
                     Time Block Planning
@@ -94,7 +102,7 @@ export default function Onboarding({ onComplete }) {
               </div>
 
               <div style={{ display: "flex", alignItems: "flex-start", gap: "16px", marginBottom: "16px" }}>
-                <div style={{ fontSize: "32px" }}>🎯</div>
+                <TargetIcon size={32} />
                 <div>
                   <div style={{ fontSize: "16px", fontWeight: "700", color: "#3B6E3B", marginBottom: "4px" }}>
                     Focus Timer
@@ -106,7 +114,7 @@ export default function Onboarding({ onComplete }) {
               </div>
 
               <div style={{ display: "flex", alignItems: "flex-start", gap: "16px" }}>
-                <div style={{ fontSize: "32px" }}>🌙</div>
+                <MoonIcon size={32} />
                 <div>
                   <div style={{ fontSize: "16px", fontWeight: "700", color: "#3B6E3B", marginBottom: "4px" }}>
                     Daily Reflection
@@ -236,7 +244,7 @@ export default function Onboarding({ onComplete }) {
         {step === 2 && (
           <div>
             <h1 className="title" style={{ fontSize: "24px", marginBottom: "20px", textAlign: "center" }}>
-              What Makes TimeFlow Special 🌿
+              What Makes TimeFlow Special
             </h1>
 
             <div style={{
@@ -248,7 +256,7 @@ export default function Onboarding({ onComplete }) {
               padding: "4px"
             }}>
               <div style={{ display: "flex", gap: "10px", padding: "12px", background: "rgba(167,211,167,0.08)", borderRadius: "10px" }}>
-                <span style={{ fontSize: "18px", flexShrink: 0 }}>🔄</span>
+                <RefreshIcon size={18} />
                 <div>
                   <div style={{ fontSize: "13px", fontWeight: "600", color: "#3B6E3B", marginBottom: "4px" }}>
                     Adaptive Rescheduling
@@ -260,7 +268,7 @@ export default function Onboarding({ onComplete }) {
               </div>
 
               <div style={{ display: "flex", gap: "10px", padding: "12px", background: "rgba(167,211,167,0.08)", borderRadius: "10px" }}>
-                <span style={{ fontSize: "18px", flexShrink: 0 }}>🌊</span>
+                <WaterIcon size={18} />
                 <div>
                   <div style={{ fontSize: "13px", fontWeight: "600", color: "#3B6E3B", marginBottom: "4px" }}>
                     Weekly Pool
@@ -272,7 +280,7 @@ export default function Onboarding({ onComplete }) {
               </div>
 
               <div style={{ display: "flex", gap: "10px", padding: "12px", background: "rgba(167,211,167,0.08)", borderRadius: "10px" }}>
-                <span style={{ fontSize: "18px", flexShrink: 0 }}>📝</span>
+                <AdminIcon size={18} />
                 <div>
                   <div style={{ fontSize: "13px", fontWeight: "600", color: "#3B6E3B", marginBottom: "4px" }}>
                     Daily Reflections
@@ -284,7 +292,7 @@ export default function Onboarding({ onComplete }) {
               </div>
 
               <div style={{ display: "flex", gap: "10px", padding: "12px", background: "rgba(167,211,167,0.08)", borderRadius: "10px" }}>
-                <span style={{ fontSize: "18px", flexShrink: 0 }}>🎯</span>
+                <TargetIcon size={18} />
                 <div>
                   <div style={{ fontSize: "13px", fontWeight: "600", color: "#3B6E3B", marginBottom: "4px" }}>
                     Focus Mode
@@ -296,7 +304,7 @@ export default function Onboarding({ onComplete }) {
               </div>
 
               <div style={{ display: "flex", gap: "10px", padding: "12px", background: "rgba(167,211,167,0.08)", borderRadius: "10px" }}>
-                <span style={{ fontSize: "18px", flexShrink: 0 }}>🌿</span>
+                <LeafIcon size={18} />
                 <div>
                   <div style={{ fontSize: "13px", fontWeight: "600", color: "#3B6E3B", marginBottom: "4px" }}>
                     Calm Interface
@@ -308,7 +316,7 @@ export default function Onboarding({ onComplete }) {
               </div>
 
               <div style={{ display: "flex", gap: "10px", padding: "12px", background: "rgba(167,211,167,0.08)", borderRadius: "10px" }}>
-                <span style={{ fontSize: "18px", flexShrink: 0 }}>📊</span>
+                <ChartIcon size={18} />
                 <div>
                   <div style={{ fontSize: "13px", fontWeight: "600", color: "#3B6E3B", marginBottom: "4px" }}>
                     Weekly Overview
@@ -320,7 +328,7 @@ export default function Onboarding({ onComplete }) {
               </div>
 
               <div style={{ display: "flex", gap: "10px", padding: "12px", background: "rgba(167,211,167,0.08)", borderRadius: "10px" }}>
-                <span style={{ fontSize: "18px", flexShrink: 0 }}>🌱</span>
+                <SproutIcon size={18} />
                 <div>
                   <div style={{ fontSize: "13px", fontWeight: "600", color: "#3B6E3B", marginBottom: "4px" }}>
                     Gentle Streaks
@@ -332,7 +340,7 @@ export default function Onboarding({ onComplete }) {
               </div>
 
               <div style={{ display: "flex", gap: "10px", padding: "12px", background: "rgba(167,211,167,0.08)", borderRadius: "10px" }}>
-                <span style={{ fontSize: "18px", flexShrink: 0 }}>⚠️</span>
+                <WarningIcon size={18} />
                 <div>
                   <div style={{ fontSize: "13px", fontWeight: "600", color: "#3B6E3B", marginBottom: "4px" }}>
                     Task Health Check
@@ -344,7 +352,7 @@ export default function Onboarding({ onComplete }) {
               </div>
 
               <div style={{ display: "flex", gap: "10px", padding: "12px", background: "rgba(167,211,167,0.08)", borderRadius: "10px" }}>
-                <span style={{ fontSize: "18px", flexShrink: 0 }}>✈️</span>
+                <AirplaneIcon size={18} />
                 <div>
                   <div style={{ fontSize: "13px", fontWeight: "600", color: "#3B6E3B", marginBottom: "4px" }}>
                     Works Offline
@@ -356,7 +364,7 @@ export default function Onboarding({ onComplete }) {
               </div>
 
               <div style={{ display: "flex", gap: "10px", padding: "12px", background: "rgba(167,211,167,0.08)", borderRadius: "10px" }}>
-                <span style={{ fontSize: "18px", flexShrink: 0 }}>🔄</span>
+                <RefreshIcon size={18} />
                 <div>
                   <div style={{ fontSize: "13px", fontWeight: "600", color: "#3B6E3B", marginBottom: "4px" }}>
                     Auto-Updates
@@ -373,7 +381,7 @@ export default function Onboarding({ onComplete }) {
         {step === 3 && (
           <div>
             <h1 className="title" style={{ fontSize: "24px", marginBottom: "16px", textAlign: "center" }}>
-              📱 Install TimeFlow as an App
+              Install TimeFlow as an App
             </h1>
             <p style={{ fontSize: "14px", color: "#6B8E6B", marginBottom: "20px", textAlign: "center", lineHeight: "1.5" }}>
               Get the full app experience with offline support and instant loading
@@ -391,7 +399,7 @@ export default function Onboarding({ onComplete }) {
                 border: "1px solid rgba(59,110,59,0.15)"
               }}>
                 <div style={{ fontSize: "13px", fontWeight: "600", color: "#3B6E3B", marginBottom: "6px" }}>
-                  📱 Android (Chrome/Edge)
+                  Android (Chrome/Edge)
                 </div>
                 <div style={{ fontSize: "12px", color: "#6B8E6B", lineHeight: "1.4" }}>
                   Look for the "Install" banner at the bottom, or tap the menu (⋮) → "Install app"
@@ -405,7 +413,7 @@ export default function Onboarding({ onComplete }) {
                 border: "1px solid rgba(59,110,59,0.15)"
               }}>
                 <div style={{ fontSize: "13px", fontWeight: "600", color: "#3B6E3B", marginBottom: "6px" }}>
-                  🍎 iOS (Safari)
+                  iOS (Safari)
                 </div>
                 <div style={{ fontSize: "12px", color: "#6B8E6B", lineHeight: "1.4" }}>
                   Tap the Share button <span style={{ fontSize: "14px" }}>⎙</span> → "Add to Home Screen"
@@ -419,7 +427,7 @@ export default function Onboarding({ onComplete }) {
                 border: "1px solid rgba(59,110,59,0.15)"
               }}>
                 <div style={{ fontSize: "13px", fontWeight: "600", color: "#3B6E3B", marginBottom: "6px" }}>
-                  💻 Desktop (Chrome/Edge/Brave)
+                  Desktop (Chrome/Edge/Brave)
                 </div>
                 <div style={{ fontSize: "12px", color: "#6B8E6B", lineHeight: "1.4" }}>
                   Look for the install icon <span style={{ fontSize: "14px" }}>⊕</span> in the address bar
@@ -437,7 +445,7 @@ export default function Onboarding({ onComplete }) {
               textAlign: "center",
               fontStyle: "italic"
             }}>
-              💡 You can always install later from your browser menu
+              You can always install later from your browser menu
             </div>
           </div>
         )}
@@ -460,7 +468,7 @@ export default function Onboarding({ onComplete }) {
               marginBottom: "24px"
             }}>
               <div style={{ fontSize: "14px", fontWeight: "700", color: "#3B6E3B", marginBottom: "12px" }}>
-                💡 Pro Tips
+                Pro Tips
               </div>
               <ul style={{ textAlign: "left", margin: 0, paddingLeft: "24px", color: "#6B8E6B", fontSize: "14px", lineHeight: "1.8" }}>
                 <li>Press <kbd style={{ padding: "2px 6px", background: "#e0f0e8", borderRadius: "4px", fontSize: "13px", fontWeight: "600" }}>F</kbd> to toggle Focus Mode</li>

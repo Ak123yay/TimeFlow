@@ -1,4 +1,5 @@
 import { motion } from 'framer-motion';
+import { LeafDriftIcon } from '../../../icons';
 
 /**
  * LeafSwipe - Flying leaf particle animation
@@ -86,7 +87,7 @@ export default function LeafSwipe({ origin = 'center', count = 8, onComplete }) 
             willChange: 'transform, opacity'
           }}
         >
-          🍃
+          <LeafDriftIcon size={20} />
         </motion.div>
       ))}
     </div>

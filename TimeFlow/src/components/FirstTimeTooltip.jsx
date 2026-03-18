@@ -63,7 +63,7 @@ export default function FirstTimeTooltip({ title, description, icon, onDismiss }
               touchAction: 'manipulation'
             }}
           >
-            Got it ✓
+            Got it
           </button>
         </div>
       </div>

@@ -1,4 +1,5 @@
 import DialogBase from "./DialogBase";
+import { WarningIcon } from "../../icons";
 import "../../App.css";
 
 export default function DeleteConfirmDialog({ isOpen, onClose, task, onConfirm }) {
@@ -10,7 +11,7 @@ export default function DeleteConfirmDialog({ isOpen, onClose, task, onConfirm }
   return (
     <DialogBase isOpen={isOpen} onClose={onClose} maxWidth="420px">
       <div style={{ textAlign: "center" }}>
-        <div style={{ fontSize: "48px", marginBottom: "16px" }}>⚠️</div>
+        <div style={{ fontSize: "48px", marginBottom: "16px" }}><WarningIcon size={48} /></div>
         <h2 style={{
           fontSize: "24px",
           fontWeight: "900",

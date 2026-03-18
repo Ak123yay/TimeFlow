@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useDarkMode } from '../../utils/useDarkMode';
+import { PauseIcon, PlayIcon, CloseIcon } from '../../icons';
 
 /**
  * TaskTimer - Clean mobile-friendly active task timer
@@ -46,7 +47,7 @@ export default function TaskTimer({
         alignItems: 'center',
         gap: '6px'
       }}>
-        Now Working On {isPaused && <span style={{ color: '#D97706' }}>⏸ Paused</span>}
+        Now Working On {isPaused && <span style={{ color: '#D97706' }}><PauseIcon size={14} style={{ display: 'inline', marginRight: '4px', verticalAlign: 'middle' }} /> Paused</span>}
       </div>
 
       {/* Task Name */}
@@ -125,7 +126,7 @@ export default function TaskTimer({
             gap: '6px'
           }}
         >
-          {isPaused ? '▶️ Resume' : '⏸ Pause'}
+          {isPaused ? <><PlayIcon size={13} style={{ display: 'inline', marginRight: '4px', verticalAlign: 'middle' }} /> Resume</> : <><PauseIcon size={13} style={{ display: 'inline', marginRight: '4px', verticalAlign: 'middle' }} /> Pause</>}
         </button>
 
         {/* Finish Early button */}
@@ -166,7 +167,7 @@ export default function TaskTimer({
             flexShrink: 0
           }}
         >
-          ✕
+          <CloseIcon size={20} />
         </button>
       </div>
     </div>

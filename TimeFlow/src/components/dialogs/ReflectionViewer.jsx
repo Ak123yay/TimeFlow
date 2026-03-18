@@ -1,4 +1,11 @@
 import "../../App.css";
+import {
+  HappyIcon,
+  ContentIcon,
+  NeutralIcon,
+  SadIcon,
+  AdminIcon,
+} from '../../icons';
 
 export default function ReflectionViewer({ date, reflection, onClose }) {
   if (!reflection) return null;
@@ -118,10 +125,10 @@ export default function ReflectionViewer({ date, reflection, onClose }) {
           </div>
           <div style={{ textAlign: "center" }}>
             <div style={{ fontSize: 24, fontWeight: 900, color: "#3B6E3B" }}>
-              {reflection.mood === 'great' ? '😊' :
-               reflection.mood === 'good' ? '🙂' :
-               reflection.mood === 'okay' ? '😐' :
-               reflection.mood === 'rough' ? '😔' : '–'}
+              {reflection.mood === 'great' ? <HappyIcon size={24} /> :
+               reflection.mood === 'good' ? <ContentIcon size={24} /> :
+               reflection.mood === 'okay' ? <NeutralIcon size={24} /> :
+               reflection.mood === 'rough' ? <SadIcon size={24} /> : '–'}
             </div>
             <div style={{ fontSize: 12, color: "#6B8E6B", marginTop: 4, textTransform: "capitalize" }}>
               {reflection.mood || 'No mood'}
@@ -146,7 +153,7 @@ export default function ReflectionViewer({ date, reflection, onClose }) {
               alignItems: "center",
               gap: 8
             }}>
-              <span>📝</span>
+              <span><AdminIcon size={16} /></span>
               <span>What went well today</span>
             </div>
             <div style={{

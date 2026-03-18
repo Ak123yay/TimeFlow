@@ -8,6 +8,20 @@ import {
   getEstimationBias,
   getRescheduleOptionFrequencies,
 } from '../utils/analytics';
+import {
+  ChartIcon,
+  TargetIcon,
+  BoltIcon,
+  CheckmarkIcon,
+  StopwatchIcon,
+  ClockIcon,
+  CalendarIcon,
+  WaterIcon,
+  HammerIcon,
+  TargetIcon as TargetIcon2,
+  BulbIcon,
+  RefreshIcon,
+} from '../icons';
 
 // Pure helpers — defined outside component so they aren't recreated on every render
 function calculateTrend(values) {
@@ -148,7 +162,7 @@ export default function Insights({ onNavigate }) {
         {/* Header */}
         <div style={{ marginBottom: '16px', textAlign: 'center' }}>
           <h1 style={{ fontSize: '20px', fontWeight: 800, color: isDark ? '#E8F0E8' : '#1A1A1A', margin: '0 0 4px' }}>
-            Insights 📊
+            Insights
           </h1>
           <p style={{ fontSize: '12px', color: isDark ? '#9CA59C' : '#8E8E93', margin: 0 }}>
             Learn from your task patterns
@@ -206,7 +220,7 @@ export default function Insights({ onNavigate }) {
             boxShadow: isDark ? '0 1px 3px rgba(0,0,0,0.12), 0 4px 12px rgba(0,0,0,0.16)' : '0 1px 3px rgba(0,0,0,0.04), 0 4px 12px rgba(0,0,0,0.06)'
           }}>
             <h3 style={{ fontSize: '14px', fontWeight: 700, color: isDark ? '#E8F0E8' : '#1A1A1A', margin: '0 0 12px' }}>
-              Estimation Bias 🎯
+              Estimation Bias
             </h3>
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '10px' }}>
               <div style={{
@@ -240,7 +254,7 @@ export default function Insights({ onNavigate }) {
             boxShadow: isDark ? '0 1px 3px rgba(0,0,0,0.12), 0 4px 12px rgba(0,0,0,0.16)' : '0 1px 3px rgba(0,0,0,0.04), 0 4px 12px rgba(0,0,0,0.06)'
           }}>
             <h3 style={{ fontSize: '14px', fontWeight: 700, color: isDark ? '#E8F0E8' : '#1A1A1A', margin: '0 0 12px' }}>
-              Your Best Hours ⚡
+              Your Best Hours
             </h3>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
               {energyPattern.map((slot, idx) => (
@@ -278,7 +292,7 @@ export default function Insights({ onNavigate }) {
               ))}
             </div>
             <div style={{ marginTop: '12px', fontSize: '11px', color: isDark ? '#9CA59C' : '#6B8E6B', fontStyle: 'italic' }}>
-              💡 Schedule important tasks during these hours for best results
+              Schedule important tasks during these hours for best results
             </div>
           </div>
         )}
@@ -286,13 +300,13 @@ export default function Insights({ onNavigate }) {
         {/* Reschedule Habits Card */}
         {Object.keys(rescheduleHabits).length > 0 && (() => {
           const LABELS = {
-            complete: { icon: '✓', label: 'Completed' },
-            continue: { icon: '⏱️', label: 'Kept going' },
-            later_today: { icon: '🕐', label: 'Later today' },
-            tomorrow: { icon: '📅', label: 'Tomorrow' },
-            back_to_pool: { icon: '🌊', label: 'Back to pool' },
-            break_task: { icon: '🔨', label: 'Broke it up' },
-            pick_time: { icon: '🎯', label: 'Picked a time' },
+            complete: { icon: () => <CheckmarkIcon size={14} />, label: 'Completed' },
+            continue: { icon: () => <StopwatchIcon size={14} />, label: 'Kept going' },
+            later_today: { icon: () => <ClockIcon size={14} />, label: 'Later today' },
+            tomorrow: { icon: () => <CalendarIcon size={14} />, label: 'Tomorrow' },
+            back_to_pool: { icon: () => <WaterIcon size={14} />, label: 'Back to pool' },
+            break_task: { icon: () => <HammerIcon size={14} />, label: 'Broke it up' },
+            pick_time: { icon: () => <TargetIcon size={14} />, label: 'Picked a time' },
           };
           const entries = Object.entries(rescheduleHabits).sort(([, a], [, b]) => b - a);
           const total = entries.reduce((s, [, v]) => s + v, 0);
@@ -305,7 +319,7 @@ export default function Insights({ onNavigate }) {
               boxShadow: isDark ? '0 1px 6px rgba(0,0,0,0.3)' : '0 1px 6px rgba(0,0,0,0.04)'
             }}>
               <h3 style={{ fontSize: '14px', fontWeight: 700, color: isDark ? '#E8F0E8' : '#1A1A1A', margin: '0 0 12px' }}>
-                Reschedule Habits 🔁
+                Reschedule Habits
               </h3>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                 {entries.map(([key, count]) => {
@@ -313,7 +327,7 @@ export default function Insights({ onNavigate }) {
                   const pct = Math.round((count / total) * 100);
                   return (
                     <div key={key} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                      <span style={{ fontSize: '14px', width: '20px', textAlign: 'center' }}>{meta.icon}</span>
+                      <span style={{ fontSize: '14px', width: '20px', textAlign: 'center' }}>{typeof meta.icon === 'function' ? meta.icon() : meta.icon}</span>
                       <div style={{ flex: 1 }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '3px' }}>
                           <span style={{ fontSize: '12px', fontWeight: 600, color: isDark ? '#E8F0E8' : '#1A1A1A' }}>{meta.label}</span>
@@ -341,7 +355,7 @@ export default function Insights({ onNavigate }) {
             boxShadow: isDark ? '0 1px 3px rgba(0,0,0,0.12), 0 4px 12px rgba(0,0,0,0.16)' : '0 1px 3px rgba(0,0,0,0.04), 0 4px 12px rgba(0,0,0,0.06)'
           }}>
             <h3 style={{ fontSize: '14px', fontWeight: 700, color: isDark ? '#E8F0E8' : '#1A1A1A', margin: '0 0 12px' }}>
-              Smart Suggestions 💡
+              Smart Suggestions
             </h3>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
               {frequentTasks.map((task, idx) => {
@@ -390,7 +404,7 @@ export default function Insights({ onNavigate }) {
         {/* Empty State */}
         {!accuracyStats && !estimationBias && Object.keys(rescheduleHabits).length === 0 && (!energyPattern || energyPattern.length === 0) && frequentTasks.length === 0 && (
           <div style={{ textAlign: 'center', padding: '40px 20px' }}>
-            <div style={{ fontSize: '48px', marginBottom: '12px' }}>📊</div>
+            <div style={{ fontSize: '48px', marginBottom: '12px' }}><ChartIcon size={48} /></div>
             <p style={{ fontSize: '15px', fontWeight: 600, color: isDark ? '#E8F0E8' : '#1A1A1A', margin: '0 0 4px' }}>
               No Insights Yet
             </p>
@@ -429,7 +443,7 @@ export default function Insights({ onNavigate }) {
   return (
     <div style={{ padding: '40px', maxWidth: '1200px', margin: '0 auto' }}>
       <h1 style={{ fontSize: '32px', fontWeight: 800, color: isDark ? '#E8F0E8' : '#1A1A1A', marginBottom: '8px' }}>
-        Insights 📊
+        Insights
       </h1>
       <p style={{ fontSize: '16px', color: isDark ? '#9CA59C' : '#8E8E93', marginBottom: '32px' }}>
         Desktop view coming soon. Please use mobile view for now.

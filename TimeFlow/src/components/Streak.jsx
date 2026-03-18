@@ -6,15 +6,19 @@ import { getReflectionHistory } from '../utils/storage';
 import { loadStreak } from '../utils/streaks';
 import { haptic } from '../utils/haptics';
 import { useDarkMode } from '../utils/useDarkMode';
-
-function LeafIcon({ size = 18, fill = "#3B6E3B" }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <ellipse cx="12" cy="12" rx="8" ry="4" transform="rotate(-45 12 12)" fill={fill} opacity="0.9" />
-      <line x1="6" y1="18" x2="18" y2="6" stroke="#2E6B2E" strokeWidth="1" strokeLinecap="round" />
-    </svg>
-  );
-}
+import {
+  LeafIcon,
+  FireIcon,
+  TrophyIcon,
+  ChartIcon,
+  TargetIcon,
+  StarIcon,
+  HappyIcon,
+  ContentIcon,
+  NeutralIcon,
+  SadIcon,
+  SproutIcon,
+} from '../icons';
 
 export default function Streak({ onNavigate }) {
   const isDark = useDarkMode();
@@ -44,9 +48,9 @@ export default function Streak({ onNavigate }) {
     if (streak.current === 0) return "Start your streak today!";
     if (streak.current === 1) return "Great start! Keep it going!";
     if (streak.current < 7) return "Building momentum!";
-    if (streak.current < 30) return "You're on fire! 🔥";
+    if (streak.current < 30) return "You're on fire!";
     if (streak.current < 100) return "Incredible dedication!";
-    return "Legendary streak! 🏆";
+    return "Legendary streak!";
   };
 
   const getDaysUntilMilestone = () => {
@@ -71,7 +75,7 @@ export default function Streak({ onNavigate }) {
         {/* Header */}
         <div style={{ marginBottom: '16px', textAlign: 'center' }}>
           <h1 style={{ fontSize: '20px', fontWeight: 800, color: isDark ? '#E8F0E8' : '#1A1A1A', margin: '0 0 4px', letterSpacing: '-0.3px' }}>
-            Your Streak 🌿
+            Your Streak
           </h1>
           <p style={{ fontSize: '12px', color: isDark ? '#9CA59C' : '#8E8E93', margin: 0 }}>
             Track your daily progress
@@ -161,7 +165,7 @@ export default function Streak({ onNavigate }) {
             justifyContent: 'center',
             fontSize: '20px'
           }}>
-            📊
+            <ChartIcon size={20} />
           </div>
           <div style={{ flex: 1 }}>
             <div style={{ fontSize: '13px', fontWeight: 700, color: isDark ? '#E8F0E8' : '#1A1A1A' }}>
@@ -188,7 +192,7 @@ export default function Streak({ onNavigate }) {
               background: 'rgba(59,110,59,0.1)', display: 'flex',
               alignItems: 'center', justifyContent: 'center', fontSize: '20px'
             }}>
-              🎯
+              <TargetIcon size={20} />
             </div>
             <div style={{ flex: 1 }}>
               <div style={{ fontSize: '13px', fontWeight: 700, color: isDark ? '#E8F0E8' : '#1A1A1A' }}>
@@ -222,7 +226,7 @@ export default function Streak({ onNavigate }) {
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                     fontSize: '18px'
                   }}>
-                    {ref.mood === 'great' ? '🌟' : ref.mood === 'good' ? '😊' : ref.mood === 'okay' ? '😐' : '😔'}
+                    {ref.mood === 'great' ? <StarIcon size={18} /> : ref.mood === 'good' ? <HappyIcon size={18} /> : ref.mood === 'okay' ? <NeutralIcon size={18} /> : <SadIcon size={18} />}
                   </div>
                   <div style={{ flex: 1 }}>
                     <div style={{ fontSize: '13px', fontWeight: 700, color: isDark ? '#E8F0E8' : '#1A1A1A' }}>
@@ -242,7 +246,7 @@ export default function Streak({ onNavigate }) {
         {/* Empty State */}
         {reflections.length === 0 && (
           <div style={{ textAlign: 'center', padding: '40px 20px' }}>
-            <div style={{ fontSize: '48px', marginBottom: '12px' }}>🌱</div>
+            <div style={{ fontSize: '48px', marginBottom: '12px' }}><SproutIcon size={48} /></div>
             <p style={{ fontSize: '15px', fontWeight: 600, color: isDark ? '#E8F0E8' : '#1A1A1A', margin: '0 0 4px' }}>
               Start Your Journey
             </p>
@@ -260,7 +264,7 @@ export default function Streak({ onNavigate }) {
     <div className="setup-fullscreen nat-bg">
       <div className="setup-inner nat-card" style={{ maxWidth: "700px" }}>
         <div className="setup-header" style={{ marginBottom: "22px" }}>
-          <h1 className="title" style={{ fontSize: "24px" }}>Your Streak 🌿</h1>
+          <h1 className="title" style={{ fontSize: "24px" }}>Your Streak</h1>
           <p className="muted" style={{ display: "flex", alignItems: "center", gap: "6px" }}>
             <LeafIcon size={14} fill="#6B8E6B" />
             Track your daily progress
@@ -326,7 +330,7 @@ export default function Streak({ onNavigate }) {
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                     fontSize: '24px'
                   }}>
-                    {ref.mood === 'great' ? '🌟' : ref.mood === 'good' ? '😊' : ref.mood === 'okay' ? '😐' : '😔'}
+                    {ref.mood === 'great' ? <StarIcon size={18} /> : ref.mood === 'good' ? <HappyIcon size={18} /> : ref.mood === 'okay' ? <NeutralIcon size={18} /> : <SadIcon size={18} />}
                   </div>
                   <div style={{ flex: 1 }}>
                     <div style={{ fontSize: '15px', fontWeight: 700, color: '#3B6E3B' }}>

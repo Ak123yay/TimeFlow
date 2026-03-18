@@ -6,15 +6,18 @@ import { hasSeenTooltip, markTooltipSeen, TOOLTIP_CONTENT } from "../utils/first
 import { haptic } from "../utils/haptics";
 import { useDarkMode } from "../utils/useDarkMode";
 import "../App.css";
-
-function LeafIcon({ className = "", size = 18, fill = "#3B6E3B" }) {
-  return (
-    <svg className={className} width={size} height={size} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <ellipse cx="12" cy="12" rx="8" ry="4" transform="rotate(-45 12 12)" fill={fill} opacity="0.9" />
-      <line x1="6" y1="18" x2="18" y2="6" stroke="#2E6B2E" strokeWidth="1" strokeLinecap="round" />
-    </svg>
-  );
-}
+import {
+  LeafIcon,
+  StarIcon,
+  HappyIcon,
+  ContentIcon,
+  NeutralIcon,
+  SadIcon,
+  SparkIcon,
+  CheckmarkIcon,
+  CalendarIcon,
+  TrashIcon,
+} from '../icons';
 
 export default function DayReflection({ todayDate, onComplete }) {
   const isDark = useDarkMode();
@@ -77,10 +80,10 @@ export default function DayReflection({ todayDate, onComplete }) {
   };
 
   const moodOptions = [
-    { value: 'great', emoji: '🌟', label: 'Great', color: '#10b981' },
-    { value: 'good', emoji: '😊', label: 'Good', color: '#6FAF6F' },
-    { value: 'okay', emoji: '😐', label: 'Okay', color: '#fbbf24' },
-    { value: 'rough', emoji: '😔', label: 'Rough', color: '#f59e0b' }
+    { value: 'great', emoji: () => <StarIcon size={24} />, label: 'Great', color: '#10b981' },
+    { value: 'good', emoji: () => <HappyIcon size={24} />, label: 'Good', color: '#6FAF6F' },
+    { value: 'okay', emoji: () => <NeutralIcon size={24} />, label: 'Okay', color: '#fbbf24' },
+    { value: 'rough', emoji: () => <SadIcon size={24} />, label: 'Rough', color: '#f59e0b' }
   ];
 
   if (isMobile) {
@@ -95,7 +98,7 @@ export default function DayReflection({ todayDate, onComplete }) {
       }} activeTab="stats">{/* Header */}
         <div style={{ marginBottom: '16px', textAlign: 'center' }}>
           <h1 style={{ fontSize: '20px', fontWeight: 800, color: isDark ? '#E8F0E8' : '#1A1A1A', margin: '0 0 4px', letterSpacing: '-0.3px' }}>
-            Day Complete ✨
+            Day Complete
           </h1>
           <p style={{ fontSize: '12px', color: isDark ? '#9CA59C' : '#8E8E93', margin: 0 }}>
             {todayDate} • Reflect on your progress
@@ -184,7 +187,7 @@ export default function DayReflection({ todayDate, onComplete }) {
                   gap: '4px'
                 }}
               >
-                <span style={{ fontSize: '28px' }}>{option.emoji}</span>
+                <span style={{ fontSize: '28px' }}>{typeof option.emoji === 'function' ? option.emoji() : option.emoji}</span>
                 <span style={{ fontSize: '11px', fontWeight: 600, color: option.color }}>{option.label}</span>
               </button>
             ))}
@@ -221,7 +224,7 @@ export default function DayReflection({ todayDate, onComplete }) {
                           color: action === 'completed' ? '#10b981' : (isDark ? '#9CA59C' : '#8E8E93')
                         }}
                       >
-                        ✓ Done
+                        Done
                       </button>
                       <button
                         onClick={() => { handleUnfinishedAction(task.id, 'carry'); haptic.light(); }}
@@ -233,7 +236,7 @@ export default function DayReflection({ todayDate, onComplete }) {
                           color: action === 'carry' || !action ? '#3B6E3B' : (isDark ? '#9CA59C' : '#8E8E93')
                         }}
                       >
-                        📅 Carry
+                        Carry
                       </button>
                       <button
                         onClick={() => { handleUnfinishedAction(task.id, 'delete'); haptic.heavy(); }}
@@ -246,7 +249,7 @@ export default function DayReflection({ todayDate, onComplete }) {
                           display: 'flex', alignItems: 'center', justifyContent: 'center'
                         }}
                       >
-                        🗑️
+                        <TrashIcon size={16} />
                       </button>
                     </div>
                   </div>
@@ -295,7 +298,7 @@ export default function DayReflection({ todayDate, onComplete }) {
               cursor: 'pointer', touchAction: 'manipulation'
             }}
           >
-            Save & Continue →
+            Save & Continue
           </button>
         </div>
 
@@ -472,7 +475,7 @@ export default function DayReflection({ todayDate, onComplete }) {
                           color: action === 'completed' ? "#10b981" : "#6B8E6B"
                         }}
                       >
-                        ✓ Done
+                        Done
                       </button>
                       <button
                         onClick={() => handleUnfinishedAction(task.id, 'carry')}
@@ -487,7 +490,7 @@ export default function DayReflection({ todayDate, onComplete }) {
                           color: action === 'carry' || !action ? "#3B6E3B" : "#6B8E6B"
                         }}
                       >
-                        📅 Carry
+                        Carry
                       </button>
                       <button
                         onClick={() => handleUnfinishedAction(task.id, 'delete')}
@@ -502,7 +505,7 @@ export default function DayReflection({ todayDate, onComplete }) {
                           color: action === 'delete' ? "#ef4444" : "#6B8E6B"
                         }}
                       >
-                        🗑️
+                        <TrashIcon size={16} />
                       </button>
                     </div>
                   </div>

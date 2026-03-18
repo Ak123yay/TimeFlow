@@ -6,6 +6,33 @@ import {
   generateSmartRecommendation,
   categorizeTask,
 } from "../../utils/smartReschedule";
+import {
+  ComputerIcon,
+  TeamworkIcon,
+  CreativeIcon,
+  EmailIcon,
+  AdminIcon,
+  HealthIcon,
+  LearningIcon,
+  SproutIcon,
+  CheckmarkIcon,
+  PlayIcon,
+  ClockIcon,
+  CalendarIcon,
+  InboxIcon,
+  TargetIcon,
+  HammerIcon,
+  HappyIcon,
+  ContentIcon,
+  NeutralIcon,
+  UneasyIcon,
+  WorriedIcon,
+  WarningIcon,
+  DangerStatusIcon,
+  FireIcon,
+  CloseIcon,
+  StopwatchIcon,
+} from "../../icons";
 import "../../App.css";
 
 const ANIM_CSS = `
@@ -39,6 +66,20 @@ const CAT_EMOJI = {
   coding: '💻', meetings: '🤝', creative: '🎨',
   email: '📧', admin: '📋', health: '🏃',
   learning: '📚', personal: '🌱',
+};
+
+const getCategoryIcon = (category) => {
+  switch(category?.primary) {
+    case 'coding': return <ComputerIcon size={22} />;
+    case 'meetings': return <TeamworkIcon size={22} />;
+    case 'creative': return <CreativeIcon size={22} />;
+    case 'email': return <EmailIcon size={22} />;
+    case 'admin': return <AdminIcon size={22} />;
+    case 'health': return <HealthIcon size={22} />;
+    case 'learning': return <LearningIcon size={22} />;
+    case 'personal': return <SproutIcon size={22} />;
+    default: return <ClockIcon size={22} />;
+  }
 };
 
 export default function RescheduleModal({
@@ -153,7 +194,6 @@ export default function RescheduleModal({
     : '#888';
 
   const catLabel = category?.primary && category.primary !== 'other' ? category.primary : null;
-  const taskEmoji = CAT_EMOJI[category?.primary] || '⏰';
 
   // ── Theme ───────────────────────────────────────────────────────────────────
   const bg = isDark ? '#161D16' : '#FFFFFF';
@@ -261,7 +301,7 @@ export default function RescheduleModal({
           fontSize: 11, fontWeight: 700, color: textSecondary,
           textTransform: 'uppercase', letterSpacing: 1,
         }}>
-          <span>⏱</span> Time&apos;s up
+          <StopwatchIcon size={12} style={{ display: 'inline', marginRight: '4px', verticalAlign: 'middle' }} /> Time&apos;s up
         </div>
 
         {/* Right chips + close */}
@@ -283,7 +323,7 @@ export default function RescheduleModal({
               border: '1px solid rgba(220,38,38,0.25)',
               padding: '3px 8px', borderRadius: 9999,
             }}>
-              {urgentLevel === 'overdue' ? '🔴 Overdue' : '🔥 Due today'}
+              {urgentLevel === 'overdue' ? <><DangerStatusIcon size={11} style={{ display: 'inline', marginRight: '3px', verticalAlign: 'middle' }} /> Overdue</> : <><FireIcon size={11} style={{ display: 'inline', marginRight: '3px', verticalAlign: 'middle' }} /> Due today</>}
             </span>
           )}
           <button onClick={onClose} style={{
@@ -292,7 +332,9 @@ export default function RescheduleModal({
             color: textSecondary, fontSize: 14,
             width: 28, height: 28, borderRadius: 8,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-          }}>✕</button>
+          }}>
+            <CloseIcon size={14} />
+          </button>
         </div>
       </div>
 
@@ -307,7 +349,7 @@ export default function RescheduleModal({
           wordBreak: 'break-word', marginBottom: catLabel ? 8 : 0,
           display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, flexWrap: 'wrap',
         }}>
-          <span style={{ fontSize: isMobile ? 20 : 22 }}>{taskEmoji}</span>
+          {getCategoryIcon(category)}
           {task.name}
         </div>
         {catLabel && (
@@ -370,10 +412,10 @@ export default function RescheduleModal({
               minWidth: 110, flex: '0 0 auto',
             }}>
               <div style={{ fontSize: 22, lineHeight: 1, flexShrink: 0 }}>
-                {procrastination?.severity === 'none' ? '😊'
-                  : procrastination?.severity === 'mild' ? '🙂'
-                  : procrastination?.severity === 'moderate' ? '😐'
-                  : procrastination?.severity === 'severe' ? '😬' : '😰'}
+                {procrastination?.severity === 'none' ? <HappyIcon size={22} />
+                  : procrastination?.severity === 'mild' ? <ContentIcon size={22} />
+                  : procrastination?.severity === 'moderate' ? <NeutralIcon size={22} />
+                  : procrastination?.severity === 'severe' ? <UneasyIcon size={22} /> : <WorriedIcon size={22} />}
               </div>
               <div>
                 <div style={{ fontSize: 11, fontWeight: 700, color: procColor, lineHeight: 1.2 }}>
@@ -432,9 +474,9 @@ export default function RescheduleModal({
             fontSize: 12, fontWeight: 700, marginBottom: 2,
             color: procrastination.severity === 'chronic' ? '#ef4444' : '#d97706',
           }}>
-            {procrastination.severity === 'chronic' ? '⚠️ Chronic avoidance detected'
-              : procrastination.severity === 'severe' ? '⚠️ Strong avoidance pattern'
-              : '⚠️ Avoidance building'}
+            {procrastination.severity === 'chronic' ? <><WarningIcon size={12} style={{ display: 'inline', marginRight: '3px', verticalAlign: 'middle' }} /> Chronic avoidance detected</>
+              : procrastination.severity === 'severe' ? <><WarningIcon size={12} style={{ display: 'inline', marginRight: '3px', verticalAlign: 'middle' }} /> Strong avoidance pattern</>
+              : <><WarningIcon size={12} style={{ display: 'inline', marginRight: '3px', verticalAlign: 'middle' }} /> Avoidance building</>}
           </div>
           {procrastination.interventions?.[0] && (
             <div style={{ fontSize: 11, color: textSecondary }}>{procrastination.interventions[0].reason}</div>
@@ -472,7 +514,7 @@ export default function RescheduleModal({
                 onTouchStart={e => { e.currentTarget.style.transform = 'scale(0.97)'; }}
                 onTouchEnd={e => { e.currentTarget.style.transform = 'scale(1)'; }}
               >
-                ✓ Mark Complete
+                <CheckmarkIcon size={16} style={{ display: 'inline', marginRight: '6px', verticalAlign: 'middle' }} /> Mark Complete
                 {isTop && (
                   <span style={{
                     position: 'absolute', top: -7, right: 12,
@@ -515,14 +557,14 @@ export default function RescheduleModal({
               <div style={{
                 fontSize: 14, fontWeight: 700,
                 color: isTop ? (isDark ? '#D4EDD4' : '#0D200D') : textPrimary,
-                lineHeight: 1.3,
+                lineHeight: 1.3, textAlign: 'center', width: '100%',
               }}>
                 {row.label}
               </div>
               <div style={{
                 fontSize: 12, fontWeight: 500,
                 color: row.warn ? '#d97706' : (isTop ? green : textSecondary),
-                lineHeight: 1.3, marginTop: 1,
+                lineHeight: 1.3, marginTop: 1, textAlign: 'center', width: '100%',
               }}>
                 {row.hint}
               </div>
@@ -556,11 +598,11 @@ export default function RescheduleModal({
         justifyContent: 'center',
       }}>
         <SecondaryBtn onClick={onPickTime} isDark={isDark} textSecondary={textSecondary} green={green} border={border}>
-          🎯 Pick a time
+          <TargetIcon size={14} style={{ display: 'inline', marginRight: '4px', verticalAlign: 'middle' }} /> Pick a time
         </SecondaryBtn>
         {showBreakTask && (
           <SecondaryBtn onClick={onBreakTask} isDark={isDark} textSecondary={textSecondary} green={green} border={border} highlight={topOption === 'break_task'}>
-            🔨 Break it up
+            <HammerIcon size={14} style={{ display: 'inline', marginRight: '4px', verticalAlign: 'middle' }} /> Break it up
           </SecondaryBtn>
         )}
       </div>
