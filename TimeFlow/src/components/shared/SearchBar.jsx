@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useDarkMode } from '../../utils/useDarkMode';
+import { SearchIcon, CloseIcon } from '../../icons';
 
 export default function SearchBar({ onSearch, placeholder = "Search tasks..." }) {
   const [query, setQuery] = useState('');
@@ -29,7 +30,7 @@ export default function SearchBar({ onSearch, placeholder = "Search tasks..." })
         padding: '8px 14px',
         border: `1px solid ${isDark ? '#4A5A4A' : 'rgba(0,0,0,0.06)'}`
       }}>
-        <span style={{ fontSize: '14px', marginRight: '8px', opacity: 0.5 }}>🔍</span>
+        <SearchIcon size={14} style={{ marginRight: '8px', opacity: 0.5 }} />
         <input
           type="text"
           value={query}
@@ -55,7 +56,7 @@ export default function SearchBar({ onSearch, placeholder = "Search tasks..." })
               color: isDark ? '#9CA59C' : '#8E8E93'
             }}
           >
-            ✕
+            <CloseIcon size={18} />
           </button>
         )}
       </div>

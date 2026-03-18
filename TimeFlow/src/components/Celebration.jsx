@@ -1,13 +1,5 @@
 import { useEffect, useState } from "react";
-
-function LeafIcon({ size = 24, fill = "#6FAF6F" }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <ellipse cx="12" cy="12" rx="8" ry="4" transform="rotate(-45 12 12)" fill={fill} opacity="0.9" />
-      <line x1="6" y1="18" x2="18" y2="6" stroke="#2E6B2E" strokeWidth="1" strokeLinecap="round" />
-    </svg>
-  );
-}
+import { CelebrationIcon } from '../icons';
 
 export default function Celebration({ type = 'task', onComplete }) {
   const [leaves, setLeaves] = useState([]);
@@ -57,7 +49,7 @@ export default function Celebration({ type = 'task', onComplete }) {
             fontSize: "72px",
             animation: "celebrationBounce 0.6s ease-out"
           }}>
-            🎉
+            <CelebrationIcon size={72} />
           </div>
           <div style={{
             fontSize: "24px",

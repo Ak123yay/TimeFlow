@@ -104,18 +104,16 @@ export default function RescheduleDialog({ isOpen, onClose, overflowData, tasks,
           })}
         </div>
 
-        <div style={{ display: "flex", gap: "12px" }}>
+        <div style={{ display: "flex", gap: "12px", justifyContent: "center" }}>
           <button
             onClick={onClose}
             className="btn ghost"
-            style={{ flex: 1 }}
           >
             Cancel
           </button>
           <button
             onClick={handleApply}
             className="btn primary"
-            style={{ flex: 1 }}
           >
             Apply Changes
           </button>

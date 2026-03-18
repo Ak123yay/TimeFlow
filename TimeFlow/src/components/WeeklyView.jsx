@@ -8,15 +8,11 @@ import { hasSeenTooltip, markTooltipSeen, TOOLTIP_CONTENT } from "../utils/first
 import { haptic } from "../utils/haptics";
 import { useDarkMode } from "../utils/useDarkMode";
 import "../App.css";
-
-function LeafIcon({ size = 18, fill = "#3B6E3B" }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <ellipse cx="12" cy="12" rx="8" ry="4" transform="rotate(-45 12 12)" fill={fill} opacity="0.9" />
-      <line x1="6" y1="18" x2="18" y2="6" stroke="#2E6B2E" strokeWidth="1" strokeLinecap="round" />
-    </svg>
-  );
-}
+import {
+  LeafIcon,
+  LeafFallIcon,
+  NoteIcon,
+} from '../icons';
 
 export default function WeeklyView({ onBackToToday }) {
   const isDark = useDarkMode();
@@ -234,7 +230,7 @@ export default function WeeklyView({ onBackToToday }) {
                             background: 'linear-gradient(135deg, #A7D3A7, #6FAF6F)',
                             display: 'flex', alignItems: 'center', justifyContent: 'center',
                             fontSize: '10px', border: isDark ? '1.5px solid #242B24' : '1.5px solid #fff'
-                          }}>📝</div>
+                          }}><NoteIcon size={10} /></div>
                         )}
                         {day.hasTasks && (
                           <span style={{ fontSize: '13px', fontWeight: 700, color: '#3B6E3B' }}>
@@ -262,7 +258,7 @@ export default function WeeklyView({ onBackToToday }) {
                           </span>
                           {day.carriedOverCount > 0 && (
                             <span style={{ fontSize: '10px', fontWeight: 600, color: '#D97706' }}>
-                              🍂 {day.carriedOverCount} carried
+                              <LeafFallIcon size={14} style={{ display: 'inline', marginRight: '4px', verticalAlign: 'middle' }} /> {day.carriedOverCount} carried
                             </span>
                           )}
                         </div>
@@ -426,7 +422,7 @@ export default function WeeklyView({ onBackToToday }) {
                     border: "2px solid #fff", display: "flex",
                     alignItems: "center", justifyContent: "center", fontSize: "12px",
                     boxShadow: "0 2px 6px rgba(59,110,59,0.2)"
-                  }}>📝</div>
+                  }}><NoteIcon size={12} /></div>
                 )}
 
                 {day.hasTasks ? (
@@ -450,7 +446,7 @@ export default function WeeklyView({ onBackToToday }) {
                         fontSize: "11px", fontWeight: "600", color: "#d97706",
                         display: "flex", alignItems: "center", gap: "4px"
                       }}>
-                        <span>🍂</span><span>{day.carriedOverCount} carried</span>
+                        <LeafFallIcon size={11} /><span>{day.carriedOverCount} carried</span>
                       </div>
                     )}
                   </>

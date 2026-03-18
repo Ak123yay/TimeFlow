@@ -15,15 +15,11 @@ import { haptic } from "../utils/haptics";
 import { useDarkMode } from "../utils/useDarkMode";
 import SearchBar from './shared/SearchBar';
 import "../App.css";
-
-function LeafIconLocal({ className = "", size = 18, fill = "#3B6E3B" }) {
-  return (
-    <svg className={className} width={size} height={size} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <ellipse cx="12" cy="12" rx="8" ry="4" transform="rotate(-45 12 12)" fill={fill} opacity="0.9" />
-      <line x1="6" y1="18" x2="18" y2="6" stroke="#2E6B2E" strokeWidth="1" strokeLinecap="round" />
-    </svg>
-  );
-}
+import {
+  LeafIcon,
+  WaterIcon,
+  CalendarIcon,
+} from '../icons';
 
 const getTodayString = () => new Date().toISOString().slice(0, 10);
 
@@ -139,7 +135,7 @@ export default function WeeklyPool({ onNavigateToToday }) {
         {/* Header */}
         <div style={{ marginBottom: '12px' }}>
           <h1 style={{ fontSize: '20px', fontWeight: 800, color: isDark ? '#E8F0E8' : '#1A1A1A', margin: '0 0 2px', letterSpacing: '-0.3px' }}>
-            Weekly Pool 🌊
+            Weekly Pool
           </h1>
           <p style={{ fontSize: '12px', color: isDark ? '#9CA59C' : '#8E8E93', margin: 0 }}>
             {poolTasks.length} tasks to work on this week
@@ -250,7 +246,7 @@ export default function WeeklyPool({ onNavigateToToday }) {
         {/* Pool Tasks List */}
         {filterTasksBySearch(poolTasks).length === 0 ? (
           <div style={{ textAlign: 'center', padding: '40px 20px' }}>
-            <div style={{ fontSize: '36px', marginBottom: '12px' }}>🌊</div>
+            <div style={{ fontSize: '36px', marginBottom: '12px' }}><WaterIcon size={36} /></div>
             <p style={{ fontSize: '15px', fontWeight: 600, color: isDark ? '#E8F0E8' : '#1A1A1A', margin: '0 0 4px' }}>
               {searchQuery ? 'No matching tasks' : 'Pool is empty'}
             </p>
@@ -284,7 +280,7 @@ export default function WeeklyPool({ onNavigateToToday }) {
                         borderRadius: '99px', fontWeight: 600,
                         display: 'inline-block'
                       }}>
-                        📅 {urgency.message}
+                        {urgency.message}
                       </span>
                     )}
                   </div>
@@ -338,7 +334,7 @@ export default function WeeklyPool({ onNavigateToToday }) {
       <div className="setup-inner nat-card">
         <div className="setup-header" style={{ marginBottom: "22px" }}>
           <div className="header-left">
-            <h1 className="title" style={{ fontSize: "24px" }}>Weekly Pool 🌊</h1>
+            <h1 className="title" style={{ fontSize: "24px", display: "flex", alignItems: "center", gap: "8px" }}>Weekly Pool <WaterIcon size={24} /></h1>
             <p className="muted" style={{ display: "flex", alignItems: "center", gap: "6px" }}>
               <LeafIconLocal size={14} fill="#6B8E6B" />
               Tasks you want to work on this week ({poolTasks.length})
@@ -377,7 +373,7 @@ export default function WeeklyPool({ onNavigateToToday }) {
           <label className="control">
             <div className="control-label">Deadline (optional)</div>
             <div className="time-input">
-              <span style={{ fontSize: "16px" }}>📅</span>
+              <CalendarIcon size={16} />
               <input
                 type="date"
                 value={newTaskDeadline}
@@ -423,7 +419,7 @@ export default function WeeklyPool({ onNavigateToToday }) {
                             borderRadius: "9999px", fontWeight: "600",
                             display: "inline-block"
                           }}>
-                            📅 {urgency.message}
+                            {urgency.message}
                           </span>
                         </div>
                       )}

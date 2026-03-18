@@ -1,4 +1,5 @@
 import React from 'react';
+import { WarningIcon, ClockIcon } from '../../icons';
 
 /**
  * StatsBar - Display daily task statistics
@@ -130,7 +131,7 @@ export function OverflowWarning({ overflowData, freeTime }) {
   return (
     <div style={getWarningStyle()} role="alert">
       <span style={{ fontSize: "20px" }} aria-hidden="true">
-        {severity === 'critical' ? '⚠️' : '⏰'}
+        {severity === 'critical' ? <WarningIcon size={20} /> : <ClockIcon size={20} />}
       </span>
       <div style={{ flex: 1 }}>
         <div>{message || `You have ${Math.abs(overflowMinutes)} minutes of overflow`}</div>

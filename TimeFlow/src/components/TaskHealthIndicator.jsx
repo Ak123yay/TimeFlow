@@ -1,9 +1,11 @@
+import { WarningIcon, AlertIcon } from '../icons';
+
 export default function TaskHealthIndicator({ health, compact = false }) {
   if (!health || health.status === 'healthy') return null;
 
   const statusIcons = {
-    warning: '⚠️',
-    critical: '🚨'
+    warning: () => <WarningIcon size={16} />,
+    critical: () => <AlertIcon size={16} />
   };
 
   const statusLabels = {
@@ -30,7 +32,7 @@ export default function TaskHealthIndicator({ health, compact = false }) {
         }}
         title={health.reasons.join(', ')}
       >
-        {statusIcons[health.status]} {statusLabels[health.status]}
+        {typeof statusIcons[health.status] === 'function' ? statusIcons[health.status]() : statusIcons[health.status]} {statusLabels[health.status]}
       </span>
     );
   }
@@ -52,7 +54,7 @@ export default function TaskHealthIndicator({ health, compact = false }) {
         gap: "8px",
         marginBottom: "6px"
       }}>
-        <span style={{ fontSize: "16px" }}>{statusIcons[health.status]}</span>
+        <span style={{ fontSize: "16px" }}>{typeof statusIcons[health.status] === 'function' ? statusIcons[health.status]() : statusIcons[health.status]}</span>
         <div style={{
           fontSize: "13px",
           fontWeight: "700",

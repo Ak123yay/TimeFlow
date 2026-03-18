@@ -58,16 +58,30 @@ import StatsBar, { OverflowWarning } from './shared/StatsBar';
 import GrowingVine from './mobile/animations/GrowingVine';
 import { LeafSwipeLeft, LeafCelebration } from './mobile/animations/LeafSwipe';
 import SearchBar from './shared/SearchBar';
+import {
+  LeafIcon,
+  TargetIcon,
+  SproutIcon,
+  StarIcon,
+  MoonIcon,
+  CalendarIcon,
+  WaterIcon,
+  EyeIcon,
+  BellIcon,
+  BellMutedIcon,
+  AlertIcon,
+  WarningIcon,
+  DangerStatusIcon,
+  WarningStatusIcon,
+  LeafFallIcon,
+  RepeatIcon,
+  FireIcon,
+  SparkIcon,
+  BulbIcon,
+} from '../icons';
 
 // Memoized LeafIcon component to prevent unnecessary re-renders
-const LeafIcon = React.memo(({ className = "", size = 18, fill = "#3B6E3B" }) => {
-  return (
-    <svg className={className} width={size} height={size} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <ellipse cx="12" cy="12" rx="8" ry="4" transform="rotate(-45 12 12)" fill={fill} opacity="0.9" />
-      <line x1="6" y1="18" x2="18" y2="6" stroke="#2E6B2E" strokeWidth="1" strokeLinecap="round" />
-    </svg>
-  );
-});
+/* LeafIcon is now imported from icons package */
 
 /* localStorage helpers - using shared utilities from timeUtils.js */
 const loadTasks = () => {
@@ -502,6 +516,16 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
         setTasks(rescheduled);
       }
 
+      // Mark original tasks as carriedMarked so they never reappear on future days
+      unfinishedTasks.forEach(task => {
+        if (!task.originalDate) return;
+        const origTasks = loadTasksForDate(task.originalDate);
+        const updated = origTasks.map(t =>
+          t.name === task.name && !t.completed ? { ...t, carriedMarked: true } : t
+        );
+        saveTasksForDate(task.originalDate, updated);
+      });
+
       // Mark that we've loaded carry-over for today
       localStorage.setItem(carryOverKey, 'true');
     } else {
@@ -545,6 +569,16 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
             const rescheduled = rescheduleUnfinishedTasks(newUnfinishedTasks, todayTasks, availability);
             setTasks(rescheduled);
           }
+
+          // Mark original tasks as carriedMarked so they never reappear on future days
+          unfinishedTasks.forEach(task => {
+            if (!task.originalDate) return;
+            const origTasks = loadTasksForDate(task.originalDate);
+            const updated = origTasks.map(t =>
+              t.name === task.name && !t.completed ? { ...t, carriedMarked: true } : t
+            );
+            saveTasksForDate(task.originalDate, updated);
+          });
 
           localStorage.setItem(carryOverKey, 'true');
         } else {
@@ -1374,10 +1408,10 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
                   <h1 style={{ fontSize: '22px', fontWeight: 800, color: isDark ? '#E8F0E8' : '#1A1A1A', margin: '2px 0 0', letterSpacing: '-0.5px' }}>{greeting}</h1>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                  <button onClick={() => setViewMode(viewMode === 'list' ? 'calendar' : 'list')} style={{ width: '30px', height: '30px', borderRadius: '10px', border: 'none', background: viewMode === 'calendar' ? '#3B6E3B' : (isDark ? '#1A1F1A' : '#F0F0F0'), color: viewMode === 'calendar' ? '#fff' : (isDark ? '#9CA59C' : '#8E8E93'), fontSize: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', touchAction: 'manipulation', transition: 'all 0.2s ease', opacity: viewMode === 'calendar' ? 1 : 0.6 }} aria-label="Toggle calendar">📅</button>
-                  <button onClick={toggleFocusMode} style={{ width: '30px', height: '30px', borderRadius: '10px', border: 'none', background: focusModeEnabled ? '#3B6E3B' : (isDark ? '#1A1F1A' : '#F0F0F0'), color: focusModeEnabled ? '#fff' : (isDark ? '#9CA59C' : '#8E8E93'), fontSize: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', touchAction: 'manipulation', transition: 'all 0.2s ease', opacity: focusModeEnabled ? 1 : 0.6 }} aria-label="Focus mode">{focusModeEnabled ? '🎯' : '👁️'}</button>
-                  <button onClick={toggleNotifications} style={{ width: '30px', height: '30px', borderRadius: '10px', border: 'none', background: notificationsEnabled ? '#3B6E3B' : (isDark ? '#1A1F1A' : '#F0F0F0'), color: notificationsEnabled ? '#fff' : (isDark ? '#9CA59C' : '#8E8E93'), fontSize: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', touchAction: 'manipulation', transition: 'all 0.2s ease', opacity: notificationsEnabled ? 1 : 0.6 }} aria-label="Task notifications">{notificationsEnabled ? '🔔' : '🔕'}</button>
-                  <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: 'linear-gradient(135deg, #3B6E3B, #6FAF6F)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '16px', marginLeft: '4px', flexShrink: 0, boxShadow: '0 2px 8px rgba(59,110,59,0.3)' }}>🌿</div>
+                  <button onClick={() => setViewMode(viewMode === 'list' ? 'calendar' : 'list')} style={{ width: '30px', height: '30px', borderRadius: '10px', border: 'none', background: viewMode === 'calendar' ? '#3B6E3B' : (isDark ? '#1A1F1A' : '#F0F0F0'), color: viewMode === 'calendar' ? '#fff' : (isDark ? '#9CA59C' : '#8E8E93'), fontSize: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', touchAction: 'manipulation', transition: 'all 0.2s ease', opacity: viewMode === 'calendar' ? 1 : 0.6 }} aria-label="Toggle calendar"><CalendarIcon size={14} /></button>
+                  <button onClick={toggleFocusMode} style={{ width: '30px', height: '30px', borderRadius: '10px', border: 'none', background: focusModeEnabled ? '#3B6E3B' : (isDark ? '#1A1F1A' : '#F0F0F0'), color: focusModeEnabled ? '#fff' : (isDark ? '#9CA59C' : '#8E8E93'), fontSize: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', touchAction: 'manipulation', transition: 'all 0.2s ease', opacity: focusModeEnabled ? 1 : 0.6 }} aria-label="Focus mode">{focusModeEnabled ? <TargetIcon size={14} /> : <EyeIcon size={14} />}</button>
+                  <button onClick={toggleNotifications} style={{ width: '30px', height: '30px', borderRadius: '10px', border: 'none', background: notificationsEnabled ? '#3B6E3B' : (isDark ? '#1A1F1A' : '#F0F0F0'), color: notificationsEnabled ? '#fff' : (isDark ? '#9CA59C' : '#8E8E93'), fontSize: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', touchAction: 'manipulation', transition: 'all 0.2s ease', opacity: notificationsEnabled ? 1 : 0.6 }} aria-label="Task notifications">{notificationsEnabled ? <BellIcon size={14} /> : <BellMutedIcon size={14} />}</button>
+                  <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: 'linear-gradient(135deg, #3B6E3B, #6FAF6F)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '16px', marginLeft: '4px', flexShrink: 0, boxShadow: '0 2px 8px rgba(59,110,59,0.3)' }}><LeafIcon size={18} fill="#fff" /></div>
                 </div>
               </div>
 
@@ -1393,7 +1427,7 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
                       <div style={{ height: '100%', width: `${progressPercent}%`, background: progressPercent === 100 ? '#10b981' : '#3B6E3B', borderRadius: '99px', transition: 'width 0.6s ease' }} />
                     </div>
                   </div>
-                  <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: isDark ? 'rgba(59,110,59,0.2)' : 'rgba(59,110,59,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '18px', flexShrink: 0 }}>🌿</div>
+                  <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: isDark ? 'rgba(59,110,59,0.2)' : 'rgba(59,110,59,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '18px', flexShrink: 0 }}><LeafIcon size={20} /></div>
                 </div>
               )}
 
@@ -1425,7 +1459,7 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
               {/* Streak */}
               {streak && streak.current > 0 && (
                 <div style={{ marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                  <span style={{ fontSize: '14px' }}>🌿</span>
+                  <LeafIcon size={14} />
                   <span style={{ fontSize: '11px', fontWeight: 600, color: '#3B6E3B' }}>{streak.current} day streak</span>
                 </div>
               )}
@@ -1491,7 +1525,7 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
               fontSize: '12px', fontWeight: 600,
               color: overflowData.severity === 'critical' ? '#DC2626' : '#D97706'
             }}>
-              <span>{overflowData.severity === 'critical' ? '🔴' : '🟡'}</span>
+              <span>{overflowData.severity === 'critical' ? <DangerStatusIcon size={16} /> : <WarningStatusIcon size={16} />}</span>
               <span>Schedule overflows by {Math.floor(Math.abs(freeTime) / 60)}h {Math.abs(freeTime) % 60}m</span>
             </div>
           )}
@@ -1503,7 +1537,7 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
               background: 'rgba(59,110,59,0.06)', textAlign: 'center',
               fontSize: '12px', fontWeight: 600, color: '#3B6E3B'
             }}>
-              🎯 Focus Mode {!activeTaskId && '• Hiding completed tasks'}
+              <TargetIcon size={12} style={{ display: 'inline', marginRight: '4px', verticalAlign: 'middle' }} /> Focus Mode {!activeTaskId && '• Hiding completed tasks'}
             </div>
           )}
 
@@ -1512,7 +1546,7 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
             <DailyCalendar />
           ) : tasks.length === 0 ? (
             <div style={{ textAlign: 'center', padding: '40px 20px' }}>
-              <div style={{ fontSize: '36px', marginBottom: '12px' }}>🌱</div>
+              <div style={{ fontSize: '36px', marginBottom: '12px' }}><SproutIcon size={36} /></div>
               <p style={{ fontSize: '15px', fontWeight: 600, color: isDark ? '#E8F0E8' : '#1A1A1A', margin: '0 0 4px' }}>Start your day</p>
               <p style={{ fontSize: '13px', color: isDark ? '#9CA59C' : '#8E8E93', margin: 0 }}>Tap + to add your first task</p>
             </div>
@@ -1737,7 +1771,7 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
               {/* All tasks hidden/complete message */}
               {filterForFocus(carriedTasks).length === 0 && filterForFocus(todayTasks).length === 0 && (
                 <div style={{ textAlign: 'center', padding: '40px 20px' }}>
-                  <div style={{ fontSize: '36px', marginBottom: '12px' }}>✨</div>
+                  <div style={{ fontSize: '36px', marginBottom: '12px' }}><SparkIcon size={36} /></div>
                   <p style={{ fontSize: '15px', fontWeight: 600, color: isDark ? '#E8F0E8' : '#1A1A1A', margin: '0 0 4px' }}>
                     All complete!
                   </p>
@@ -2029,7 +2063,7 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
                 e.currentTarget.style.boxShadow = "0 2px 6px rgba(59,110,59,0.06)";
               }}
             >
-              <span>🌙</span>
+              <MoonIcon size={16} />
               <span>End Day</span>
             </button>
             <button
@@ -2058,7 +2092,7 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
                 e.currentTarget.style.boxShadow = "0 2px 6px rgba(59,110,59,0.06)";
               }}
             >
-              <span>📅</span>
+              <CalendarIcon size={16} />
               <span>Week</span>
             </button>
             <button
@@ -2087,7 +2121,7 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
                 e.currentTarget.style.boxShadow = "0 2px 6px rgba(59,110,59,0.06)";
               }}
             >
-              <span>🌊</span>
+              <WaterIcon size={16} />
               <span>Pool</span>
             </button>
 
@@ -2127,7 +2161,7 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
               }}
               title="Press F to toggle (hides everything except active task)"
             >
-              <span>{focusModeEnabled ? "🎯" : "👁️"}</span>
+              <span>{focusModeEnabled ? <TargetIcon size={16} /> : <EyeIcon size={16} />}</span>
               <span>{focusModeEnabled ? "Focus On" : "Focus"}</span>
             </button>
 
@@ -2167,7 +2201,7 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
               }}
               title="Get notifications 5 min before and when tasks start"
             >
-              <span>{notificationsEnabled ? "🔔" : "🔕"}</span>
+              <span>{notificationsEnabled ? <BellIcon size={16} /> : <BellMutedIcon size={16} />}</span>
               <span>{notificationsEnabled ? "Alerts On" : "Alerts"}</span>
             </button>
 
@@ -2253,7 +2287,7 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
                       alignItems: "center",
                       gap: "8px"
                     }}>
-                      <span>{overflowData.severity === 'critical' ? '🚨' : '⚠️'}</span>
+                      <span>{overflowData.severity === 'critical' ? <AlertIcon size={16} /> : <WarningIcon size={16} />}</span>
                       <span>
                         {overflowData.severity === 'critical'
                           ? "Critical: Day overbooked!"
@@ -2365,7 +2399,7 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
                   }}>
                     <div style={{ flex: 1 }}>
                       <div style={{ fontWeight: "600", color: "#3B6E3B", marginBottom: "2px" }}>
-                        💡 Usually {durationSuggestion.suggested} min
+                        <BulbIcon size={14} style={{ display: 'inline', marginRight: '4px', verticalAlign: 'middle' }} /> Usually {durationSuggestion.suggested} min
                       </div>
                       <div style={{ fontSize: "11px", color: "#6B8E6B" }}>
                         Based on {Math.round(durationSuggestion.confidence)}% confidence ({durationSuggestion.min}-{durationSuggestion.max} min range)
@@ -2407,7 +2441,7 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
               <label className="control">
                 <div className="control-label">Deadline (optional)</div>
                 <div className="time-input">
-                  <span style={{ fontSize: "16px" }}>📅</span>
+                  <CalendarIcon size={16} />
                   <input
                     type="date"
                     value={taskDeadline}
@@ -2469,7 +2503,7 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
             gap: "8px",
             animation: "fadeIn 0.3s ease-out"
           }}>
-            <span>🎯</span>
+            <TargetIcon size={16} />
             <span>Focus Mode Active</span>
             <span style={{ fontSize: "12px", opacity: 0.7, fontWeight: "500" }}>(Press F or click button to exit)</span>
           </div>
@@ -2487,7 +2521,7 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
             boxShadow: "0 4px 12px rgba(59,110,59,0.06), 0 12px 32px rgba(59,110,59,0.1)",
             animation: "fadeIn 0.3s ease-out"
           }}>
-            <div style={{ fontSize: "12px", fontWeight: 700, color: "#3B6E3B", textTransform: "uppercase", letterSpacing: "0.5px" }}>🌿 Current Task</div>
+            <div style={{ fontSize: "12px", fontWeight: 700, color: "#3B6E3B", textTransform: "uppercase", letterSpacing: "0.5px" }}><LeafIcon size={12} style={{ display: 'inline', marginRight: '4px', verticalAlign: 'middle' }} /> Current Task</div>
             <div style={{ fontSize: "20px", fontWeight: 900, marginTop: 8, color: "#123a12" }}>{activeTask.name}</div>
 
             <div style={{ display: "flex", alignItems: "center", gap: 16, marginTop: 14 }}>
@@ -2578,7 +2612,7 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
                             borderRadius: "10px",
                             border: "1.5px solid rgba(255,165,0,0.18)"
                           }}>
-                            <span style={{ fontSize: "16px" }}>🍂</span>
+                            <LeafFallIcon size={16} />
                             <h3 style={{ margin: 0, fontSize: "14px", fontWeight: "700", color: "#d97706" }}>
                               Carried from previous days ({carriedTasksMemo.length})
                             </h3>
@@ -2663,7 +2697,7 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
                                         flexShrink: 0,
                                         boxShadow: "0 4px 10px rgba(245,158,11,0.2)"
                                       }}>
-                                        🍂
+                                        <LeafFallIcon size={16} />
                                       </div>
 
                                       <div style={{ flex: 1 }}>
@@ -2701,7 +2735,7 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
                                               alignItems: "center",
                                               gap: "3px"
                                             }}>
-                                              🔁 {task.attempts}x
+                                              <RepeatIcon size={12} style={{ display: 'inline', marginRight: '2px', verticalAlign: 'middle' }} /> {task.attempts}x
                                             </span>
                                           )}
                                           {hasConflict(task.id) && (
@@ -2716,7 +2750,7 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
                                               alignItems: "center",
                                               gap: "3px"
                                             }}>
-                                              ⚠️ Conflict
+<WarningIcon size={12} style={{ display: 'inline', marginRight: '2px', verticalAlign: 'middle' }} /> Conflict
                                             </span>
                                           )}
                                           {(() => {
@@ -2739,7 +2773,7 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
                                                 gap: "3px",
                                                 animation: urgency.shouldBlock ? "focusPulse 2s ease-in-out infinite" : "none"
                                               }}>
-                                                {urgency.level === 'overdue' ? "🔴" : urgency.level === 'today' ? "🔴" : urgency.level === 'tomorrow' ? "⚠️" : "📅"} {urgency.message}
+                                                {urgency.level === 'overdue' ? <DangerStatusIcon size={12} style={{ display: 'inline', marginRight: '3px', verticalAlign: 'middle' }} /> : urgency.level === 'today' ? <DangerStatusIcon size={12} style={{ display: 'inline', marginRight: '3px', verticalAlign: 'middle' }} /> : urgency.level === 'tomorrow' ? <WarningIcon size={12} style={{ display: 'inline', marginRight: '3px', verticalAlign: 'middle' }} /> : <CalendarIcon size={12} style={{ display: 'inline', marginRight: '3px', verticalAlign: 'middle' }} />} {urgency.message}
                                               </span>
                                             );
                                           })()}
@@ -2759,7 +2793,7 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
                                             borderRadius: "6px",
                                             border: "1px dashed rgba(245,158,11,0.3)"
                                           }}>
-                                            ⚠️ Consider breaking this into smaller steps
+                                            <WarningIcon size={12} style={{ display: 'inline', marginRight: '4px', verticalAlign: 'middle' }} /> Consider breaking this into smaller steps
                                           </div>
                                         )}
                                       </div>
@@ -2822,7 +2856,7 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
                             borderRadius: "10px",
                             border: "1.5px solid rgba(111,175,111,0.18)"
                           }}>
-                            <span style={{ fontSize: "16px" }}>🌿</span>
+                            <LeafIcon size={16} />
                             <h3 style={{ margin: 0, fontSize: "14px", fontWeight: "700", color: "#3B6E3B" }}>
                               Today's tasks ({todayTasksMemo.length})
                             </h3>
@@ -2947,7 +2981,7 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
                                               alignItems: "center",
                                               gap: "3px"
                                             }}>
-                                              🔁 {task.attempts}x
+                                              <RepeatIcon size={12} style={{ display: 'inline', marginRight: '2px', verticalAlign: 'middle' }} /> {task.attempts}x
                                             </span>
                                           )}
                                           {hasConflict(task.id) && (
@@ -2962,7 +2996,7 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
                                               alignItems: "center",
                                               gap: "3px"
                                             }}>
-                                              ⚠️ Conflict
+<WarningIcon size={12} style={{ display: 'inline', marginRight: '2px', verticalAlign: 'middle' }} /> Conflict
                                             </span>
                                           )}
                                           {(() => {
@@ -2985,7 +3019,7 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
                                                 gap: "3px",
                                                 animation: urgency.shouldBlock ? "focusPulse 2s ease-in-out infinite" : "none"
                                               }}>
-                                                {urgency.level === 'overdue' ? "🔴" : urgency.level === 'today' ? "🔴" : urgency.level === 'tomorrow' ? "⚠️" : "📅"} {urgency.message}
+                                                {urgency.level === 'overdue' ? <DangerStatusIcon size={12} style={{ display: 'inline', marginRight: '3px', verticalAlign: 'middle' }} /> : urgency.level === 'today' ? <DangerStatusIcon size={12} style={{ display: 'inline', marginRight: '3px', verticalAlign: 'middle' }} /> : urgency.level === 'tomorrow' ? <WarningIcon size={12} style={{ display: 'inline', marginRight: '3px', verticalAlign: 'middle' }} /> : <CalendarIcon size={12} style={{ display: 'inline', marginRight: '3px', verticalAlign: 'middle' }} />} {urgency.message}
                                               </span>
                                             );
                                           })()}
@@ -3005,7 +3039,7 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
                                             borderRadius: "6px",
                                             border: "1px dashed rgba(245,158,11,0.3)"
                                           }}>
-                                            ⚠️ Consider breaking this into smaller steps
+                                            <WarningIcon size={12} style={{ display: 'inline', marginRight: '4px', verticalAlign: 'middle' }} /> Consider breaking this into smaller steps
                                           </div>
                                         )}
                                       </div>
@@ -3122,7 +3156,7 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
           alignItems: "center",
           gap: "8px"
         }}>
-          <span>{focusModeEnabled ? "🎯" : "👁️"}</span>
+          <span>{focusModeEnabled ? <TargetIcon size={16} /> : <EyeIcon size={16} />}</span>
           <span>{focusModeEnabled ? "Focus Mode ON" : "Focus Mode OFF"}</span>
           <span style={{ fontSize: "12px", opacity: 0.8 }}>
             {focusModeEnabled ? "(Press F to exit)" : "(Press F to enable)"}

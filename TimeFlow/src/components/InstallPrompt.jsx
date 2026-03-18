@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useDarkMode } from '../utils/useDarkMode';
 import { haptic } from '../utils/haptics';
+import { LeafIcon } from '../icons';
 
 export default function InstallPrompt() {
   const [deferredPrompt, setDeferredPrompt] = useState(null);
@@ -58,7 +59,7 @@ export default function InstallPrompt() {
       animation: 'slideUp 0.3s ease-out'
     }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px' }}>
-        <div style={{ fontSize: '32px' }}>🌿</div>
+        <LeafIcon size={32} />
         <div style={{ flex: 1 }}>
           <div style={{ fontSize: '15px', fontWeight: 700, color: isDark ? '#E8F0E8' : '#1A1A1A' }}>
             Install TimeFlow

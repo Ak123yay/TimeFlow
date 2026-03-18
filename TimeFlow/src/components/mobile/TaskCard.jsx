@@ -1,6 +1,11 @@
 import { useMemo } from 'react';
 import { useDarkMode } from '../../utils/useDarkMode';
 import SwipeableTask from '../SwipeableTask';
+import {
+  CheckmarkIcon,
+  RepeatIcon,
+  PlayIcon,
+} from '../../icons';
 
 /**
  * TaskCard - Clean minimal task card with full feature support
@@ -98,7 +103,7 @@ export default function TaskCard({
           userSelect: 'none'
         }}
       >
-        {task.completed ? '✓' : (task.position || '')}
+        {task.completed ? <CheckmarkIcon size={14} /> : (task.position || '')}
       </div>
 
       {/* Content */}
@@ -140,7 +145,9 @@ export default function TaskCard({
                 color: isActive ? (isDark ? '#A8D4A8' : '#3B6E3B') : '#3B6E3B',
                 letterSpacing: '0.3px',
                 textTransform: 'uppercase'
-              }}>▶ up next</span>
+              }}>
+                <PlayIcon size={9} style={{ display: 'inline', marginRight: '2px', verticalAlign: 'middle' }} /> up next
+              </span>
             </>
           )}
           {task.startTime && (
@@ -161,7 +168,7 @@ export default function TaskCard({
             <>
               <span style={{ opacity: 0.4 }}>·</span>
               <span style={{ color: isActive ? (isDark ? 'rgba(168,212,168,0.8)' : '#5A8A5A') : '#D97706' }}>
-                🔁{task.rescheduleAttempts}x
+                <RepeatIcon size={12} style={{ display: 'inline', marginRight: '2px', verticalAlign: 'middle' }} />{task.rescheduleAttempts}x
               </span>
             </>
           )}
