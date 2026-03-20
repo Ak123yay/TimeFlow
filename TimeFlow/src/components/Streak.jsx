@@ -6,6 +6,7 @@ import { getReflectionHistory } from '../utils/storage';
 import { loadStreak } from '../utils/streaks';
 import { haptic } from '../utils/haptics';
 import { useDarkMode } from '../utils/useDarkMode';
+import { usePageTransition, useScrollReveal } from '../utils/useAnimations';
 import {
   LeafIcon,
   FireIcon,
@@ -22,6 +23,8 @@ import {
 
 export default function Streak({ onNavigate }) {
   const isDark = useDarkMode();
+  const { ref: pageRef } = usePageTransition();
+  const cardRef = useScrollReveal({ threshold: 0.2 });
   const [isMobile, setIsMobile] = useState(() => window.matchMedia('(max-width: 768px)').matches);
   const [streak, setStreak] = useState({ current: 0, longest: 0, lastActive: null });
   const [reflections, setReflections] = useState([]);

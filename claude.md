@@ -171,6 +171,212 @@ After subagents complete:
 
 ---
 
+## 5.5 TimeFlow-Specific Skills (Superpowers)
+
+TimeFlow has 8 specialized Claude Code skills for sophisticated development workflows. **These are custom skills** (not built-in tools) - use `/skillname` to invoke them.
+
+### Available TimeFlow Skills
+
+#### 1. `/timeflow-tdd` - Test-Driven Development
+**Purpose:** Implement features using RED→GREEN→REFACTOR discipline
+**Use When:** Building new features or fixing bugs with test-first approach
+**Workflow:**
+- RED: Write failing tests that define behavior
+- GREEN: Implement minimal code to pass tests
+- REFACTOR: Clean up without changing behavior
+
+**Example:**
+```
+/timeflow-tdd "Implement task priority system
+
+RED: Write tests for priority levels (low/medium/high)
+GREEN: Make tests pass with minimal code
+REFACTOR: Clean up priority sorting logic"
+```
+
+#### 2. `/timeflow-debug` - Systematic Debugging
+**Purpose:** Fix bugs using 4-phase methodology (Investigate → Analyze → Hypothesize → Implement)
+**Use When:** Debugging complex issues, task carryover problems, dark mode issues
+**Workflow:**
+- INVESTIGATE: Reproduce issue systematically, gather evidence
+- ANALYZE: Understand root cause (not symptoms)
+- HYPOTHESIZE: Create specific fix hypothesis
+- IMPLEMENT: Execute fix, verify no regressions
+
+**Example:**
+```
+/timeflow-debug "Dark mode text invisible on task cards
+
+Reproduce on real device (not just DevTools)
+Identify which CSS variables are incorrect
+Check contrast ratios in dark mode
+Verify fix across all components"
+```
+
+#### 3. `/timeflow-brainstorm` - Socratic Ideation
+**Purpose:** Explore features through guided questioning (5 phases)
+**Use When:** Designing new features, gathering requirements, validating ideas
+**Workflow:**
+- OPENING: Understand raw idea
+- DEEP QUESTIONING: Explore edge cases, user needs, calm productivity alignment
+- REQUIREMENTS: Document acceptance criteria
+- DESIGN: Sketch solution approach
+- ACCEPTANCE CRITERIA: Define measurable success
+
+**Example:**
+```
+/timeflow-brainstorm "Add weekly goal tracking feature
+
+What does 'goal' mean? (task vs. intention vs. metric)
+How does this support calm productivity?
+Should goals limit daily tasks?
+What happens when goals aren't met? (no guilt!)"
+```
+
+#### 4. `/timeflow-ralph-loop` - Iterative Development
+**Purpose:** Work autonomously for 1+ hour on complex tasks requiring iteration
+**Use When:** Multi-phase features, complex refactoring, edge case fixes
+**Key:** FULLY AUTONOMOUS - no user interruption during loop
+**Workflow:** 6-8 iterations:
+- ITERATION 1: Initial implementation + testing
+- ITERATION 2-6: Read prior work, identify issues, refine
+- ITERATION 7-8: Convergence verification, completion promise
+
+**Example:**
+```
+/timeflow-ralph-loop "Fix task carryover duplication bug
+
+SUCCESS CRITERIA:
+- [ ] Carried tasks no longer duplicate after reload
+- [ ] Deleted carried tasks don't reappear
+- [ ] All edge cases verified
+- [ ] localStorage state clean
+
+MAX ITERATIONS: 6"
+```
+
+#### 5. `/timeflow-guide` - Architecture Reference
+**Purpose:** Understand how TimeFlow works, codebase patterns, best practices
+**Use When:** Learning the project, planning features, reviewing architecture
+**Contains:** Data structures, file organization, design system, common patterns
+
+**Example:**
+```
+/timeflow-guide "How does the task carryover system work?
+
+Explain the data flow from Today.jsx through storage.js
+What happens when a task is carried to the next day?
+How are duplicates prevented?"
+```
+
+#### 6. `/icon-guide` - Icon System Standards
+**Purpose:** Create, modify, and verify icons following minimalistic design standards
+**Use When:** Adding new icons, refactoring icon system, ensuring consistency
+**Standards:** 1.2px strokes, outline-only design, dark mode support, React.memo optimization
+
+**Example:**
+```
+/icon-guide "Verify all tab bar icons match system standards
+
+Check: 20px size, 1.2px strokes, outline-only, dark mode"
+```
+
+#### 7. `/design-review` - UI/UX Verification
+**Purpose:** Comprehensive design review for UI consistency and user experience
+**Use When:** Evaluating UI changes, new components, design system updates
+**Checks:** Visual hierarchy, dark mode compatibility, responsive design, calm productivity alignment
+
+**Example:**
+```
+/design-review "Review task card redesign
+
+Verify: Color contrast, icon sizing, spacing, mobile responsiveness, dark mode"
+```
+
+#### 8. `/analyze-tasks` - Task System Investigation
+**Purpose:** Deep research of task persistence, carryover logic, AI rescheduling
+**Use When:** Debugging task-related issues, validating changes don't break carryover
+**Specialization:** localStorage patterns, ID-based matching, edge case discovery
+
+**Example:**
+```
+/analyze-tasks "Investigate why carried tasks appear as duplicates
+
+Trace: Task creation → carry logic → localStorage save → reload"
+```
+
+#### 9. `/simplify` - Code Quality Review
+**Purpose:** Review code changes for reuse, quality, and efficiency
+**Use When:** After implementation, before committing code
+**Checks:** DRY principle, performance, security, maintainability
+
+**Example:**
+```
+/simplify "Review the new priority system implementation
+
+Check for code duplication, unnecessary complexity, performance issues"
+```
+
+### Skill Selection Matrix
+
+| Task | Skill | Why |
+|------|-------|-----|
+| Add new feature | `/timeflow-brainstorm` → `/timeflow-tdd` | Design first, then TDD |
+| Fix complex bug | `/timeflow-debug` → `/timeflow-ralph-loop` | Systematic investigation, then iterate |
+| Understand system | `/timeflow-guide` | Reference architecture and patterns |
+| Create icons | `/icon-guide` | Icon system standards |
+| Review UI changes | `/design-review` | Consistency and UX verification |
+| Debug task issues | `/analyze-tasks` | Task-specific deep research |
+| Optimize code | `/simplify` | Quality and efficiency checks |
+| Extended iteration | `/timeflow-ralph-loop` | Autonomous multi-hour work |
+
+### Using Multiple Skills Together
+
+**Recommended Workflow for New Feature:**
+```
+1. /timeflow-brainstorm "Design the feature"
+   → Returns requirements and acceptance criteria
+
+2. /timeflow-tdd "Implement with TDD discipline"
+   → RED phase (failing tests)
+   → GREEN phase (implementation)
+   → REFACTOR phase (cleanup)
+
+3. /design-review "Verify UI/UX consistency"
+   → Check dark mode, responsiveness, hierarchy
+
+4. /simplify "Code quality review"
+   → Check for duplication, performance, security
+
+5. /timeflow-ralph-loop "Extended iteration if needed"
+   → Multi-hour refinement and edge case handling
+```
+
+**Recommended Workflow for Bug Fix:**
+```
+1. /timeflow-debug "Systematic investigation"
+   → INVESTIGATE: Reproduce, gather evidence
+   → ANALYZE: Root cause analysis
+   → HYPOTHESIZE: Create fix
+   → IMPLEMENT: Execute and verify
+
+2. /timeflow-ralph-loop "If complex, iterate"
+   → Test edge cases
+   → Verify no regressions
+   → Multiple iterations until complete
+```
+
+### Important Notes on Skills
+
+- Skills are **custom, TimeFlow-specific** (not built-in Claude Code tools)
+- Invoke with `/skillname` in prompt or use `Skill` tool
+- Each skill has **deep contextual knowledge** about TimeFlow
+- Skills preserve **all prior context** - they know the full project
+- Can be **chained together** for sophisticated workflows
+- Output feeds directly into next skill or implementation
+
+---
+
 ## 6. Parallelize Independent Tasks
 
 **When multiple tools don't depend on each other:**

@@ -1,5 +1,7 @@
 import { useEffect, useState, useRef, useMemo, useCallback, lazy, Suspense } from "react";
 import { loadAvailability, getUnfinishedTasksFromPreviousDays, saveTasksForDate, loadTasksForDate, addTaskToWeeklyPool } from "../utils/storage";
+import { useScrollReveal, usePageTransition, useTaskCompletionAnimation, useStaggerAnimation } from "../utils/useAnimations";
+import { getStaggerDelay, prefersReducedMotion } from "../utils/animationUtils";
 import { rescheduleUnfinishedTasks, detectConflicts, calculateOverflow, getDeadlineUrgency, detectPotentialConflicts, getTaskHealth } from "../utils/scheduler";
 import { hhmmToMinutes, minutesToHHMM, getTodayString, formatDuration } from "../utils/timeUtils";
 import { getCached, setCached, flushNow } from "../utils/storageCache";
@@ -254,6 +256,9 @@ function MobileSortableTask({ task, isActive, children }) {
 export default function Today({ onEndDay, onShowWeek, onShowPool }) {
   const isDark = useDarkMode();
   const availability = loadAvailability();
+
+  // Page transition animation
+  const { ref: pageRef } = usePageTransition();
 
   // Mobile detection
   const [isMobile, setIsMobile] = useState(() => window.matchMedia('(max-width: 768px)').matches);
@@ -2028,7 +2033,7 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
 
   // ==================== DESKTOP RENDER ====================
   return (
-    <div className="setup-fullscreen nat-bg">
+    <div ref={pageRef} className="setup-fullscreen nat-bg page-transition-enter">
       <div className="setup-inner nat-card">
 
         {/* Header */}
@@ -2648,9 +2653,11 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
                                     <SortableTaskItem
                                       task={task}
                                       key={task.id}
+                                      data-stagger-item
                                       sectionHasMultipleItems={hasMultiple}
-                                      className={isActiveTask ? 'task-focused' : ''}
+                                      className={isActiveTask ? 'task-focused list-item' : 'list-item'}
                                       style={{
+                                        '--stagger-delay': `${getStaggerDelay(i)}s`,
                                         background: "linear-gradient(135deg, rgba(255,200,150,0.1), rgba(255,210,160,0.06))",
                                         border: `2px solid ${health.color}`,
                                         borderRadius: "16px",
@@ -2662,7 +2669,7 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
                                         overflow: "hidden",
                                         opacity: shouldDim ? 0.4 : (task.completed ? 0.6 : 1),
                                         transition: "all 0.25s cubic-bezier(0.25, 0.46, 0.45, 0.94)",
-                                        animation: "slideInFromLeft 0.4s ease-out",
+                                        animation: `listItemStagger 0.3s ease-out both`,
                                         boxShadow: hasConflict(task.id)
                                           ? "0 2px 12px rgba(245,158,11,0.15)"
                                           : isActiveTask

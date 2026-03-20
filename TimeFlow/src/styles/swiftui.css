@@ -71,6 +71,32 @@
   transform: scale(0.98);
 }
 
+/* ============================================
+   ENHANCED SWIFTUI BUTTON ANIMATIONS
+   Refined microinteractions with spring physics
+   ============================================ */
+
+@keyframes swiftuiButtonHover {
+  0% {
+    transform: scale(1);
+  }
+  100% {
+    transform: scale(1.04);
+  }
+}
+
+@keyframes swiftuiButtonPress {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(0.94);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
 /* SwiftUI Button Styles */
 .swiftui-button {
   padding: 10px 16px;
@@ -78,13 +104,23 @@
   font-weight: 500;
   border: none;
   cursor: pointer;
-  transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
   font-size: 16px;
   line-height: 1.4;
+  position: relative;
+  overflow: hidden;
+}
+
+.swiftui-button:hover {
+  animation: swiftuiButtonHover 0.2s ease-out forwards;
+}
+
+.swiftui-button:active {
+  animation: swiftuiButtonPress 0.2s ease-out forwards;
 }
 
 /* Primary Button - Blue */

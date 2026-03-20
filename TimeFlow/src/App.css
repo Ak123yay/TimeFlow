@@ -1552,3 +1552,319 @@ a:focus-visible {
 .bounce-update {
   animation: iosBounceIn 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
+
+/* ============================================
+   ENHANCED PAGE TRANSITIONS
+   Smooth, purposeful navigation between views
+   ============================================ */
+
+/* Page slide out (exit) */
+@keyframes pageSlideOut {
+  0% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(-30px);
+  }
+}
+
+/* Page slide in (enter) */
+@keyframes pageSlideIn {
+  0% {
+    opacity: 0;
+    transform: translateX(30px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Page fade transition */
+@keyframes pageFadeIn {
+  0% { opacity: 0; }
+  100% { opacity: 1; }
+}
+
+/* Page container transition class */
+.page-transition-enter {
+  animation: pageSlideIn 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+}
+
+.page-transition-exit {
+  animation: pageSlideOut 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+}
+
+/* ============================================
+   TASK COMPLETION CELEBRATION EFFECT
+   Celebratory feedback when task completed
+   ============================================ */
+
+@keyframes taskCompleteConfetti {
+  0% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.5) translateY(-60px);
+  }
+}
+
+@keyframes taskCompleteScale {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.08); }
+  100% { transform: scale(1); }
+}
+
+@keyframes taskCompleteGlow {
+  0% {
+    box-shadow: var(--shadow-card);
+  }
+  50% {
+    box-shadow: 0 0 30px rgba(82, 183, 136, 0.4);
+  }
+  100% {
+    box-shadow: var(--shadow-card);
+  }
+}
+
+.task-complete-effect {
+  animation: taskCompleteScale 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.task-complete-glow {
+  animation: taskCompleteGlow 0.6s ease-out;
+}
+
+/* ============================================
+   FORM INTERACTION FEEDBACK
+   Enhanced focus, input, and validation states
+   ============================================ */
+
+@keyframes inputFocusRing {
+  0% {
+    box-shadow: 0 0 0 0 rgba(59, 110, 59, 0.1);
+  }
+  100% {
+    box-shadow: 0 0 0 4px rgba(59, 110, 59, 0.1);
+  }
+}
+
+@keyframes inputInvalidShake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-3px); }
+  75% { transform: translateX(3px); }
+}
+
+input:focus {
+  animation: inputFocusRing 0.3s ease-out;
+}
+
+input.invalid {
+  animation: inputInvalidShake 0.4s ease-out;
+  border-color: var(--danger) !important;
+}
+
+/* ============================================
+   VISUAL HIERARCHY ENHANCEMENTS
+   Refined typography scale with animations
+   ============================================ */
+
+/* Section header entrance */
+@keyframes sectionHeaderEnter {
+  0% {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.section-header {
+  animation: sectionHeaderEnter 0.4s ease-out;
+}
+
+/* List item stagger entrance */
+@keyframes listItemStagger {
+  0% {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.list-item {
+  animation: listItemStagger 0.3s ease-out;
+}
+
+.list-item:nth-child(1) { animation-delay: 0.05s; }
+.list-item:nth-child(2) { animation-delay: 0.1s; }
+.list-item:nth-child(3) { animation-delay: 0.15s; }
+.list-item:nth-child(4) { animation-delay: 0.2s; }
+.list-item:nth-child(5) { animation-delay: 0.25s; }
+.list-item:nth-child(n+6) { animation-delay: 0.3s; }
+
+/* ============================================
+   SHADOW & ELEVATION POLISH
+   Enhanced depth perception with refined shadows
+   ============================================ */
+
+/* Hover elevation effect */
+@keyframes hoverElevate {
+  0% {
+    transform: translateY(0);
+  }
+  100% {
+    transform: translateY(-4px);
+  }
+}
+
+.interactive-card:hover {
+  animation: hoverElevate 0.3s ease-out forwards;
+}
+
+/* Pressed state */
+@keyframes pressDown {
+  0% {
+    transform: translateY(0);
+  }
+  100% {
+    transform: translateY(2px);
+  }
+}
+
+.interactive-card:active {
+  animation: pressDown 0.15s ease-out forwards;
+}
+
+/* ============================================
+   LOADING & SKELETON STATES
+   Smooth, professional loading feedback
+   ============================================ */
+
+@keyframes skeletonPulse {
+  0%, 100% {
+    opacity: 0.7;
+    background-color: rgba(167, 211, 167, 0.1);
+  }
+  50% {
+    opacity: 1;
+    background-color: rgba(167, 211, 167, 0.15);
+  }
+}
+
+.skeleton-loading {
+  animation: skeletonPulse 2s ease-in-out infinite;
+  border-radius: var(--radius-md);
+  background-color: rgba(167, 211, 167, 0.1);
+}
+
+/* Shimmer effect for premium feel */
+@keyframes shimmer {
+  0% {
+    background-position: -1000px 0;
+  }
+  100% {
+    background-position: 1000px 0;
+  }
+}
+
+.skeleton-shimmer {
+  background: linear-gradient(
+    90deg,
+    rgba(167, 211, 167, 0),
+    rgba(167, 211, 167, 0.15),
+    rgba(167, 211, 167, 0)
+  );
+  background-size: 1000px 100%;
+  animation: shimmer 2s infinite;
+}
+
+/* ============================================
+   SCROLL-TRIGGERED ANIMATIONS
+   Elements animate in as they scroll into view
+   ============================================ */
+
+@keyframes scrollReveal {
+  0% {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.scroll-reveal {
+  animation: scrollReveal 0.5s ease-out forwards;
+}
+
+/* ============================================
+   REFINED BUTTON INTERACTIONS
+   More sophisticated feedback and transitions
+   ============================================ */
+
+button {
+  position: relative;
+  overflow: hidden;
+}
+
+/* Button ripple effect on click */
+@keyframes buttonRipple {
+  0% {
+    transform: scale(0);
+    opacity: 0.8;
+  }
+  100% {
+    transform: scale(4);
+    opacity: 0;
+  }
+}
+
+button::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.3);
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+
+button:active::after {
+  animation: buttonRipple 0.6s ease-out;
+}
+
+/* ============================================
+   DARK MODE ANIMATION REFINEMENTS
+   Smooth transitions for theme changes
+   ============================================ */
+
+@media (prefers-color-scheme: dark) {
+  /* Enhanced dark mode shadows */
+  .shadow-elevated-dark {
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
+  }
+
+  /* Refined dark mode focus states */
+  button:focus-visible {
+    outline-color: var(--primary-2);
+  }
+
+  /* Dark mode animation adjustments */
+  .task-complete-glow {
+    --success-glow: rgba(82, 183, 136, 0.5);
+  }
+}

@@ -13,6 +13,7 @@ import FirstTimeTooltip from './FirstTimeTooltip';
 import { hasSeenTooltip, markTooltipSeen, TOOLTIP_CONTENT } from "../utils/firstTimeTooltips";
 import { haptic } from "../utils/haptics";
 import { useDarkMode } from "../utils/useDarkMode";
+import { usePageTransition, useScrollReveal } from "../utils/useAnimations";
 import SearchBar from './shared/SearchBar';
 import "../App.css";
 import {
@@ -42,6 +43,8 @@ const saveTasks = (tasks) => {
 
 export default function WeeklyPool({ onNavigateToToday }) {
   const isDark = useDarkMode();
+  const { ref: pageRef } = usePageTransition();
+  const poolItemsRef = useScrollReveal({ threshold: 0.15 });
   const [poolTasks, setPoolTasks] = useState(() => loadWeeklyPool());
   const [newTaskName, setNewTaskName] = useState("");
   const [newTaskDeadline, setNewTaskDeadline] = useState("");

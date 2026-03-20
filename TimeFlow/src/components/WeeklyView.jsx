@@ -7,6 +7,7 @@ import FirstTimeTooltip from './FirstTimeTooltip';
 import { hasSeenTooltip, markTooltipSeen, TOOLTIP_CONTENT } from "../utils/firstTimeTooltips";
 import { haptic } from "../utils/haptics";
 import { useDarkMode } from "../utils/useDarkMode";
+import { usePageTransition, useScrollReveal } from "../utils/useAnimations";
 import "../App.css";
 import {
   LeafIcon,
@@ -16,6 +17,7 @@ import {
 
 export default function WeeklyView({ onBackToToday }) {
   const isDark = useDarkMode();
+  const { ref: pageRef } = usePageTransition();
   const [weekStart, setWeekStart] = useState(getCurrentWeekStart());
   const [weekData, setWeekData] = useState([]);
   const [selectedDay, setSelectedDay] = useState(null);

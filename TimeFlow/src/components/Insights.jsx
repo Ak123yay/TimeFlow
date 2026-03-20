@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import MobileLayout from './mobile/MobileLayout';
 import { haptic } from '../utils/haptics';
 import { useDarkMode } from '../utils/useDarkMode';
+import { usePageTransition, useScrollReveal } from '../utils/useAnimations';
 import {
   suggestDuration,
   getAllHourlyCompletionRates,
@@ -41,6 +42,8 @@ function formatHour(hour) {
 
 export default function Insights({ onNavigate }) {
   const isDark = useDarkMode();
+  const { ref: pageRef } = usePageTransition();
+  const statsRef = useScrollReveal({ threshold: 0.1 });
   const [isMobile, setIsMobile] = useState(() => window.matchMedia('(max-width: 768px)').matches);
   const [accuracyStats, setAccuracyStats] = useState(null);
   const [energyPattern, setEnergyPattern] = useState(null);
