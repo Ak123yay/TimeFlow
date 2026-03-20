@@ -10,6 +10,11 @@ import {
   getRescheduleOptionFrequencies,
 } from '../utils/analytics';
 import {
+  getProductivityScoreHistory,
+  getProductivityTrend,
+  calculateProductivityScore,
+} from '../utils/storage';
+import {
   ChartIcon,
   TargetIcon,
   BoltIcon,
@@ -50,6 +55,7 @@ export default function Insights({ onNavigate }) {
   const [frequentTasks, setFrequentTasks] = useState([]);
   const [estimationBias, setEstimationBias] = useState(null);
   const [rescheduleHabits, setRescheduleHabits] = useState({});
+  const [productivityStats, setProductivityStats] = useState(null);
 
   useEffect(() => {
     const mq = window.matchMedia('(max-width: 768px)');
@@ -146,6 +152,30 @@ export default function Insights({ onNavigate }) {
     const freqs = getRescheduleOptionFrequencies();
     if (Object.keys(freqs).length > 0) setRescheduleHabits(freqs);
 
+    // Calculate productivity score stats
+    try {
+      const today = new Date().toISOString().slice(0, 10);
+      const todayScore = calculateProductivityScore(today);
+      const scoreHistory = getProductivityScoreHistory(30);
+      const trend = getProductivityTrend(7);
+
+      // Calculate average score from history
+      const validScores = scoreHistory.filter(h => h.score > 0);
+      const avgScore = validScores.length > 0
+        ? Math.round(validScores.reduce((sum, h) => sum + h.score, 0) / validScores.length)
+        : 0;
+
+      setProductivityStats({
+        today: todayScore,
+        average: avgScore,
+        trend,
+        history: scoreHistory,
+        daysWithData: validScores.length
+      });
+    } catch (e) {
+      console.error('Error loading productivity stats:', e);
+    }
+
   }, []);
 
   if (isMobile) {
@@ -171,6 +201,71 @@ export default function Insights({ onNavigate }) {
             Learn from your task patterns
           </p>
         </div>
+
+        {/* Productivity Score Card */}
+        {productivityStats && (
+          <div style={{
+            background: isDark ? '#242B24' : '#fff',
+            borderRadius: '18px',
+            padding: '18px',
+            marginBottom: '14px',
+            boxShadow: isDark ? '0 1px 3px rgba(0,0,0,0.12), 0 4px 12px rgba(0,0,0,0.16)' : '0 1px 3px rgba(0,0,0,0.04), 0 4px 12px rgba(0,0,0,0.06)',
+            borderLeft: `4px solid ${
+              productivityStats.today >= 80 ? '#10b981' :
+              productivityStats.today >= 50 ? '#f59e0b' : '#ef4444'
+            }`
+          }}>
+            <h3 style={{ fontSize: '14px', fontWeight: 700, color: isDark ? '#E8F0E8' : '#1A1A1A', margin: '0 0 12px' }}>
+              Daily Productivity Score
+            </h3>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+              <div style={{ flex: 1 }}>
+                <div style={{
+                  fontSize: '32px',
+                  fontWeight: 800,
+                  color: productivityStats.today >= 80 ? '#10b981' :
+                    productivityStats.today >= 50 ? '#f59e0b' : '#ef4444'
+                }}>
+                  {productivityStats.today}%
+                </div>
+                <div style={{ fontSize: '11px', color: isDark ? '#9CA59C' : '#8E8E93', marginTop: '4px' }}>
+                  Today's score
+                </div>
+              </div>
+              <div style={{
+                padding: '8px 12px',
+                borderRadius: '10px',
+                background: productivityStats.trend === 'improving' ? 'rgba(16,185,129,0.1)' :
+                  productivityStats.trend === 'declining' ? 'rgba(239,68,68,0.1)' : 'rgba(251,191,36,0.1)',
+                color: productivityStats.trend === 'improving' ? '#10b981' :
+                  productivityStats.trend === 'declining' ? '#ef4444' : '#fbbf24',
+                fontSize: '12px',
+                fontWeight: 600
+              }}>
+                {productivityStats.trend === 'improving' ? '↗ Improving' :
+                  productivityStats.trend === 'declining' ? '↘ Declining' : '→ Stable'}
+              </div>
+            </div>
+            <div style={{
+              marginTop: '12px',
+              height: '6px',
+              background: isDark ? '#1A1F1A' : '#F0F0F0',
+              borderRadius: '3px',
+              overflow: 'hidden'
+            }}>
+              <div style={{
+                height: '100%',
+                width: `${productivityStats.today}%`,
+                background: productivityStats.today >= 80 ? '#10b981' :
+                  productivityStats.today >= 50 ? '#f59e0b' : '#ef4444',
+                transition: 'width 0.3s ease'
+              }} />
+            </div>
+            <div style={{ marginTop: '12px', fontSize: '12px', color: isDark ? '#9CA59C' : '#6B8E6B' }}>
+              7-day average: {productivityStats.average}% • {productivityStats.daysWithData} days tracked
+            </div>
+          </div>
+        )}
 
         {/* Duration Accuracy Card */}
         {accuracyStats && (

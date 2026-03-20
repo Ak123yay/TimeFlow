@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { loadTasksForDate, saveTasksForDate, saveReflection } from "../utils/storage";
+import { loadTasksForDate, saveTasksForDate, saveReflection, calculateProductivityScore, recordDailyInsight } from "../utils/storage";
 import MobileLayout from './mobile/MobileLayout';
 import FirstTimeTooltip from './FirstTimeTooltip';
 import { hasSeenTooltip, markTooltipSeen, TOOLTIP_CONTENT } from "../utils/firstTimeTooltips";
@@ -59,14 +59,25 @@ export default function DayReflection({ todayDate, onComplete }) {
 
     saveTasksForDate(todayDate, updatedTasks);
 
-    // Save reflection
+    // Calculate productivity score
+    const productivityScore = calculateProductivityScore(todayDate);
+
+    // Save reflection with productivity score
     saveReflection(todayDate, {
       completedCount: completedTasks.length,
       totalCount: tasks.length,
       timeSpent: completedTime,
       reflection,
       mood,
-      unfinishedActions
+      unfinishedActions,
+      productivityScore // Add productivity score to reflection
+    });
+
+    // Record daily insight with productivity metrics
+    recordDailyInsight(todayDate, {
+      reflection,
+      mood,
+      timeSpent: completedTime
     });
 
     onComplete();
@@ -155,11 +166,22 @@ export default function DayReflection({ todayDate, onComplete }) {
               </div>
               <div style={{ fontSize: '10px', color: isDark ? '#9CA59C' : '#8E8E93', marginTop: '2px' }}>Time</div>
             </div>
-            <div style={{ textAlign: 'center' }}>
-              <div style={{ fontSize: '18px', fontWeight: 800, color: '#3B6E3B' }}>
-                {tasks.length > 0 ? Math.round((completedTasks.length / tasks.length) * 100) : 0}%
+            <div style={{
+              textAlign: 'center',
+              padding: '8px',
+              borderRadius: '10px',
+              background: calculateProductivityScore(todayDate) >= 80 ? 'rgba(16,185,129,0.1)' :
+                calculateProductivityScore(todayDate) >= 50 ? 'rgba(245,158,11,0.1)' : 'rgba(239,68,68,0.1)'
+            }}>
+              <div style={{
+                fontSize: '18px',
+                fontWeight: 800,
+                color: calculateProductivityScore(todayDate) >= 80 ? '#10b981' :
+                  calculateProductivityScore(todayDate) >= 50 ? '#f59e0b' : '#ef4444'
+              }}>
+                {calculateProductivityScore(todayDate)}%
               </div>
-              <div style={{ fontSize: '10px', color: isDark ? '#9CA59C' : '#8E8E93', marginTop: '2px' }}>Done</div>
+              <div style={{ fontSize: '10px', color: isDark ? '#9CA59C' : '#8E8E93', marginTop: '2px' }}>Productivity</div>
             </div>
           </div>
         </div>

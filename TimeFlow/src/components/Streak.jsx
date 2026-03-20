@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import MobileLayout from './mobile/MobileLayout';
 import FirstTimeTooltip from './FirstTimeTooltip';
 import { hasSeenTooltip, markTooltipSeen, TOOLTIP_CONTENT } from "../utils/firstTimeTooltips";
-import { getReflectionHistory } from '../utils/storage';
+import { getReflectionHistory, getProductivityTrend, getProductivityScoreHistory } from '../utils/storage';
 import { loadStreak } from '../utils/streaks';
 import { haptic } from '../utils/haptics';
 import { useDarkMode } from '../utils/useDarkMode';
@@ -29,6 +29,7 @@ export default function Streak({ onNavigate }) {
   const [streak, setStreak] = useState({ current: 0, longest: 0, lastActive: null });
   const [reflections, setReflections] = useState([]);
   const [showTooltip, setShowTooltip] = useState(() => !hasSeenTooltip('streak'));
+  const [productivityMetrics, setProductivityMetrics] = useState(null);
 
   useEffect(() => {
     const mq = window.matchMedia('(max-width: 768px)');
@@ -45,6 +46,25 @@ export default function Streak({ onNavigate }) {
     // Load recent reflections
     const history = getReflectionHistory();
     setReflections(history.slice(0, 7)); // Last 7 days
+
+    // Load productivity metrics
+    try {
+      const scoreHistory = getProductivityScoreHistory(7);
+      const validScores = scoreHistory.filter(h => h.score > 0);
+      const avgScore = validScores.length > 0
+        ? Math.round(validScores.reduce((sum, h) => sum + h.score, 0) / validScores.length)
+        : 0;
+      const trend = getProductivityTrend(7);
+
+      setProductivityMetrics({
+        average: avgScore,
+        trend,
+        daysTracked: validScores.length,
+        current: scoreHistory[scoreHistory.length - 1]?.score || 0
+      });
+    } catch (e) {
+      console.error('Error loading productivity metrics:', e);
+    }
   }, []);
 
   const getStreakMessage = () => {
@@ -116,7 +136,7 @@ export default function Streak({ onNavigate }) {
         </div>
 
         {/* Stats Grid */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '10px', marginBottom: '14px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px', marginBottom: '14px' }}>
           <div style={{
             background: isDark ? 'rgba(36,43,36,0.8)' : 'rgba(255,255,255,0.85)',
             backdropFilter: 'blur(12px)',
@@ -131,7 +151,7 @@ export default function Streak({ onNavigate }) {
             <div style={{ fontSize: '28px', fontWeight: 800, color: '#3B6E3B' }}>
               {streak.longest}
             </div>
-            <div style={{ fontSize: '11px', color: isDark ? '#9CA59C' : '#8E8E93', marginTop: '4px' }}>Longest Streak</div>
+            <div style={{ fontSize: '11px', color: isDark ? '#9CA59C' : '#8E8E93', marginTop: '4px' }}>Longest</div>
           </div>
 
           <div style={{
@@ -148,8 +168,33 @@ export default function Streak({ onNavigate }) {
             <div style={{ fontSize: '28px', fontWeight: 800, color: '#3B6E3B' }}>
               {reflections.length}
             </div>
-            <div style={{ fontSize: '11px', color: isDark ? '#9CA59C' : '#8E8E93', marginTop: '4px' }}>Total Days</div>
+            <div style={{ fontSize: '11px', color: isDark ? '#9CA59C' : '#8E8E93', marginTop: '4px' }}>Days</div>
           </div>
+
+          {/* Productivity Metric */}
+          {productivityMetrics && (
+            <div style={{
+              background: isDark ? 'rgba(36,43,36,0.8)' : 'rgba(255,255,255,0.85)',
+              backdropFilter: 'blur(12px)',
+              WebkitBackdropFilter: 'blur(12px)',
+              borderRadius: '18px',
+              padding: '18px',
+              boxShadow: '0 2px 8px rgba(59,110,59,0.1)',
+              border: `1px solid ${isDark ? 'rgba(255,255,255,0.08)' : 'rgba(59,110,59,0.1)'}`,
+              textAlign: 'center',
+              transition: 'all 0.2s'
+            }}>
+              <div style={{
+                fontSize: '28px',
+                fontWeight: 800,
+                color: productivityMetrics.average >= 80 ? '#10b981' :
+                  productivityMetrics.average >= 50 ? '#f59e0b' : '#ef4444'
+              }}>
+                {productivityMetrics.average}%
+              </div>
+              <div style={{ fontSize: '11px', color: isDark ? '#9CA59C' : '#8E8E93', marginTop: '4px' }}>Productivity</div>
+            </div>
+          )}
         </div>
 
         {/* Insights Card */}

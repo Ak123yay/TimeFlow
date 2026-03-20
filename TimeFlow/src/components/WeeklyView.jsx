@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { getWeekData, getCurrentWeekStart, loadReflection } from "../utils/storage";
+import { useState, useEffect, lazy } from "react";
+import { getWeekData, getCurrentWeekStart, loadReflection, loadTasksForDate, saveTasksForDate } from "../utils/storage";
 import ReflectionViewer from "./dialogs/ReflectionViewer";
 import MobileLayout from './mobile/MobileLayout';
 import CalendarView from './CalendarView';
@@ -13,7 +13,10 @@ import {
   LeafIcon,
   LeafFallIcon,
   NoteIcon,
+  PlusIcon,
 } from '../icons';
+
+const AddTaskModal = lazy(() => import("./dialogs/AddTaskModal"));
 
 export default function WeeklyView({ onBackToToday }) {
   const isDark = useDarkMode();
@@ -24,6 +27,8 @@ export default function WeeklyView({ onBackToToday }) {
   const [viewMode, setViewMode] = useState('week'); // 'week' or 'month'
   const [isMobile, setIsMobile] = useState(() => window.matchMedia('(max-width: 768px)').matches);
   const [showTooltip, setShowTooltip] = useState(() => !hasSeenTooltip('week'));
+  const [showAddTaskModal, setShowAddTaskModal] = useState(false);
+  const [selectedDateForTask, setSelectedDateForTask] = useState(null);
 
   useEffect(() => {
     const mq = window.matchMedia('(max-width: 768px)');
@@ -61,6 +66,39 @@ export default function WeeklyView({ onBackToToday }) {
   };
 
   const isCurrentWeek = weekStart === getCurrentWeekStart();
+
+  // Handle add task from calendar
+  const handleAddTaskClick = (dateString) => {
+    haptic.light();
+    setSelectedDateForTask(dateString);
+    setShowAddTaskModal(true);
+  };
+
+  // Handle save new task from modal
+  const handleAddTask = (newTask) => {
+    if (!selectedDateForTask) return;
+
+    try {
+      const tasks = loadTasksForDate(selectedDateForTask);
+      tasks.push(newTask);
+      saveTasksForDate(selectedDateForTask, tasks);
+
+      // Refresh week data
+      const data = getWeekData(weekStart);
+      const dataWithReflections = data.map(day => ({
+        ...day,
+        reflection: loadReflection(day.date)
+      }));
+      setWeekData(dataWithReflections);
+
+      haptic.light();
+      setShowAddTaskModal(false);
+      setSelectedDateForTask(null);
+    } catch (e) {
+      console.error('Error adding task:', e);
+      haptic.warning();
+    }
+  };
 
   if (isMobile) {
     return (
@@ -272,6 +310,45 @@ export default function WeeklyView({ onBackToToday }) {
                         No tasks
                       </div>
                     )}
+
+                    {/* Add Task Button */}
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleAddTaskClick(day.date);
+                      }}
+                      style={{
+                        marginTop: '10px',
+                        width: '100%',
+                        padding: '10px',
+                        background: isDark ? '#1A1F1A' : '#F8F8F8',
+                        color: isDark ? '#9CA59C' : '#666',
+                        border: `1.5px dashed ${isDark ? '#4B5B4B' : '#D1D5DB'}`,
+                        borderRadius: '10px',
+                        fontSize: '12px',
+                        fontWeight:600,
+                        cursor: 'pointer',
+                        transition: 'all 0.2s',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '6px',
+                        touchAction: 'manipulation'
+                      }}
+                      onMouseOver={(e) => {
+                        e.target.style.background = isDark ? '#242B24' : '#F0F0F0';
+                        e.target.style.borderColor = isDark ? '#6FAF6F' : '#3B6E3B';
+                        e.target.style.color = isDark ? '#6FAF6F' : '#3B6E3B';
+                      }}
+                      onMouseOut={(e) => {
+                        e.target.style.background = isDark ? '#1A1F1A' : '#F8F8F8';
+                        e.target.style.borderColor = isDark ? '#4B5B4B' : '#D1D5DB';
+                        e.target.style.color = isDark ? '#9CA59C' : '#666';
+                      }}
+                    >
+                      <PlusIcon size={14} />
+                      Add Task
+                    </button>
                   </div>
                 );
               })}
@@ -500,6 +577,17 @@ export default function WeeklyView({ onBackToToday }) {
             onClose={() => setSelectedDay(null)}
           />
         )}
+
+        {/* Add Task Modal */}
+        <AddTaskModal
+          isOpen={showAddTaskModal}
+          onClose={() => {
+            setShowAddTaskModal(false);
+            setSelectedDateForTask(null);
+          }}
+          onAddTask={handleAddTask}
+          prefilledDate={selectedDateForTask}
+        />
       </div>
     </div>
   );

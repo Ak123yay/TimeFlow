@@ -466,3 +466,153 @@ export const getAllAnalytics = () => {
   }
 };
 
+// ============================================================================
+// DAILY INSIGHTS - Productivity Score & Metrics
+// ============================================================================
+
+/**
+ * Calculate productivity score for a given date
+ * Score = (tasksCompleted / tasksCreated) * 100, capped at 100
+ * @param {string} dateString - YYYY-MM-DD format
+ * @returns {number} Productivity score (0-100)
+ */
+export const calculateProductivityScore = (dateString) => {
+  try {
+    const tasks = loadTasksForDate(dateString);
+    if (tasks.length === 0) return 0;
+
+    const completed = tasks.filter(t => t.completed).length;
+    const created = tasks.length;
+
+    // Ensure no division by zero, cap at 100
+    const score = created > 0 ? Math.min(100, Math.round((completed / created) * 100)) : 0;
+    return score;
+  } catch (e) {
+    console.error('calculateProductivityScore', e);
+    return 0;
+  }
+};
+
+/**
+ * Record daily insight/reflection data with productivity score
+ * @param {string} dateString - YYYY-MM-DD format
+ * @param {object} insightData - Insight data to record
+ */
+export const recordDailyInsight = (dateString, insightData = {}) => {
+  try {
+    const insights = JSON.parse(localStorage.getItem('timeflow-daily-insights') || '{}');
+    const tasks = loadTasksForDate(dateString);
+    const completed = tasks.filter(t => t.completed).length;
+
+    insights[dateString] = {
+      date: dateString,
+      tasksCreated: tasks.length,
+      tasksCompleted: completed,
+      tasksSkipped: tasks.length - completed,
+      productivityScore: calculateProductivityScore(dateString),
+      totalTimeTracked: tasks.reduce((sum, t) => sum + (t.duration || 0), 0),
+      ...insightData,
+      timestamp: new Date().toISOString()
+    };
+
+    localStorage.setItem('timeflow-daily-insights', JSON.stringify(insights));
+  } catch (e) {
+    console.error('recordDailyInsight', e);
+  }
+};
+
+/**
+ * Load insight data for a specific date
+ * @param {string} dateString - YYYY-MM-DD format
+ * @returns {object|null} Insight data or null
+ */
+export const loadDailyInsight = (dateString) => {
+  try {
+    const insights = JSON.parse(localStorage.getItem('timeflow-daily-insights') || '{}');
+    return insights[dateString] || null;
+  } catch (e) {
+    console.error('loadDailyInsight', e);
+    return null;
+  }
+};
+
+/**
+ * Load all daily insights
+ * @returns {object} All insights keyed by date
+ */
+export const getAllDailyInsights = () => {
+  try {
+    return JSON.parse(localStorage.getItem('timeflow-daily-insights') || '{}');
+  } catch (e) {
+    console.error('getAllDailyInsights', e);
+    return {};
+  }
+};
+
+/**
+ * Get productivity trend for the last N days
+ * @param {number} days - Number of days to analyze (default 7)
+ * @returns {string} Trend: 'improving', 'stable', 'declining'
+ */
+export const getProductivityTrend = (days = 7) => {
+  try {
+    const insights = getAllDailyInsights();
+    const today = new Date();
+    const scores = [];
+
+    for (let i = 0; i < days; i++) {
+      const date = new Date(today);
+      date.setDate(date.getDate() - i);
+      const dateString = date.toISOString().slice(0, 10);
+      const insight = insights[dateString];
+      if (insight) {
+        scores.unshift(insight.productivityScore);
+      }
+    }
+
+    if (scores.length < 5) return 'neutral';
+
+    const recent = scores.slice(-3).reduce((a, b) => a + b, 0) / 3;
+    const older = scores.slice(0, 3).reduce((a, b) => a + b, 0) / 3;
+
+    if (recent - older > 10) return 'improving';
+    if (older - recent > 10) return 'declining';
+    return 'stable';
+  } catch (e) {
+    console.error('getProductivityTrend', e);
+    return 'neutral';
+  }
+};
+
+/**
+ * Get productivity score history (array format for charts)
+ * @param {number} days - Number of days to retrieve
+ * @returns {array} Array of { date, score } objects
+ */
+export const getProductivityScoreHistory = (days = 30) => {
+  try {
+    const insights = getAllDailyInsights();
+    const today = new Date();
+    const history = [];
+
+    for (let i = days - 1; i >= 0; i--) {
+      const date = new Date(today);
+      date.setDate(date.getDate() - i);
+      const dateString = date.toISOString().slice(0, 10);
+      const insight = insights[dateString];
+
+      history.push({
+        date: dateString,
+        score: insight ? insight.productivityScore : 0,
+        completed: insight ? insight.tasksCompleted : 0,
+        created: insight ? insight.tasksCreated : 0
+      });
+    }
+
+    return history;
+  } catch (e) {
+    console.error('getProductivityScoreHistory', e);
+    return [];
+  }
+};
+

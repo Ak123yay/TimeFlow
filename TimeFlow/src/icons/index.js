@@ -48,6 +48,7 @@ export { default as DangerStatusIcon } from './ui-controls/DangerStatusIcon';
 export { default as WarningStatusIcon } from './ui-controls/WarningStatusIcon';
 export { default as BoltIcon } from './ui-controls/BoltIcon';
 export { default as FireIcon } from './ui-controls/FireIcon';
+export { default as PlusIcon } from './ui-controls/PlusIcon';
 
 // Category icons
 export { default as ComputerIcon } from './categories/ComputerIcon';
