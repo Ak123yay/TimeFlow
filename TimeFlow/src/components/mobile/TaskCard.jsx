@@ -1,6 +1,8 @@
 import { useMemo } from 'react';
 import { useDarkMode } from '../../utils/useDarkMode';
 import SwipeableTask from '../SwipeableTask';
+import HealthIndicatorDots from '../HealthIndicatorDots';
+import { getTaskHealth } from '../../utils/scheduler';
 import {
   CheckmarkIcon,
   RepeatIcon,
@@ -9,7 +11,7 @@ import {
 
 /**
  * TaskCard - Clean minimal task card with full feature support
- * Shows: name, duration, time, deadline, conflicts, reschedule count
+ * Shows: name, duration, time, deadline, conflicts, reschedule count, health indicators
  */
 export default function TaskCard({
   task,
@@ -19,10 +21,16 @@ export default function TaskCard({
   onComplete,
   onDelete,
   onEdit,
-  showSwipeActions = true
+  showSwipeActions = true,
+  allTasks = []
 }) {
   // Detect system color scheme
   const isDark = useDarkMode();
+
+  // OPTIMIZED: Memoize health calculation
+  const health = useMemo(() => {
+    return getTaskHealth(task, allTasks || []);
+  }, [task, allTasks]);
 
   // OPTIMIZED: Memoize deadline calculation - only recalculates when deadline changes
   const deadlineInfo = useMemo(() => {
@@ -111,20 +119,29 @@ export default function TaskCard({
       {/* Content */}
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{
-          fontSize: '14px',
-          fontWeight: 600,
-          lineHeight: 1.3,
-          color: isActive
-            ? (isDark ? '#A8D4A8' : '#1E3E1E')
-            : task.completed
-              ? (isDark ? '#6B7B6B' : '#9CA3AF')
-              : (isDark ? '#E8F0E8' : '#1A1A1A'),
-          textDecoration: task.completed ? 'line-through' : 'none',
-          overflow: 'hidden',
-          textOverflow: 'ellipsis',
-          whiteSpace: 'nowrap'
+          display: 'flex',
+          alignItems: 'center',
+          gap: '8px',
+          marginBottom: '4px'
         }}>
-          {task.name}
+          <div style={{
+            fontSize: '14px',
+            fontWeight: 600,
+            lineHeight: 1.3,
+            color: isActive
+              ? (isDark ? '#A8D4A8' : '#1E3E1E')
+              : task.completed
+                ? (isDark ? '#6B7B6B' : '#9CA3AF')
+                : (isDark ? '#E8F0E8' : '#1A1A1A'),
+            textDecoration: task.completed ? 'line-through' : 'none',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            whiteSpace: 'nowrap',
+            flex: 1
+          }}>
+            {task.name}
+          </div>
+          <HealthIndicatorDots health={health} size="sm" />
         </div>
 
         {/* Meta row */}

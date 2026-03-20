@@ -1664,6 +1664,7 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
                             onDelete={() => deleteTask(task.id)}
                             onEdit={() => handleEditTask(task)}
                             showSwipeActions={activeTaskId !== task.id}
+                            allTasks={tasks}
                           />
                         </MobileSortableTask>
                       ))}
@@ -1769,6 +1770,7 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
                             onDelete={() => deleteTask(task.id)}
                             onEdit={() => handleEditTask(task)}
                             showSwipeActions={activeTaskId !== task.id}
+                            allTasks={tasks}
                           />
                         </MobileSortableTask>
                       ))}

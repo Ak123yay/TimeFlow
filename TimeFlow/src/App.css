@@ -8,6 +8,13 @@
 
 /* Palette - Light Mode */
 :root{
+  /* Beta V1.1 Color System */
+  --forest-primary: #1B4332;   /* Deep forest green (Beta V1.1) */
+  --forest-light: #3B6E3B;     /* Original primary (maintained for compatibility) */
+  --sage: #74C69D;             /* Beta V1.1 sage green */
+  --parchment: #F5F0E8;        /* Beta V1.1 warm parchment */
+
+  /* Legacy colors (kept for backwards compatibility) */
   --bg: #F0F8F2;        /* soft green / cream */
   --card: #ffffff;
   --text-primary: #1A1A1A;
@@ -17,20 +24,59 @@
   --primary-2: #6FAF6F; /* light green */
   --muted: #4B6B4B;
   --vine: #A7D3A7;
+
+  /* Typography System */
+  --font-display: 'Playfair Display', serif;  /* Headers */
+  --font-body: 'DM Sans', system-ui, -apple-system, 'Segoe UI', Roboto, Arial;  /* Body text */
+  --font-mono: 'JetBrains Mono', 'Courier New', monospace;  /* Timers/code */
+
+  /* Typography Scale */
+  --text-xs: 11px;
+  --text-sm: 13px;
+  --text-base: 15px;
+  --text-lg: 17px;
+  --text-xl: 22px;
+  --text-2xl: 28px;
+  --text-3xl: 34px;
+
+  /* Spacing System (4px base unit) */
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 12px;
+  --space-lg: 16px;
+  --space-xl: 24px;
+  --space-2xl: 32px;
+  --space-3xl: 48px;
+
+  /* Soft shadows & transitions */
   --soft-shadow: rgba(12, 34, 12, 0.05);
+
+  /* Animation Timings */
+  --transition-fast: all 0.15s cubic-bezier(0.25, 0.46, 0.45, 0.94);
   --transition-smooth: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-  --transition-fast: all 0.18s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-  --radius-sm: 12px;
-  --radius-md: 16px;
-  --radius-lg: 20px;
+  --transition-slow: all 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+
+  /* Border Radius System */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
   --radius-xl: 24px;
+
+  /* Shadow System (3 elevation levels) */
+  --shadow-low: 0 1px 2px rgba(0, 0, 0, 0.04), 0 2px 4px rgba(0, 0, 0, 0.08);
+  --shadow-medium: 0 2px 6px rgba(59,110,59,0.06), 0 8px 16px rgba(59,110,59,0.1);
   --shadow-card: 0 1px 3px rgba(59,110,59,0.04), 0 4px 12px rgba(59,110,59,0.06);
   --shadow-card-hover: 0 2px 6px rgba(59,110,59,0.06), 0 8px 24px rgba(59,110,59,0.1);
   --shadow-elevated: 0 4px 12px rgba(59,110,59,0.06), 0 12px 32px rgba(59,110,59,0.1);
+  --shadow-high: 0 12px 24px rgba(59,110,59,0.12), 0 20px 48px rgba(59,110,59,0.16);
+
+  /* Health Indicator Colors */
+  --health-green: #52B788;     /* Healthy - leaf green */
+  --health-amber: #F9C74F;     /* Warning - golden yellow */
+  --health-red: #DC2626;       /* Critical - autumn red */
 
   /* Enhanced nature-inspired earthy tones */
   --moss: #7C9A73;           /* Soft moss green */
-  --sage: #9DB39B;           /* Sage green */
   --earth: #8B7355;          /* Earthy brown */
   --sand: #F5F1E8;           /* Warm sand */
   --sky: #E8F4F2;            /* Light sky blue */
@@ -56,6 +102,12 @@
 /* Dark Mode Palette */
 @media (prefers-color-scheme: dark) {
   :root {
+    /* Beta V1.1 Dark Mode Colors */
+    --forest-primary: #0D2B1F;  /* Darker forest for dark mode */
+    --forest-light: #4A6B4A;    /* Lighter forest accent */
+    --sage: #52A073;            /* Darker sage for dark mode */
+    --parchment: #2F342D;       /* Dark parchment/neutral */
+
     --bg: #1A1F1A;              /* Deep forest night */
     --card: #242B24;            /* Dark moss card */
     --text-primary: #E8F0E8;    /* Light text */
@@ -66,13 +118,22 @@
     --muted: #6B7B6B;
     --vine: #4A6B4A;            /* Darker vine */
     --soft-shadow: rgba(0, 0, 0, 0.25);
+
+    /* Dark Mode Shadows */
+    --shadow-low: 0 1px 2px rgba(0, 0, 0, 0.12), 0 2px 4px rgba(0, 0, 0, 0.16);
+    --shadow-medium: 0 2px 6px rgba(0, 0, 0, 0.14), 0 8px 16px rgba(0, 0, 0, 0.2);
     --shadow-card: 0 1px 3px rgba(0,0,0,0.12), 0 4px 12px rgba(0,0,0,0.16);
     --shadow-card-hover: 0 2px 6px rgba(0,0,0,0.14), 0 8px 24px rgba(0,0,0,0.2);
     --shadow-elevated: 0 4px 12px rgba(0,0,0,0.15), 0 12px 32px rgba(0,0,0,0.22);
+    --shadow-high: 0 12px 24px rgba(0,0,0,0.2), 0 20px 48px rgba(0,0,0,0.25);
+
+    /* Health Indicator Colors (Dark Mode) */
+    --health-green: #52B788;    /* Keep same green - good contrast */
+    --health-amber: #FBBF24;    /* Brighter amber for dark mode */
+    --health-red: #F87171;      /* Brighter red for dark mode */
 
     /* Adjusted earthy tones for dark */
     --moss: #5B7A52;
-    --sage: #6B8B6B;
     --earth: #6B5545;
     --sand: #2F342D;
     --sky: #1F2B2A;
@@ -100,11 +161,41 @@ html, body, #root {
 }
 body{
   margin:0;
-  font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, Arial;
+  font-family: var(--font-body);
   background: var(--bg);
   color: var(--text-primary);
   -webkit-font-smoothing:antialiased;
   -moz-osx-font-smoothing:grayscale;
+  font-size: var(--text-base);
+  line-height: 1.6;
+}
+
+/* Heading Typography */
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-display);
+  font-weight: 600;
+  line-height: 1.2;
+  margin: 0;
+}
+
+h1 { font-size: var(--text-3xl); }
+h2 { font-size: var(--text-2xl); }
+h3 { font-size: var(--text-xl); }
+h4 { font-size: var(--text-lg); }
+h5, h6 { font-size: var(--text-base); }
+
+/* Monospace Typography */
+code, pre {
+  font-family: var(--font-mono);
+}
+
+/* Reduced Motion Support */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }
 
 /* Smooth scroll */
