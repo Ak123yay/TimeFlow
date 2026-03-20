@@ -76,9 +76,8 @@ export default function AddTaskModal({ isOpen, onClose, onAddTask, prefilledDate
       backdropFilter: "blur(4px)",
       display: "flex",
       alignItems: "flex-end",
-      zIndex: 9999,
-      animation: "fadeIn 0.2s ease-out"
-    }}>
+      zIndex: 9999
+    }} className="modal-backdrop">
       <div style={{
         background: "var(--tf-bg)",
         borderTopLeftRadius: 24,
@@ -87,9 +86,8 @@ export default function AddTaskModal({ isOpen, onClose, onAddTask, prefilledDate
         width: "100%",
         maxHeight: "90vh",
         overflowY: "auto",
-        animation: "slideUp 0.3s ease-out",
         boxShadow: "0 -4px 20px rgba(0,0,0,0.1)"
-      }}>
+      }} className="modal-content-slide-up">
         {/* Header */}
         <div style={{
           display: "flex",
@@ -147,8 +145,9 @@ export default function AddTaskModal({ isOpen, onClose, onAddTask, prefilledDate
                 background: "var(--tf-surface)",
                 color: "var(--tf-text)",
                 boxSizing: "border-box",
-                transition: "border-color 0.2s"
+                transition: "border-color 0.2s, box-shadow 0.2s"
               }}
+              className="input-focus-animation"
               onFocus={(e) => e.target.style.borderColor = "var(--tf-accent)"}
               onBlur={(e) => e.target.style.borderColor = "var(--tf-border)"}
             />
@@ -304,6 +303,9 @@ export default function AddTaskModal({ isOpen, onClose, onAddTask, prefilledDate
                 cursor: "pointer",
                 transition: "all 0.2s"
               }}
+              className="transition-smooth"
+              onMouseDown={(e) => e.currentTarget.classList.add('button-press')}
+              onMouseUp={(e) => e.currentTarget.classList.remove('button-press')}
               onMouseOver={(e) => e.target.style.background = "var(--tf-border)"}
               onMouseOut={(e) => e.target.style.background = "var(--tf-surface)"}
             >
@@ -323,6 +325,9 @@ export default function AddTaskModal({ isOpen, onClose, onAddTask, prefilledDate
                 cursor: "pointer",
                 transition: "all 0.2s"
               }}
+              className="transition-smooth"
+              onMouseDown={(e) => e.currentTarget.classList.add('button-press')}
+              onMouseUp={(e) => e.currentTarget.classList.remove('button-press')}
               onMouseOver={(e) => e.target.style.opacity = 0.9}
               onMouseOut={(e) => e.target.style.opacity = 1}
             >

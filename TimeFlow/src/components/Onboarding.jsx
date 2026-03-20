@@ -74,7 +74,7 @@ export default function Onboarding({ onComplete }) {
         <ProgressDots currentStep={step} totalSteps={5} />
 
         {step === 0 && (
-          <div style={{ textAlign: "center" }}>
+          <div className="page-transition-enter" style={{ textAlign: "center" }}>
             <div style={{ fontSize: "72px", marginBottom: "16px" }}><LeafIcon size={72} /></div>
             <h1 className="title" style={{ fontSize: "32px", marginBottom: "16px" }}>Welcome to TimeFlow</h1>
             <p className="muted" style={{ fontSize: "17px", lineHeight: "1.7", marginBottom: "32px" }}>
@@ -132,7 +132,7 @@ export default function Onboarding({ onComplete }) {
         )}
 
         {step === 1 && (
-          <div style={{ textAlign: "center" }}>
+          <div className="page-transition-enter" style={{ textAlign: "center" }}>
             <h1 className="title" style={{ fontSize: "28px", marginBottom: "24px" }}>How It Works</h1>
 
             <div style={{ display: "flex", flexDirection: "column", gap: "20px", marginBottom: "32px" }}>
@@ -245,7 +245,7 @@ export default function Onboarding({ onComplete }) {
         )}
 
         {step === 2 && (
-          <div>
+          <div className="page-transition-enter">
             <h1 className="title" style={{ fontSize: "24px", marginBottom: "20px", textAlign: "center" }}>
               What Makes TimeFlow Special
             </h1>
@@ -382,7 +382,7 @@ export default function Onboarding({ onComplete }) {
         )}
 
         {step === 3 && (
-          <div>
+          <div className="page-transition-enter">
             <h1 className="title" style={{ fontSize: "24px", marginBottom: "16px", textAlign: "center" }}>
               Install TimeFlow as an App
             </h1>
@@ -454,7 +454,7 @@ export default function Onboarding({ onComplete }) {
         )}
 
         {step === 4 && (
-          <div style={{ textAlign: "center" }}>
+          <div className="page-transition-enter" style={{ textAlign: "center" }}>
             <LeafIcon size={64} fill="#3B6E3B" />
             <h1 className="title" style={{ fontSize: "28px", marginTop: "16px", marginBottom: "16px" }}>
               You're All Set!

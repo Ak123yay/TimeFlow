@@ -22,7 +22,7 @@ export default function DailyCalendar() {
   const year = today.getFullYear();
 
   return (
-    <div style={{
+    <div className="list-item-0" style={{
       background: isDark
         ? 'linear-gradient(135deg, rgba(74,107,74,0.15), rgba(59,110,59,0.08))'
         : 'linear-gradient(135deg, rgba(167,211,167,0.15), rgba(111,175,111,0.08))',

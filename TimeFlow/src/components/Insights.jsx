@@ -193,7 +193,7 @@ export default function Insights({ onNavigate }) {
         activeTab="stats"
       >
         {/* Header */}
-        <div style={{ marginBottom: '16px', textAlign: 'center' }}>
+        <div className="list-item-0" style={{ marginBottom: '16px', textAlign: 'center' }}>
           <h1 style={{ fontSize: '20px', fontWeight: 800, color: isDark ? '#E8F0E8' : '#1A1A1A', margin: '0 0 4px' }}>
             Insights
           </h1>
@@ -204,7 +204,7 @@ export default function Insights({ onNavigate }) {
 
         {/* Productivity Score Card */}
         {productivityStats && (
-          <div style={{
+          <div className="card-enter stagger-1" style={{
             background: isDark ? '#242B24' : '#fff',
             borderRadius: '18px',
             padding: '18px',
@@ -225,7 +225,7 @@ export default function Insights({ onNavigate }) {
                   fontWeight: 800,
                   color: productivityStats.today >= 80 ? '#10b981' :
                     productivityStats.today >= 50 ? '#f59e0b' : '#ef4444'
-                }}>
+                }} className="number-flip">
                   {productivityStats.today}%
                 </div>
                 <div style={{ fontSize: '11px', color: isDark ? '#9CA59C' : '#8E8E93', marginTop: '4px' }}>
@@ -269,7 +269,7 @@ export default function Insights({ onNavigate }) {
 
         {/* Duration Accuracy Card */}
         {accuracyStats && (
-          <div style={{
+          <div className="card-enter stagger-2" style={{
             background: isDark ? '#242B24' : '#fff',
             borderRadius: '18px',
             padding: '18px',
@@ -344,7 +344,7 @@ export default function Insights({ onNavigate }) {
 
         {/* Energy Patterns Card */}
         {energyPattern && energyPattern.length > 0 && (
-          <div style={{
+          <div className="card-enter stagger-3" style={{
             background: isDark ? '#242B24' : '#fff',
             borderRadius: '18px',
             padding: '18px',
@@ -409,7 +409,7 @@ export default function Insights({ onNavigate }) {
           const entries = Object.entries(rescheduleHabits).sort(([, a], [, b]) => b - a);
           const total = entries.reduce((s, [, v]) => s + v, 0);
           return (
-            <div style={{
+            <div className="card-enter stagger-4" style={{
               background: isDark ? '#242B24' : '#fff',
               borderRadius: '16px',
               padding: '16px',
@@ -445,7 +445,7 @@ export default function Insights({ onNavigate }) {
 
         {/* Frequent Tasks with Suggestions */}
         {frequentTasks.length > 0 && (
-          <div style={{
+          <div className="card-enter stagger-5" style={{
             background: isDark ? '#242B24' : '#fff',
             borderRadius: '18px',
             padding: '18px',

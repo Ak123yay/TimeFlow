@@ -20,7 +20,7 @@ export default function StatsBar({
 
   return (
     <div
-      className="presets horizontal-scroll stats-bar"
+      className="presets horizontal-scroll stats-bar list-item-2"
       role="list"
       style={{ marginBottom: "20px" }}
     >

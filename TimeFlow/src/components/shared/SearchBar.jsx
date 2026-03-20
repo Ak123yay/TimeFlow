@@ -14,7 +14,7 @@ export default function SearchBar({ onSearch, placeholder = "Search tasks..." })
   }, [query, onSearch]);
 
   return (
-    <div style={{
+    <div className="list-item-1" style={{
       position: 'sticky',
       top: 0,
       zIndex: 10,

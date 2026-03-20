@@ -6,6 +6,9 @@
 /* Import mobile-first CSS system */
 @import url('./styles/mobile.css');
 
+/* Import comprehensive animation library */
+@import url('./styles/animations.css');
+
 /* Palette - Light Mode */
 :root{
   /* Beta V1.1 Color System */

@@ -222,7 +222,7 @@ export default function Setup({ onDone }) {
           </div>
         </div>
 
-        {error && <div className="error">{error}</div>}
+        {error && <div className="error error-enter">{error}</div>}
 
         <div className="actions-row">
           <button className="btn primary" onClick={validateAndSave}>Save & Continue</button>

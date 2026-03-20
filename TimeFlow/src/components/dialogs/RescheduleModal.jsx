@@ -684,18 +684,18 @@ export default function RescheduleModal({
           position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
           background: isDark ? 'rgba(0,0,0,0.7)' : 'rgba(0,0,0,0.4)',
           zIndex: 9999,
-          animation: 'fadeIn 0.15s ease-out',
           ...(isMobile ? {} : {
             display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16,
           }),
         }}
+        className="modal-backdrop"
         onClick={onClose}
       >
         {/* Desktop: centered sheet inside backdrop */}
         {!isMobile && (
           <div
             ref={sheetRef}
-            className="reschedule-modal"
+            className="reschedule-modal modal-content-slide-up"
             style={sheetStyle}
             onClick={e => e.stopPropagation()}
           >
@@ -708,7 +708,7 @@ export default function RescheduleModal({
       {isMobile && (
         <div
           ref={sheetRef}
-          className="reschedule-modal"
+          className="reschedule-modal modal-content-slide-up"
           style={sheetStyle}
           onTouchStart={handleSheetTouchStart}
           onTouchEnd={handleSheetTouchEnd}

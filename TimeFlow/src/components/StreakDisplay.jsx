@@ -49,7 +49,7 @@ export default function StreakDisplay({ streak, compact = false }) {
 
   // Full display for detailed view
   return (
-    <div style={{
+    <div className="list-item-2" style={{
       padding: '16px 20px',
       background: `linear-gradient(135deg, ${colors.primary}12, ${colors.secondary}05)`,
       borderRadius: '12px',

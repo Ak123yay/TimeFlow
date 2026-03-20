@@ -25,7 +25,7 @@ export default function ReflectionViewer({ date, reflection, onClose }) {
     : 0;
 
   return (
-    <div style={{
+    <div className="modal-backdrop" style={{
       position: "fixed",
       inset: 0,
       background: "rgba(0,0,0,0.4)",
@@ -33,17 +33,15 @@ export default function ReflectionViewer({ date, reflection, onClose }) {
       display: "flex",
       alignItems: "center",
       justifyContent: "center",
-      zIndex: 9999,
-      animation: "fadeIn 0.2s ease-out"
+      zIndex: 9999
     }}>
-      <div style={{
+      <div className="modal-content-scale" style={{
         background: "#fff",
         padding: 32,
         borderRadius: 20,
         width: "92%",
         maxWidth: 600,
         boxShadow: "0 30px 80px rgba(0,0,0,0.25)",
-        animation: "scaleIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)",
         maxHeight: "80vh",
         overflow: "auto"
       }}>

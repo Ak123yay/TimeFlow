@@ -49,6 +49,7 @@ export default function TaskCard({
 
   const content = (
     <div
+      className="card-enter"
       onClick={() => onEdit && onEdit(task)}
       style={{
         display: 'flex',

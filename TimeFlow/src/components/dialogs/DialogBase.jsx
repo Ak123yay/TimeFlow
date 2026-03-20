@@ -77,6 +77,7 @@ export default function DialogBase({ isOpen, onClose, title, children, maxWidth 
 
   return (
     <div
+      className="modal-backdrop"
       style={{
         position: "fixed",
         inset: 0,
@@ -85,8 +86,7 @@ export default function DialogBase({ isOpen, onClose, title, children, maxWidth 
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        zIndex: 9999,
-        animation: "fadeIn 0.2s ease-out"
+        zIndex: 9999
       }}
       onClick={(e) => {
         // Close when clicking backdrop
@@ -100,6 +100,7 @@ export default function DialogBase({ isOpen, onClose, title, children, maxWidth 
         role="dialog"
         aria-modal="true"
         aria-labelledby="dialog-title"
+        className="modal-content-scale"
         style={{
           background: "#fff",
           padding: "28px",
@@ -107,7 +108,6 @@ export default function DialogBase({ isOpen, onClose, title, children, maxWidth 
           width: "92%",
           maxWidth,
           boxShadow: "0 30px 80px rgba(0,0,0,0.25)",
-          animation: "scaleIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)",
           maxHeight: "90vh",
           overflowY: "auto"
         }}

@@ -34,7 +34,7 @@ export default function TaskTimer({
   const timerColor = percentLeft > 50 ? '#3B6E3B' : percentLeft > 25 ? '#D97706' : '#DC2626';
 
   return (
-    <div>
+    <div className="list-item-3">
       {/* Label */}
       <div style={{
         fontSize: '11px',

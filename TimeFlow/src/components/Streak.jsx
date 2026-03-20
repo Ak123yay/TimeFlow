@@ -48,23 +48,32 @@ export default function Streak({ onNavigate }) {
     setReflections(history.slice(0, 7)); // Last 7 days
 
     // Load productivity metrics
-    try {
-      const scoreHistory = getProductivityScoreHistory(7);
-      const validScores = scoreHistory.filter(h => h.score > 0);
-      const avgScore = validScores.length > 0
-        ? Math.round(validScores.reduce((sum, h) => sum + h.score, 0) / validScores.length)
-        : 0;
-      const trend = getProductivityTrend(7);
+    const loadProductivityMetrics = () => {
+      try {
+        const scoreHistory = getProductivityScoreHistory(7);
+        const validScores = scoreHistory.filter(h => h.score > 0);
+        const avgScore = validScores.length > 0
+          ? Math.round(validScores.reduce((sum, h) => sum + h.score, 0) / validScores.length)
+          : 0;
+        const trend = getProductivityTrend(7);
 
-      setProductivityMetrics({
-        average: avgScore,
-        trend,
-        daysTracked: validScores.length,
-        current: scoreHistory[scoreHistory.length - 1]?.score || 0
-      });
-    } catch (e) {
-      console.error('Error loading productivity metrics:', e);
-    }
+        setProductivityMetrics({
+          average: avgScore,
+          trend,
+          daysTracked: validScores.length,
+          current: scoreHistory[scoreHistory.length - 1]?.score || 0
+        });
+      } catch (e) {
+        console.error('Error loading productivity metrics:', e);
+      }
+    };
+
+    // Load immediately
+    loadProductivityMetrics();
+
+    // Refresh every 30 seconds to catch score updates
+    const refreshInterval = setInterval(loadProductivityMetrics, 30000);
+    return () => clearInterval(refreshInterval);
   }, []);
 
   const getStreakMessage = () => {
@@ -119,12 +128,12 @@ export default function Streak({ onNavigate }) {
         )}
 
         {/* Current Streak Card */}
-        <div style={{
+        <div className="card-enter stagger-1" style={{
           background: 'linear-gradient(135deg, #3B6E3B 0%, #2E5A2E 100%)',
           borderRadius: '20px', padding: '24px', marginBottom: '14px',
           boxShadow: '0 4px 12px rgba(59,110,59,0.15), 0 12px 32px rgba(59,110,59,0.2)', textAlign: 'center'
         }}>
-          <div style={{ fontSize: '64px', fontWeight: 900, color: '#fff', lineHeight: 1 }}>
+          <div className="number-flip" style={{ fontSize: '64px', fontWeight: 900, color: '#fff', lineHeight: 1 }}>
             {streak.current}
           </div>
           <div style={{ fontSize: '14px', color: 'rgba(255,255,255,0.9)', fontWeight: 600, marginTop: '8px' }}>
@@ -137,7 +146,7 @@ export default function Streak({ onNavigate }) {
 
         {/* Stats Grid */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px', marginBottom: '14px' }}>
-          <div style={{
+          <div className="card-enter stagger-2" style={{
             background: isDark ? 'rgba(36,43,36,0.8)' : 'rgba(255,255,255,0.85)',
             backdropFilter: 'blur(12px)',
             WebkitBackdropFilter: 'blur(12px)',
@@ -148,13 +157,13 @@ export default function Streak({ onNavigate }) {
             textAlign: 'center',
             transition: 'all 0.2s'
           }}>
-            <div style={{ fontSize: '28px', fontWeight: 800, color: '#3B6E3B' }}>
+            <div className="number-flip" style={{ fontSize: '28px', fontWeight: 800, color: '#3B6E3B' }}>
               {streak.longest}
             </div>
             <div style={{ fontSize: '11px', color: isDark ? '#9CA59C' : '#8E8E93', marginTop: '4px' }}>Longest</div>
           </div>
 
-          <div style={{
+          <div className="card-enter stagger-3" style={{
             background: isDark ? 'rgba(36,43,36,0.8)' : 'rgba(255,255,255,0.85)',
             backdropFilter: 'blur(12px)',
             WebkitBackdropFilter: 'blur(12px)',
@@ -165,7 +174,7 @@ export default function Streak({ onNavigate }) {
             textAlign: 'center',
             transition: 'all 0.2s'
           }}>
-            <div style={{ fontSize: '28px', fontWeight: 800, color: '#3B6E3B' }}>
+            <div className="number-flip" style={{ fontSize: '28px', fontWeight: 800, color: '#3B6E3B' }}>
               {reflections.length}
             </div>
             <div style={{ fontSize: '11px', color: isDark ? '#9CA59C' : '#8E8E93', marginTop: '4px' }}>Days</div>
@@ -173,7 +182,7 @@ export default function Streak({ onNavigate }) {
 
           {/* Productivity Metric */}
           {productivityMetrics && (
-            <div style={{
+            <div className="card-enter stagger-4" style={{
               background: isDark ? 'rgba(36,43,36,0.8)' : 'rgba(255,255,255,0.85)',
               backdropFilter: 'blur(12px)',
               WebkitBackdropFilter: 'blur(12px)',
@@ -184,7 +193,7 @@ export default function Streak({ onNavigate }) {
               textAlign: 'center',
               transition: 'all 0.2s'
             }}>
-              <div style={{
+              <div className="number-flip" style={{
                 fontSize: '28px',
                 fontWeight: 800,
                 color: productivityMetrics.average >= 80 ? '#10b981' :

@@ -136,7 +136,7 @@ export default function WeeklyPool({ onNavigateToToday }) {
       }} activeTab="pool">
 
         {/* Header */}
-        <div style={{ marginBottom: '12px' }}>
+        <div className="list-item-0" style={{ marginBottom: '12px' }}>
           <h1 style={{ fontSize: '20px', fontWeight: 800, color: isDark ? '#E8F0E8' : '#1A1A1A', margin: '0 0 2px', letterSpacing: '-0.3px' }}>
             Weekly Pool
           </h1>
@@ -159,7 +159,7 @@ export default function WeeklyPool({ onNavigateToToday }) {
         )}
 
         {/* Add Task Form */}
-        <div style={{
+        <div className="list-item-1" style={{
           background: isDark ? '#242B24' : '#fff', borderRadius: '18px', padding: '16px',
           marginBottom: '14px', boxShadow: isDark ? '0 1px 3px rgba(0,0,0,0.12), 0 4px 12px rgba(0,0,0,0.16)' : '0 1px 3px rgba(0,0,0,0.04), 0 4px 12px rgba(0,0,0,0.06)'
         }}>

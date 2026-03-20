@@ -1584,7 +1584,8 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
                   >
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                       {filterForFocus(filterTasksBySearch(carriedTasks)).map((task, i) => (
-                        <MobileSortableTask key={task.id} task={task} isActive={activeTaskId === task.id}>
+                        <div key={task.id} className={`list-item-stagger stagger-${Math.min(i + 1, 8)}`}>
+                          <MobileSortableTask task={task} isActive={activeTaskId === task.id}>
                           <TaskCard
                             task={{
                               ...task, position: i + 1,
@@ -1667,6 +1668,7 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
                             allTasks={tasks}
                           />
                         </MobileSortableTask>
+                        </div>
                       ))}
                     </div>
                   </SortableContext>
@@ -1690,7 +1692,8 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
                   >
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                       {filterForFocus(filterTasksBySearch(todayTasks)).map((task, i) => (
-                        <MobileSortableTask key={task.id} task={task} isActive={activeTaskId === task.id}>
+                        <div key={task.id} className={`list-item-stagger stagger-${Math.min(i + 1, 8)}`}>
+                          <MobileSortableTask task={task} isActive={activeTaskId === task.id}>
                           <TaskCard
                             task={{
                               ...task, position: i + 1,
@@ -1773,6 +1776,7 @@ export default function Today({ onEndDay, onShowWeek, onShowPool }) {
                             allTasks={tasks}
                           />
                         </MobileSortableTask>
+                        </div>
                       ))}
                     </div>
                   </SortableContext>

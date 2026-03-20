@@ -51,8 +51,8 @@ export default function EditTaskDialog({ task, onSave, onClose }) {
       alignItems: "center",
       justifyContent: "center",
       zIndex: 9999,
-      animation: "fadeIn 0.2s ease-out"
-    }}>
+    }}
+     className="modal-backdrop">
       <div style={{
         background: "#fff",
         padding: 28,
@@ -60,8 +60,8 @@ export default function EditTaskDialog({ task, onSave, onClose }) {
         width: "92%",
         maxWidth: 480,
         boxShadow: "0 30px 80px rgba(0,0,0,0.25)",
-        animation: "scaleIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)"
-      }}>
+      }}
+      className="modal-content-scale">
         <div style={{ fontSize: 24, fontWeight: 900, color: "#123a12", marginBottom: 20 }}>
           Edit Task
         </div>

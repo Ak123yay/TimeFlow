@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useDarkMode } from '../../utils/useDarkMode';
 import { haptic } from '../../utils/haptics';
 import { SwiftUITabBar } from '../SwiftUIComponents';
@@ -15,10 +15,29 @@ import '../../styles/mobile.css';
  * MobileLayout - Clean minimal layout shell with iOS-style tab bar
  * No heavy header - content scrolls naturally
  * Bottom nav using native iOS SwiftUI styling
+ * Page transitions animated for smooth view changes
  */
 export default function MobileLayout({ children, showBottomNav = true, onNavigate, activeTab = 'today' }) {
   // Detect system color scheme
   const isDark = useDarkMode();
+
+  // Track page transition animation
+  const [prevTab, setPrevTab] = useState(activeTab);
+  const [showAnimation, setShowAnimation] = useState(false);
+  const contentRef = useRef(null);
+
+  // Trigger animation when tab changes
+  useEffect(() => {
+    if (activeTab !== prevTab) {
+      setShowAnimation(true);
+      setPrevTab(activeTab);
+      // Remove animation class after animation completes
+      const timer = setTimeout(() => {
+        setShowAnimation(false);
+      }, 400); // Match animation duration
+      return () => clearTimeout(timer);
+    }
+  }, [activeTab, prevTab]);
 
   // Map tab IDs to page indices for SwiftUITabBar
   const tabIndices = {
@@ -71,14 +90,18 @@ export default function MobileLayout({ children, showBottomNav = true, onNavigat
         overflowY: 'auto',
         overflowX: 'hidden',
         WebkitOverflowScrolling: 'touch',
-        paddingBottom: showBottomNav ? '70px' : '20px'
+        paddingBottom: showBottomNav ? '110px' : '20px'
       }}>
-        <div style={{
-          maxWidth: '480px',
-          margin: '0 auto',
-          padding: '20px 16px',
-          paddingBottom: 0
-        }}>
+        <div
+          ref={contentRef}
+          className={showAnimation ? 'page-transition-enter' : ''}
+          style={{
+            maxWidth: '480px',
+            margin: '0 auto',
+            padding: '20px 16px',
+            paddingBottom: 0
+          }}
+        >
           {children}
         </div>
       </main>

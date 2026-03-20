@@ -1,0 +1,806 @@
+/* ============================================
+   COMPREHENSIVE ANIMATION LIBRARY
+   Page transitions, micro-interactions, data updates
+   ============================================ */
+
+/* ============================================
+   PAGE TRANSITION ANIMATIONS
+   Smooth fade/slide between tab views
+   ============================================ */
+
+@keyframes pageEnterFade {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+@keyframes pageEnterSlideUp {
+  0% {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pageExitFade {
+  0% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes pageEnterSlideFromRight {
+  0% {
+    opacity: 0;
+    transform: translateX(30px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes pageEnterSlideFromLeft {
+  0% {
+    opacity: 0;
+    transform: translateX(-30px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Page transition class */
+.page-transition-enter {
+  animation: pageEnterFade 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.page-transition-slide-up {
+  animation: pageEnterSlideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* ============================================
+   LIST & ITEM STAGGER ANIMATIONS
+   Cascading entrance for list items
+   ============================================ */
+
+@keyframes listItemEnter {
+  0% {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes cardEnter {
+  0% {
+    opacity: 0;
+    transform: scale(0.95) translateY(8px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes slideInLeft {
+  0% {
+    opacity: 0;
+    transform: translateX(-16px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes slideInRight {
+  0% {
+    opacity: 0;
+    transform: translateX(16px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.list-item-stagger {
+  animation: listItemEnter 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+.card-enter {
+  animation: cardEnter 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+.slide-in-left {
+  animation: slideInLeft 0.3s ease-out forwards;
+}
+
+.slide-in-right {
+  animation: slideInRight 0.3s ease-out forwards;
+}
+
+/* Stagger delay utilities */
+.stagger-1 { animation-delay: 0.05s; }
+.stagger-2 { animation-delay: 0.1s; }
+.stagger-3 { animation-delay: 0.15s; }
+.stagger-4 { animation-delay: 0.2s; }
+.stagger-5 { animation-delay: 0.25s; }
+.stagger-6 { animation-delay: 0.3s; }
+.stagger-7 { animation-delay: 0.35s; }
+.stagger-8 { animation-delay: 0.4s; }
+
+/* ============================================
+   DATA UPDATE ANIMATIONS
+   Smooth transitions for value changes
+   ============================================ */
+
+@keyframes numberFlip {
+  0% {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.6;
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -1000px 0;
+  }
+  100% {
+    background-position: 1000px 0;
+  }
+}
+
+@keyframes colorShift {
+  0% {
+    background-color: inherit;
+  }
+  50% {
+    background-color: rgba(59, 110, 59, 0.1);
+  }
+  100% {
+    background-color: inherit;
+  }
+}
+
+@keyframes expand {
+  0% {
+    max-height: 0;
+    opacity: 0;
+  }
+  100% {
+    max-height: 500px;
+    opacity: 1;
+  }
+}
+
+.number-flip {
+  animation: numberFlip 0.5s ease-out;
+}
+
+.pulse-effect {
+  animation: pulse 2s ease-in-out infinite;
+}
+
+.pulse-once {
+  animation: pulse 1s ease-in-out;
+}
+
+.shimmer-effect {
+  background: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.2) 50%, rgba(255,255,255,0) 100%);
+  background-size: 1000px 100%;
+  animation: shimmer 2s infinite;
+}
+
+.color-shift {
+  animation: colorShift 0.6s ease-out;
+}
+
+.expand-enter {
+  animation: expand 0.3s ease-out forwards;
+}
+
+/* ============================================
+   MICRO-INTERACTIONS
+   Button clicks, hovers, focus states
+   ============================================ */
+
+@keyframes buttonPress {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(0.95);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes buttonHover {
+  0% {
+    transform: scale(1);
+  }
+  100% {
+    transform: scale(1.05);
+  }
+}
+
+@keyframes ripple {
+  0% {
+    transform: scale(0);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(4);
+    opacity: 0;
+  }
+}
+
+@keyframes bounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-4px);
+  }
+}
+
+.button-press {
+  animation: buttonPress 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.button-hover {
+  animation: buttonHover 0.2s ease-out forwards;
+}
+
+.ripple-effect {
+  position: relative;
+  overflow: hidden;
+}
+
+.ripple-effect::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 10px;
+  height: 10px;
+  background: rgba(255, 255, 255, 0.5);
+  border-radius: 50%;
+  transform: translate(-50%, -50%) scale(0);
+  pointer-events: none;
+}
+
+.ripple-active::after {
+  animation: ripple 0.6s ease-out;
+}
+
+.bounce-effect {
+  animation: bounce 0.4s ease-in-out;
+}
+
+/* ============================================
+   ERROR & SUCCESS STATES
+   Gentle feedback animations
+   ============================================ */
+
+@keyframes shake {
+  0%, 100% {
+    transform: translateX(0);
+  }
+  25% {
+    transform: translateX(-4px);
+  }
+  75% {
+    transform: translateX(4px);
+  }
+}
+
+@keyframes gentleShake {
+  0%, 100% {
+    transform: translateX(0);
+  }
+  50% {
+    transform: translateX(-2px);
+  }
+}
+
+@keyframes slideInError {
+  0% {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideOutError {
+  0% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes successCheckmark {
+  0% {
+    transform: scale(0) rotate(-45deg);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.1);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1) rotate(0deg);
+    opacity: 1;
+  }
+}
+
+.shake-animation {
+  animation: gentleShake 0.4s ease-out;
+}
+
+.error-enter {
+  animation: slideInError 0.3s ease-out;
+}
+
+.error-exit {
+  animation: slideOutError 0.3s ease-out forwards;
+}
+
+.success-checkmark {
+  animation: successCheckmark 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* ============================================
+   LOADING STATES
+   Skeleton and loading animations
+   ============================================ */
+
+@keyframes skeletonLoading {
+  0% {
+    background-position: -1000px 0;
+  }
+  100% {
+    background-position: 1000px 0;
+  }
+}
+
+@keyframes loadingDots {
+  0%, 20%, 50%, 80%, 100% {
+    opacity: 0.5;
+  }
+  40% {
+    opacity: 1;
+  }
+}
+
+@keyframes spinnerRotate {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes fadeInScale {
+  0% {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.skeleton-loading {
+  background: linear-gradient(90deg, rgba(200,200,200,0.2) 0%, rgba(200,200,200,0.3) 50%, rgba(200,200,200,0.2) 100%);
+  background-size: 1000px 100%;
+  animation: skeletonLoading 1.5s infinite;
+}
+
+.loading-dot {
+  animation: loadingDots 1.4s infinite;
+}
+
+.loading-dot:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.loading-dot:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+.spinner {
+  animation: spinnerRotate 1s linear infinite;
+}
+
+.fade-in-scale {
+  animation: fadeInScale 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* ============================================
+   MODAL & DIALOG ANIMATIONS
+   Entrance and exit with backdrop
+   ============================================ */
+
+@keyframes modalBackdropFade {
+  0% {
+    opacity: 0;
+    backdrop-filter: blur(0px);
+  }
+  100% {
+    opacity: 1;
+    backdrop-filter: blur(4px);
+  }
+}
+
+@keyframes modalSlideUp {
+  0% {
+    opacity: 0;
+    transform: translateY(40px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes modalScaleIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.9) translateY(10px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes modalFadeOut {
+  0% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(40px);
+  }
+}
+
+.modal-backdrop {
+  animation: modalBackdropFade 0.3s ease-out;
+}
+
+.modal-content-slide-up {
+  animation: modalSlideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.modal-content-scale {
+  animation: modalScaleIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.modal-exit {
+  animation: modalFadeOut 0.3s ease-out forwards;
+}
+
+/* ============================================
+   DARK MODE TRANSITION
+   Smooth color scheme toggle
+   ============================================ */
+
+@keyframes darkModeTransition {
+  0% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.98;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+html.dark-mode-transitioning,
+html.dark-mode-transitioning * {
+  animation: darkModeTransition 0.3s ease-out !important;
+}
+
+.dark-mode-transition {
+  animation: darkModeTransition 0.3s ease-out;
+}
+
+/* Smooth theme variable transitions */
+html {
+  transition: background-color 0.3s ease-out, color 0.3s ease-out;
+}
+
+/* ============================================
+   SMOOTH TRANSITIONS
+   General purpose easing for common properties
+   ============================================ */
+
+.transition-smooth {
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.transition-fast {
+  transition: all 0.15s ease-out;
+}
+
+.transition-bounce {
+  transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.transition-ease {
+  transition: all 0.25s ease-in-out;
+}
+
+/* Color transition */
+.transition-colors {
+  transition: background-color 0.3s ease-out, color 0.3s ease-out, border-color 0.3s ease-out;
+}
+
+/* Transform transition */
+.transition-transform {
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Opacity transition */
+.transition-opacity {
+  transition: opacity 0.2s ease-out;
+}
+
+/* ============================================
+   ACCESSIBILITY: RESPECT prefers-reduced-motion
+   Disable animations for users who prefer reduced motion
+   ============================================ */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  /* Keep page readable but skip fancy animations */
+  .page-transition-enter,
+  .page-transition-slide-up,
+  .list-item-stagger,
+  .card-enter,
+  .slide-in-left,
+  .slide-in-right,
+  .number-flip,
+  .pulse-effect,
+  .pulse-once,
+  .shimmer-effect,
+  .color-shift,
+  .button-press,
+  .button-hover,
+  .bounce-effect,
+  .shake-animation,
+  .error-enter,
+  .error-exit,
+  .error-pulse,
+  .success-checkmark,
+  .skeleton-loading,
+  .spinner,
+  .fade-in-scale,
+  .modal-backdrop,
+  .modal-content-slide-up,
+  .modal-content-scale,
+  .modal-exit,
+  .dark-mode-transition,
+  .floating-pill-enter,
+  .tab-item-active-pop {
+    animation: none !important;
+    transition: none !important;
+  }
+
+  /* Ensure final states are visible */
+  .page-transition-enter,
+  .page-transition-slide-up,
+  .list-item-stagger,
+  .card-enter,
+  .modal-content-slide-up,
+  .modal-content-scale {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* ============================================
+   PERFORMANCE OPTIMIZATION
+   Use will-change sparingly for GPU acceleration
+   ============================================ */
+
+.gpu-accelerated {
+  will-change: transform, opacity;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  perspective: 1000px;
+}
+
+/* Remove will-change after animation completes */
+.animation-complete {
+  will-change: auto;
+}
+
+/* ============================================
+   FLOATING PILL ANIMATIONS
+   Tab bar and floating UI element entrance & interactions
+   ============================================ */
+
+@keyframes floatingPillEnter {
+  0% {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes tabItemPop {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+}
+
+@keyframes floatingGlow {
+  0%, 100% {
+    box-shadow: 0 8px 24px rgba(59, 110, 59, 0.15);
+  }
+  50% {
+    box-shadow: 0 12px 32px rgba(59, 110, 59, 0.25);
+  }
+}
+
+.floating-pill-enter {
+  animation: floatingPillEnter 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+.tab-item-active-pop {
+  animation: tabItemPop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.floating-glow {
+  animation: floatingGlow 3s ease-in-out infinite;
+}
+
+/* ============================================
+   ENHANCED ERROR TOAST ANIMATIONS
+   Subtle, attention-grabbing but non-intrusive error feedback
+   ============================================ */
+
+@keyframes errorBounce {
+  0% {
+    opacity: 0;
+    transform: translateY(-12px) scale(0.95);
+  }
+  60% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes errorPulse {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(255, 107, 107, 0.7);
+  }
+  50% {
+    box-shadow: 0 0 0 8px rgba(255, 107, 107, 0);
+  }
+}
+
+.error {
+  animation: errorBounce 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.error-pulse {
+  animation: errorPulse 1.5s ease-out;
+}
+
+/* ============================================
+   SMOOTH HOVER EFFECTS
+   ============================================ */
+
+.hover-lift {
+  transition: transform 0.2s ease-out, box-shadow 0.2s ease-out;
+}
+
+.hover-lift:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* Smooth fade */
+.fade-in {
+  animation: pageEnterFade 0.3s ease-out forwards;
+}
+
+.fade-out {
+  animation: pageExitFade 0.3s ease-out forwards;
+}
+
+/* Smooth scale entry */
+.scale-in {
+  animation: fadeInScale 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* Text selection animation */
+.text-select-animation {
+  transition: color 0.2s ease-out, text-shadow 0.2s ease-out;
+}
+
+/* Smooth input focus */
+.input-focus-animation {
+  transition: border-color 0.2s ease-out, box-shadow 0.2s ease-out, background-color 0.2s ease-out;
+}
+
+/* Combined animations for common scenarios */
+.card-interactive {
+  transition: all 0.2s ease-out;
+  cursor: pointer;
+}
+
+.card-interactive:active {
+  animation: buttonPress 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.card-interactive:hover {
+  transform: translateY(-1px);
+}
+
+/* Universal button smooth transitions */
+button, [role="button"], a[role="button"] {
+  transition: all 0.2s ease-out;
+}

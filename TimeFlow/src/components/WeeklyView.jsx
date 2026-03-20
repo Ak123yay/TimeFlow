@@ -397,6 +397,19 @@ export default function WeeklyView({ onBackToToday }) {
             onClose={() => setSelectedDay(null)}
           />
         )}
+
+        {/* Add Task Modal for Mobile */}
+        <Suspense fallback={null}>
+          <AddTaskModal
+            isOpen={showAddTaskModal}
+            onClose={() => {
+              setShowAddTaskModal(false);
+              setSelectedDateForTask(null);
+            }}
+            onAddTask={handleAddTask}
+            prefilledDate={selectedDateForTask}
+          />
+        </Suspense>
       </MobileLayout>
     );
   }

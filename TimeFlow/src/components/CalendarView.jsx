@@ -75,7 +75,7 @@ export default function CalendarView({ onDaySelect, selectedDate }) {
   const weekDays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
   return (
-    <div style={{
+    <div className="page-transition-enter" style={{
       background: isDark ? '#242B24' : '#fff',
       borderRadius: '16px',
       padding: '16px',

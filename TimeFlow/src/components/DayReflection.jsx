@@ -111,7 +111,7 @@ export default function DayReflection({ todayDate, onComplete }) {
         else if (tab === 'stats') window.location.hash = '#/reflection';
         else if (tab === 'streak') window.location.hash = '#/streak';
       }} activeTab="stats">{/* Header */}
-        <div style={{ marginBottom: '16px', textAlign: 'center' }}>
+        <div className="list-item-0" style={{ marginBottom: '16px', textAlign: 'center' }}>
           <h1 style={{ fontSize: '20px', fontWeight: 800, color: isDark ? '#E8F0E8' : '#1A1A1A', margin: '0 0 4px', letterSpacing: '-0.3px' }}>
             Day Complete
           </h1>
@@ -153,7 +153,7 @@ export default function DayReflection({ todayDate, onComplete }) {
         )}
 
         {/* Stats Summary */}
-        <div style={{
+        <div className="list-item-1" style={{
           background: isDark ? '#242B24' : '#fff', borderRadius: '14px', padding: '16px',
           marginBottom: '14px', boxShadow: isDark ? '0 1px 6px rgba(0,0,0,0.3)' : '0 1px 6px rgba(0,0,0,0.04)'
         }}>
@@ -191,7 +191,7 @@ export default function DayReflection({ todayDate, onComplete }) {
         </div>
 
         {/* Mood Selection */}
-        <div style={{ marginBottom: '14px' }}>
+        <div className="list-item-2" style={{ marginBottom: '14px' }}>
           <label style={{ display: 'block', marginBottom: '10px', fontSize: '13px', fontWeight: 700, color: isDark ? '#E8F0E8' : '#1A1A1A' }}>
             How was your day?
           </label>
@@ -286,7 +286,7 @@ export default function DayReflection({ todayDate, onComplete }) {
         )}
 
         {/* Reflection */}
-        <div style={{ marginBottom: '14px' }}>
+        <div className="list-item-3" style={{ marginBottom: '14px' }}>
           <label style={{ display: 'block', marginBottom: '10px', fontSize: '13px', fontWeight: 700, color: isDark ? '#E8F0E8' : '#1A1A1A' }}>
             What went well today? (Optional)
           </label>
