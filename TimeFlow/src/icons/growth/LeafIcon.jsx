@@ -24,22 +24,21 @@ const LeafIcon = React.memo(({
       xmlns="http://www.w3.org/2000/svg"
       aria-hidden="true"
     >
-      {/* Leaf outline only */}
+      {/* Leaf outline - minimalist silhouette */}
       <path
         d="M2 12C2 10.5 4 8.5 8.5 8C13.5 8 17 9 20.5 12C17 15 13.5 16 8.5 16C4 15.5 2 13.5 2 12Z"
         stroke={resolvedFill}
-        strokeWidth="1.3"
+        strokeWidth="1.2"
         strokeLinecap="round"
         strokeLinejoin="round"
       />
 
-      {/* Central vein */}
+      {/* Central vein - single clean line */}
       <path
         d="M4 12Q12 11 20 12"
         stroke={resolvedFill}
-        strokeWidth="1.1"
+        strokeWidth="1.2"
         strokeLinecap="round"
-        opacity="0.7"
       />
     </svg>
   );

@@ -21,37 +21,32 @@ const TargetIcon = React.memo(({
       xmlns="http://www.w3.org/2000/svg"
       aria-hidden="true"
     >
-      {/* Outer ring */}
+      {/* Outer ring - bold circle */}
       <circle
         cx="12"
         cy="12"
         r="10"
         stroke={resolvedFill}
-        strokeWidth="1.3"
-        opacity="0.8"
+        strokeWidth="1.2"
         strokeLinecap="round"
       />
 
-      {/* Inner ring */}
+      {/* Inner ring - mid circle */}
       <circle
         cx="12"
         cy="12"
         r="6"
         stroke={resolvedFill}
-        strokeWidth="1.3"
-        opacity="0.8"
+        strokeWidth="1.2"
         strokeLinecap="round"
       />
 
-      {/* Center dot - small circle outline */}
+      {/* Center bullseye - solid circle */}
       <circle
         cx="12"
         cy="12"
         r="2"
-        stroke={resolvedFill}
-        strokeWidth="1.1"
-        opacity="0.8"
-        strokeLinecap="round"
+        fill={resolvedFill}
       />
     </svg>
   );

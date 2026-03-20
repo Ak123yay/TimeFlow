@@ -21,7 +21,7 @@ const ChartIcon = React.memo(({
       xmlns="http://www.w3.org/2000/svg"
       aria-hidden="true"
     >
-      {/* Bar 1 - Short outline */}
+      {/* Bar 1 - shortest bar */}
       <rect
         x="4"
         y="16.5"
@@ -29,11 +29,10 @@ const ChartIcon = React.memo(({
         height="4"
         rx="0.6"
         stroke={resolvedFill}
-        strokeWidth="1.1"
-        opacity="0.8"
+        strokeWidth="1.2"
       />
 
-      {/* Bar 2 - Medium outline */}
+      {/* Bar 2 - medium bar */}
       <rect
         x="10"
         y="12"
@@ -41,11 +40,10 @@ const ChartIcon = React.memo(({
         height="8.5"
         rx="0.6"
         stroke={resolvedFill}
-        strokeWidth="1.1"
-        opacity="0.85"
+        strokeWidth="1.2"
       />
 
-      {/* Bar 3 - Tall outline */}
+      {/* Bar 3 - tallest bar */}
       <rect
         x="16"
         y="6"
@@ -53,8 +51,7 @@ const ChartIcon = React.memo(({
         height="14.5"
         rx="0.6"
         stroke={resolvedFill}
-        strokeWidth="1.1"
-        opacity="0.9"
+        strokeWidth="1.2"
       />
     </svg>
   );

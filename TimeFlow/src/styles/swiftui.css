@@ -316,7 +316,7 @@
   }
 
   .swiftui-tab-item.active {
-    color: #CCC;
+    color: #DDD;
   }
 
   .swiftui-tab-item.active::after {
