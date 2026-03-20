@@ -1,4 +1,4 @@
-import { useState, useEffect, lazy } from "react";
+import { useState, useEffect, lazy, Suspense } from "react";
 import { getWeekData, getCurrentWeekStart, loadReflection, loadTasksForDate, saveTasksForDate } from "../utils/storage";
 import ReflectionViewer from "./dialogs/ReflectionViewer";
 import MobileLayout from './mobile/MobileLayout';
@@ -579,15 +579,17 @@ export default function WeeklyView({ onBackToToday }) {
         )}
 
         {/* Add Task Modal */}
-        <AddTaskModal
-          isOpen={showAddTaskModal}
-          onClose={() => {
-            setShowAddTaskModal(false);
-            setSelectedDateForTask(null);
-          }}
-          onAddTask={handleAddTask}
-          prefilledDate={selectedDateForTask}
-        />
+        <Suspense fallback={null}>
+          <AddTaskModal
+            isOpen={showAddTaskModal}
+            onClose={() => {
+              setShowAddTaskModal(false);
+              setSelectedDateForTask(null);
+            }}
+            onAddTask={handleAddTask}
+            prefilledDate={selectedDateForTask}
+          />
+        </Suspense>
       </div>
     </div>
   );
