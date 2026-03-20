@@ -472,7 +472,15 @@ export const getAllAnalytics = () => {
 
 /**
  * Calculate productivity score for a given date
- * Score = (tasksCompleted / tasksCreated) * 100, capped at 100
+ * Factors in task completion and reschedule attempts (outcomes of reschedule modal)
+ * Score = (totalPoints / maxPoints) * 100
+ *
+ * Scoring Logic:
+ * - Task completed with 0 reschedules: 100 points
+ * - Task completed with 1-2 reschedules: 80-90 points
+ * - Task completed with 3+ reschedules: 50-70 points
+ * - Task not completed: 0 points
+ *
  * @param {string} dateString - YYYY-MM-DD format
  * @returns {number} Productivity score (0-100)
  */
@@ -481,12 +489,40 @@ export const calculateProductivityScore = (dateString) => {
     const tasks = loadTasksForDate(dateString);
     if (tasks.length === 0) return 0;
 
-    const completed = tasks.filter(t => t.completed).length;
-    const created = tasks.length;
+    let totalPoints = 0;
+    let maxPoints = 0;
 
-    // Ensure no division by zero, cap at 100
-    const score = created > 0 ? Math.min(100, Math.round((completed / created) * 100)) : 0;
-    return score;
+    tasks.forEach(task => {
+      // Max points per task = 100
+      maxPoints += 100;
+
+      if (task.completed) {
+        // Calculate points based on reschedule attempts
+        const attempts = task.attempts || 0;
+
+        if (attempts === 0) {
+          // No rescheduling needed - full credit
+          totalPoints += 100;
+        } else if (attempts === 1) {
+          // One reschedule - 90% credit (10% penalty)
+          totalPoints += 90;
+        } else if (attempts === 2) {
+          // Two reschedules - 80% credit (20% penalty)
+          totalPoints += 80;
+        } else if (attempts === 3 || attempts === 4) {
+          // Three-four reschedules - 65% credit (35% penalty)
+          totalPoints += 65;
+        } else {
+          // Five+ reschedules - 50% credit (50% penalty)
+          totalPoints += 50;
+        }
+      }
+      // Uncompleted tasks contribute 0 points
+    });
+
+    // Calculate final score capped at 100%
+    const score = maxPoints > 0 ? Math.round((totalPoints / maxPoints) * 100) : 0;
+    return Math.min(100, score); // Cap at 100%
   } catch (e) {
     console.error('calculateProductivityScore', e);
     return 0;
