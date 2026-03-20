@@ -27,29 +27,45 @@ export default function AddTaskModal({ isOpen, onClose, onAddTask, prefilledDate
   if (!isOpen) return null;
 
   const handleAddTask = () => {
-    if (!taskName.trim() || !taskDuration) {
+    if (!taskName?.trim()) {
       haptic.warning();
-      alert("Please enter task name and duration");
+      alert("Please enter a task name");
       return;
     }
 
-    const newTask = {
-      id: `task-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-      name: taskName.trim(),
-      duration: parseInt(taskDuration, 10),
-      startTime: taskStartTime || null,
-      deadline: taskDeadline || null,
-      notes: taskNotes || null,
-      completed: false,
-      createdAt: new Date().toISOString(),
-      remaining: parseInt(taskDuration, 10),
-      category: 'personal', // Default category
-      attempts: 0
-    };
+    if (!taskDuration || parseInt(taskDuration, 10) < 5) {
+      haptic.warning();
+      alert("Please enter a valid duration (minimum 5 minutes)");
+      return;
+    }
 
-    haptic.light();
-    onAddTask(newTask);
-    onClose();
+    try {
+      const newTask = {
+        id: `task-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        name: taskName.trim(),
+        duration: parseInt(taskDuration, 10),
+        startTime: taskStartTime || null,
+        deadline: taskDeadline || null,
+        notes: taskNotes || null,
+        completed: false,
+        createdAt: new Date().toISOString(),
+        remaining: parseInt(taskDuration, 10),
+        category: 'personal',
+        attempts: 0
+      };
+
+      if (typeof onAddTask !== 'function') {
+        throw new Error('onAddTask callback is not a function');
+      }
+
+      haptic.light();
+      onAddTask(newTask);
+      onClose();
+    } catch (error) {
+      console.error('[AddTaskModal] Error in handleAddTask:', error);
+      haptic.warning();
+      alert('Error creating task. Please try again.');
+    }
   };
 
   return (

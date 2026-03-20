@@ -43,44 +43,48 @@ export default function DayReflection({ todayDate, onComplete }) {
   }, []);
 
   const handleSave = () => {
-    // Process unfinished tasks based on user actions
-    const updatedTasks = tasks.map(task => {
-      if (task.completed) return task;
+    try {
+      // Process unfinished tasks based on user actions
+      const updatedTasks = tasks.map(task => {
+        if (task.completed) return task;
 
-      const action = unfinishedActions[task.id];
-      if (action === 'completed') {
-        return { ...task, completed: true, remaining: 0 };
-      } else if (action === 'delete') {
-        return null; // Will be filtered out
-      }
-      // 'carry' or undefined - leave as is, will be picked up by carry-over logic
-      return task;
-    }).filter(Boolean);
+        const action = unfinishedActions[task.id];
+        if (action === 'completed') {
+          return { ...task, completed: true, remaining: 0 };
+        } else if (action === 'delete') {
+          return null; // Will be filtered out
+        }
+        // 'carry' or undefined - leave as is, will be picked up by carry-over logic
+        return task;
+      }).filter(Boolean);
 
-    saveTasksForDate(todayDate, updatedTasks);
+      saveTasksForDate(todayDate, updatedTasks);
 
-    // Calculate productivity score
-    const productivityScore = calculateProductivityScore(todayDate);
+      // Calculate productivity score
+      const productivityScore = calculateProductivityScore(todayDate);
 
-    // Save reflection with productivity score
-    saveReflection(todayDate, {
-      completedCount: completedTasks.length,
-      totalCount: tasks.length,
-      timeSpent: completedTime,
-      reflection,
-      mood,
-      unfinishedActions,
-      productivityScore // Add productivity score to reflection
-    });
+      // Save reflection with productivity score
+      saveReflection(todayDate, {
+        completedCount: completedTasks.length,
+        totalCount: tasks.length,
+        timeSpent: completedTime,
+        reflection,
+        mood,
+        productivityScore // Add productivity score to reflection
+      });
 
-    // Record daily insight with productivity metrics
-    recordDailyInsight(todayDate, {
-      reflection,
-      mood,
-      timeSpent: completedTime
-    });
+      // Record daily insight with productivity metrics
+      recordDailyInsight(todayDate, {
+        reflection,
+        mood,
+        timeSpent: completedTime
+      });
 
-    onComplete();
+      onComplete();
+    } catch (error) {
+      console.error('Error in handleSave:', error);
+      alert('Error saving your day. Please refresh and try again.');
+    }
   };
 
   const handleUnfinishedAction = (taskId, action) => {

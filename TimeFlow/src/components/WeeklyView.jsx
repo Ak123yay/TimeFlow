@@ -76,14 +76,20 @@ export default function WeeklyView({ onBackToToday }) {
 
   // Handle save new task from modal
   const handleAddTask = (newTask) => {
-    if (!selectedDateForTask) return;
+    if (!selectedDateForTask) {
+      haptic.warning();
+      return;
+    }
 
     try {
       const tasks = loadTasksForDate(selectedDateForTask);
+      if (!Array.isArray(tasks)) {
+        throw new Error('Tasks is not an array');
+      }
       tasks.push(newTask);
       saveTasksForDate(selectedDateForTask, tasks);
 
-      // Refresh week data
+      // Refresh week data immediately
       const data = getWeekData(weekStart);
       const dataWithReflections = data.map(day => ({
         ...day,
@@ -97,6 +103,7 @@ export default function WeeklyView({ onBackToToday }) {
     } catch (e) {
       console.error('Error adding task:', e);
       haptic.warning();
+      alert('Error saving task. Please try again.');
     }
   };
 

@@ -74,9 +74,22 @@ export const loadTasksForDate = (dateString) => {
 
 export const saveTasksForDate = (dateString, tasks) => {
   try {
-    localStorage.setItem(getTasksKeyForDate(dateString), JSON.stringify(tasks));
+    if (!dateString || typeof dateString !== 'string') {
+      console.warn('saveTasksForDate: invalid dateString', dateString);
+      return;
+    }
+
+    if (!Array.isArray(tasks)) {
+      console.warn('saveTasksForDate: tasks is not an array', tasks);
+      return;
+    }
+
+    // Validate and clean tasks before saving
+    const validTasks = tasks.filter(task => task && typeof task === 'object');
+
+    localStorage.setItem(getTasksKeyForDate(dateString), JSON.stringify(validTasks));
     // Update manifest to track this date
-    if (tasks && tasks.length > 0) {
+    if (validTasks && validTasks.length > 0) {
       addDateToManifest(dateString);
     } else {
       removeDateFromManifest(dateString);
@@ -168,9 +181,25 @@ export const getUnfinishedTasksFromPreviousDays = () => {
 
 export const saveReflection = (date, reflectionData) => {
   try {
+    if (!date || typeof date !== 'string') {
+      console.warn('saveReflection: invalid date', date);
+      return;
+    }
+
     const reflections = JSON.parse(localStorage.getItem('timeflow-reflections') || '{}');
+
+    // Sanitize reflection data to avoid circular references
+    const sanitizedData = {};
+    for (const key in reflectionData) {
+      const value = reflectionData[key];
+      // Skip functions and circular references
+      if (typeof value !== 'function' && (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean' || value === null)) {
+        sanitizedData[key] = value;
+      }
+    }
+
     reflections[date] = {
-      ...reflectionData,
+      ...sanitizedData,
       timestamp: new Date().toISOString()
     };
     localStorage.setItem('timeflow-reflections', JSON.stringify(reflections));
@@ -487,18 +516,25 @@ export const getAllAnalytics = () => {
 export const calculateProductivityScore = (dateString) => {
   try {
     const tasks = loadTasksForDate(dateString);
+
+    if (!Array.isArray(tasks)) {
+      return 0;
+    }
+
     if (tasks.length === 0) return 0;
 
     let totalPoints = 0;
     let maxPoints = 0;
 
     tasks.forEach(task => {
+      if (!task) return; // Skip null/undefined tasks
+
       // Max points per task = 100
       maxPoints += 100;
 
       if (task.completed) {
         // Calculate points based on reschedule attempts
-        const attempts = task.attempts || 0;
+        const attempts = parseInt(task.attempts, 10) || 0;
 
         if (attempts === 0) {
           // No rescheduling needed - full credit
@@ -538,15 +574,21 @@ export const recordDailyInsight = (dateString, insightData = {}) => {
   try {
     const insights = JSON.parse(localStorage.getItem('timeflow-daily-insights') || '{}');
     const tasks = loadTasksForDate(dateString);
-    const completed = tasks.filter(t => t.completed).length;
+
+    if (!Array.isArray(tasks)) {
+      console.warn('recordDailyInsight: tasks is not an array', tasks);
+      return;
+    }
+
+    const completed = tasks.filter(t => t && t.completed).length;
 
     insights[dateString] = {
       date: dateString,
       tasksCreated: tasks.length,
       tasksCompleted: completed,
       tasksSkipped: tasks.length - completed,
-      productivityScore: calculateProductivityScore(dateString),
-      totalTimeTracked: tasks.reduce((sum, t) => sum + (t.duration || 0), 0),
+      productivityScore: calculateProductivityScore(dateString) || 0,
+      totalTimeTracked: tasks.reduce((sum, t) => sum + (t && t.duration ? parseInt(t.duration, 10) || 0 : 0), 0),
       ...insightData,
       timestamp: new Date().toISOString()
     };

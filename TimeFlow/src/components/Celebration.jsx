@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { CelebrationIcon } from '../icons';
+import { CelebrationIcon, LeafIcon } from '../icons';
 
 export default function Celebration({ type = 'task', onComplete }) {
   const [leaves, setLeaves] = useState([]);
